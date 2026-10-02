@@ -19,17 +19,17 @@ Initial targets:
 
 Baseline:
 
-[
+$$
 Y_{t+h}=f(M_t)
-]
+$$
 
 Candidate model:
 
-[
+$$
 Y_{t+h}=f(M_t,ATT_t)
-]
+$$
 
-Promotion requires positive incremental OOS performance, not merely in-sample significance.
+Promotion requires positive incremental out-of-sample performance, not merely in-sample significance.
 
 ## N2 — Common attention exists, but platform residuals matter
 
@@ -40,7 +40,7 @@ Promotion requires positive incremental OOS performance, not merely in-sample si
 Test sequence:
 
 1. build per-platform attention series;
-2. estimate common component;
+2. estimate a common component;
 3. preserve residuals;
 4. compare common-only, platform-only and combined models.
 
@@ -50,16 +50,24 @@ No platform merging before this ablation.
 
 **Status:** literature-backed / replication target.
 
-**Claim:** dispersion/polarization/homogeneity contain information not captured by mean stance.
+**Claim:** dispersion, polarization and homogeneity contain information not captured by mean stance.
 
 Ablation:
 
-```text
+~~~text
 market
 market + mean stance
 market + disagreement
 market + stance + disagreement
-```
+~~~
+
+A candidate polarization statistic is:
+
+$$
+P=E[|s|]-|E[s]|
+$$
+
+The formula is provisional and must compete with other dispersion measures.
 
 ## N4 — Narrative structure beats message count alone
 
@@ -67,7 +75,26 @@ market + stance + disagreement
 
 **Claim:** topic entropy, concentration and novelty provide incremental information beyond message count/attention.
 
-Tests must compare directly against count-only baselines.
+Candidate normalized narrative entropy:
+
+$$
+H_N(t)
+=
+-
+\frac{
+\sum_{k=1}^{K}\pi_{k,t}\log\pi_{k,t}
+}{
+\log K
+}
+$$
+
+Candidate concentration:
+
+$$
+C_N(t)=1-H_N(t)
+$$
+
+Tests must compare directly against count-only and attention-only baselines.
 
 ## N5 — Propagation carries incremental information
 
@@ -82,22 +109,45 @@ Candidate features:
 - latency;
 - Hawkes excitation;
 - branching/reproduction proxies;
-- transfer entropy / effective transfer entropy.
+- Transfer Entropy / Effective Transfer Entropy.
+
+Core comparison:
+
+$$
+\mathcal{L}(M+ATT+TRN)
+<
+\mathcal{L}(M+ATT)
+$$
+
+on untouched chronological data.
 
 ## N6 — Attention and credibility are orthogonal dimensions
 
 **Status:** literature-backed motivation / replication target.
 
-**Claim:** high attention does not imply high truth/confirmation probability and the interaction produces different market responses.
+**Claim:** high attention does not imply high truth/confirmation probability, and the interaction produces different market responses.
 
 Candidate state classes:
 
-```text
+~~~text
 high attention + confirmed
 high attention + unconfirmed
 low attention + confirmed
 low attention + unconfirmed
-```
+~~~
+
+A candidate interaction diagnostic is:
+
+$$
+CredibilityGap_t
+=
+AttentionSurprise_t
+\left(
+1-Confirmation_t
+\right)
+$$
+
+This exact scalar form is a Ninja hypothesis, not a validated production metric.
 
 ## N7 — Event morphology generalizes across superficially different events
 
@@ -107,28 +157,65 @@ low attention + unconfirmed
 
 A candidate event distance may combine:
 
-[
-d(i,j)=
-w_c d_{categorical}
-+w_s(1-cos(z_i,z_j))
-+w_n d_{numeric}
-+w_m d_{market-context}
-]
+$$
+d_E(i,j)
+=
+w_c d_{categorical}(i,j)
++
+w_s
+\left[
+1-\cos(z_i,z_j)
+\right]
++
+w_n d_{numeric}(i,j)
++
+w_m d_{market}(i,j)
+$$
 
 Weights may not be hand-tuned on the final test set.
+
+Core test:
+
+$$
+E\!\left[
+d_R(R_i,R_j)
+\mid
+d_E(i,j)\le c
+\right]
+<
+E\!\left[
+d_R(R_i,R_k)
+\mid
+k\in\text{matched controls}
+\right]
+$$
+
+on held-out events.
 
 ## N8 — Shock × transmission × susceptibility interaction matters
 
 **Status:** literature-motivated Ninja core hypothesis.
 
-**Claim:** information shocks have stronger/different effects when propagation is strong and the market is financially susceptible.
+**Claim:** information shocks have stronger or different effects when propagation is strong and the market is financially susceptible.
 
 Candidate model family:
 
-[
-Y =
-f(M,Q,T,S,Q	imes T,Q	imes S,T	imes S,Q	imes T	imes S)
-]
+$$
+Y_{t+h}
+=
+f\!\left(
+M_t,
+Q_t,
+T_t,
+S_t,
+Q_tT_t,
+Q_tS_t,
+T_tS_t,
+Q_tT_tS_t
+\right)
++
+\epsilon_{t+h}
+$$
 
 A simpler model should be preferred unless interactions produce robust incremental value.
 
@@ -138,7 +225,17 @@ A simpler model should be preferred unless interactions produce robust increment
 
 **Claim:** Ninja factors improve forecasts of volatility, jumps, liquidity, MAE or regime changes more robustly than directional returns.
 
-This must be tested rather than assumed.
+Primary target ordering:
+
+1. realized volatility;
+2. volume surprise;
+3. jump/tail probability;
+4. MAE / stop-hit probability;
+5. liquidity deterioration;
+6. regime transition;
+7. directional return.
+
+This ordering must be tested rather than assumed.
 
 ## N10 — A validated Ninja factor can improve an existing Master Trader strategy without replacing it
 
@@ -146,117 +243,178 @@ This must be tested rather than assumed.
 
 Example experimental question:
 
-> Among historical Keltner entries, can a frozen Ninja factor reduce maximum drawdown/stop rate without destroying expected value through excessive filtering?
+> Among historical Keltner entries, can a frozen Ninja factor reduce maximum drawdown or stop rate without destroying expected value through excessive filtering?
 
 Comparison:
 
-```text
+~~~text
 original strategy
 vs
 same strategy + frozen Ninja policy
-```
+~~~
 
-No new trading logic is accepted unless the original strategy remains the explicit baseline.
+The original strategy remains the explicit baseline.
 
 ## Candidate metrics under investigation
 
 These are not production definitions.
 
-### Attention surprise
+### Attention surprise — robust form
 
-Robust form:
+$$
+AZ_t
+=
+\frac{
+x_t-\operatorname{median}(x)
+}{
+1.4826\,MAD(x)+\epsilon
+}
+$$
 
-[
-AZ_t =
-rac{x_t-operatorname{median}(x)}
-{1.4826,MAD(x)+epsilon}
-]
+### Attention surprise — count-model form
 
-Count-model form:
+Assume:
 
-[
-AS_t =
-rac{N_t-mu_t}
-{sqrt{mu_t+mu_t^2/phi}}
-]
+$$
+N_t\sim NB(\mu_t,\phi)
+$$
 
-for a Negative-Binomial baseline.
+with:
+
+$$
+Var(N_t)
+=
+\mu_t+\frac{\mu_t^2}{\phi}
+$$
+
+Then:
+
+$$
+AS_t
+=
+\frac{
+N_t-\mu_t
+}{
+\sqrt{
+\mu_t+\mu_t^2/\phi
+}
+}
+$$
 
 ### Author concentration
 
-[
-HHI=sum_u s_u^2
-]
+$$
+HHI=\sum_u s_u^2
+$$
 
 ### Author entropy
 
-[
-H_A=
--rac{sum_u s_ulog s_u}{log U}
-]
+$$
+H_A
+=
+-
+\frac{
+\sum_u s_u\log s_u
+}{
+\log U
+}
+$$
 
 ### Polarization candidate
 
-[
-P=E[|s|]-|E[s]|
-]
+$$
+P
+=
+E[|s|]-|E[s]|
+$$
 
 ### Narrative entropy
 
-[
-H_N=
--rac{sum_k pi_klogpi_k}{log K}
-]
+$$
+H_N
+=
+-
+\frac{
+\sum_k\pi_k\log\pi_k
+}{
+\log K
+}
+$$
 
 ### Semantic homogeneity
 
-[
-H_S=
-rac{2}{n(n-1)}
-sum_{i<j}cos(z_i,z_j)
-]
+$$
+H_S
+=
+\frac{2}{n(n-1)}
+\sum_{i<j}
+\cos(z_i,z_j)
+$$
 
 ### Novelty
 
-Simple semantic form:
-
-[
-Novelty_i =
-1-max_{jin history}cos(z_i,z_j)
-]
-
-### Echo/effective attention candidate
-
-For weights (w_i):
-
-[
-N_{eff}
+$$
+Novelty_i
 =
-rac{(sum_i w_i)^2}{sum_i w_i^2}
-]
+1-
+\max_{j\in\mathcal H_t}
+\cos(z_i,z_j)
+$$
+
+### Effective attention
+
+For weights \(w_i\):
+
+$$
+N_{\mathrm{eff}}
+=
+\frac{
+\left(
+\sum_i w_i
+\right)^2
+}{
+\sum_i w_i^2
+}
+$$
 
 Candidate:
 
-[
-EchoRatio=1-rac{N_{eff}}{N}
-]
+$$
+EchoRatio
+=
+1-\frac{N_{\mathrm{eff}}}{N}
+$$
 
 ### Propagation latency
 
-[
-L_{p	o q}=t_q^*-t_p^*
-]
+$$
+L_{p\to q}
+=
+t_q^\*-t_p^\*
+$$
 
-where (t_p^*) is the first threshold-crossing time on platform (p).
+where \(t_p^\*\) is the first threshold-crossing time on platform \(p\).
 
-### Net information flow
+### Effective Transfer Entropy
 
-Candidate:
+$$
+ETE_{X\to Y}
+=
+TE_{X\to Y}
+-
+E\!\left[
+TE_{X^{shuffle}\to Y}
+\right]
+$$
 
-[
+### Net directed information flow
+
+$$
 NetFlow_{X,Y}
 =
-ETE_{X	o Y}-ETE_{Y	o X}
-]
+ETE_{X\to Y}
+-
+ETE_{Y\to X}
+$$
 
 All formulas remain provisional until their estimator, sampling assumptions and robustness protocol are specified in an experiment.
