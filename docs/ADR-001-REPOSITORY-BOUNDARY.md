@@ -1,191 +1,116 @@
 # ADR-001 — Ninja / Master Trader repository boundary
 
-**Status:** provisional architecture decision  
+**Status:** revised  
 **Date:** 2026-10-02
 
 ## Context
 
-There are two defensible implementation positions.
+Two separate questions were being mixed together:
 
-### Position A — separate Ninja repository
+1. where should Ninja research live?
+2. where should validated Ninja trading code execute?
 
-Ninja has a research lifecycle substantially different from Master Trader:
-
-- historical social/news datasets;
-- crawling and scraping;
-- large temporary data;
-- embeddings and local models;
-- NLP/event extraction;
-- Hawkes/network/information-theory research;
-- experimental dependencies;
-- frequent failed hypotheses;
-- research artifacts;
-- serving code that may evolve independently.
-
-Master Trader, by contrast, is primarily a deterministic trading/operations runtime containing:
-
-- Freqtrade strategies;
-- signal receivers;
-- risk controls;
-- monitoring;
-- portfolio logic;
-- execution.
-
-A separate repository reduces dependency and data/research contamination of the trading runtime.
-
-### Position B — everything inside Master Trader
-
-This is also technically defensible.
-
-Advantages:
-
-- one repository;
-- atomic code changes;
-- easier local development;
-- no cross-repo version management;
-- integration tests live beside strategies;
-- less organizational overhead.
-
-If Ninja ultimately becomes only a small set of deterministic Python features, a separate repository could become unnecessary architecture.
+They do not need the same answer.
 
 ## Decision
 
-The **logical boundary is required; the physical repository boundary is provisional**.
+### Research
 
-Today Ninja remains a separate repository because the current work is primarily
+Ninja remains a separate repository during the research phase.
 
-$$
-research + data + probabilistic\ extraction
-$$
+It owns:
 
-rather than
+- historical information datasets/manifests;
+- literature and mathematical framework;
+- feature engineering;
+- event morphology research;
+- Hawkes / information-flow experiments;
+- local-model evaluation;
+- failed hypotheses;
+- validation evidence;
+- candidate implementations.
 
-$$
-production\ trading\ logic.
-$$
+### Runtime
 
-However, Ninja must be designed so its serving component can later be:
+Validated Ninja implementations should normally execute **inside the Master Trader runtime model**.
 
-- moved into a Master Trader package;
-- vendored;
-- used as a git subtree/submodule;
-- deployed as a local sidecar/service;
-- consumed by files, IPC or HTTP;
+A promoted Ninja may become:
 
-without changing the scientific semantics of the feature contract.
+- a Freqtrade strategy;
+- a deterministic overlay used by an existing strategy;
+- a deterministic risk/regime module;
+- an optional data-feed service required by one of those implementations.
 
-## Required boundary
+It should use the same registry, monitoring, risk and live/dry-run concepts as the existing fleet.
 
-Regardless of repository topology:
+## Why this split
 
-~~~text
-Unstructured / probabilistic research
+The research stack may require large datasets, browsers, embeddings, PyTorch, graph libraries and experimental dependencies.
+
+The runtime bot should not.
+
+Separating research from production therefore has operational value without requiring Ninja to become a permanent external trading microservice.
+
+## Required invariant
+
+Research code has zero order authority.
+
+Promotion requires a concrete deterministic implementation.
+
+Conceptually:
+
+```text
+Ninja research repository
         ↓
-Ninja feature contract
-════════ deterministic boundary ════════
-Master Trader policy / risk / execution
-~~~
+validated Python artifact
+        ↓
+Master Trader fleet
+        ↓
+shared risk / monitoring / execution
+```
 
-This boundary matters more than whether GitHub shows one repository or two.
+## Global enable/disable
 
-## Why separate during the research phase
+The intended Master Trader behavior is:
 
-### Dependency isolation
+```text
+NINJA_ENABLED=false
+→ Ninja family absent; current fleet unchanged
 
-Research may require:
+NINJA_ENABLED=true
+→ individually enabled Ninja bots may run
+```
 
-- Polars / DuckDB;
-- embedding runtimes;
-- PyTorch / transformers;
-- graph libraries;
-- Hawkes / Transfer Entropy estimators;
-- browser/crawler stacks.
+This matches the existing multi-bot architecture more closely than introducing a separate generic Ninja policy runtime.
 
-The trading runtime should not inherit these dependencies unless operationally necessary.
+## Live data
 
-### Data isolation
+A Ninja that needs current public-information features may depend on optional collector/feed services.
 
-Large corpora and temporary caches do not belong in the trading deployment context.
+Those services can remain separately packaged if useful, but they are data providers, not trading authorities.
 
-### Failure isolation
+## Alternative: monorepo
 
-A broken crawler, expired browser session or unavailable local model must not affect trading execution.
-
-### Epistemic isolation
-
-Experimental features should not become accidental production assumptions merely because they live beside strategy code.
-
-### Independent release cadence
-
-Ninja may iterate quickly on data science while Master Trader remains conservative.
-
-## What would justify merging later?
-
-Revisit this ADR if most of the following become true:
-
-1. Ninja live serving is small;
-2. research dependencies are not needed by serving;
-3. only a few stable deterministic factors survive;
-4. cross-repository versioning creates more complexity than it removes;
-5. Master Trader maintainers prefer a single release unit;
-6. dependency/data isolation can be preserved inside a monorepo.
-
-A future layout could be:
-
-~~~text
-Master-Trader/
-  ninja/
-    serving/
-    policies/
-    schemas/
-~~~
-
-while heavy historical research remains elsewhere or archived.
-
-## What would justify permanent separation?
-
-Keep Ninja separate if it becomes a reusable information engine with:
-
-- multiple consumers;
-- substantial independent data acquisition;
-- separate deployment cadence;
-- large model/runtime dependencies;
-- non-Master-Trader research use;
-- independent feature/version serving.
-
-## Contract-first integration
-
-Master Trader should depend on a **contract**, not Ninja internals.
+A future monorepo is still valid.
 
 For example:
 
-~~~text
-ninja.features/1.x
-~~~
+```text
+Master-Trader/
+  research/ninja/
+  ft_userdata/user_data/strategies/Ninja*.py
+  services/ninja-data/
+```
 
-Master Trader should not import:
+The repository layout is secondary.
 
-- crawler implementations;
-- LLM clients;
-- embedding models;
-- historical-dataset code.
+The important distinction is:
 
-## First Master Trader integration PR
-
-The initial integration should ideally contain only:
-
-1. optional Ninja configuration;
-2. read-only feature-contract client;
-3. schema and freshness validation;
-4. shadow logging;
-5. tests proving Ninja OFF parity.
-
-No scientific model needs to live in that PR.
+- experimental research;
+- promoted deterministic runtime code.
 
 ## Consequence
 
-The objection that Ninja should simply live inside Master Trader is treated as a valid architectural alternative.
+The original idea of a mandatory `NinjaState → Policy Engine → Master Trader` chain is rejected as unnecessary abstraction.
 
-The current two-repository decision is a **research-phase optimization**, not an ideological commitment.
-
-The design is successful only if moving the deterministic serving layer into Master Trader later would be straightforward.
+A research feature vector may still be useful analytically, but it is not a required production component.
