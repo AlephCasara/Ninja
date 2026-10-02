@@ -2165,7 +2165,7 @@ The project uses published evidence as **motivation**, not as local proof.
 
 ## Phase 2 — E1 Attention Replication
 
-- [ ] Build Attention Scout v0
+- [ ] Build the first attention feature set
 - [ ] Test volatility
 - [ ] Test volume
 - [ ] Test jumps
@@ -2209,7 +2209,7 @@ The project uses published evidence as **motivation**, not as local proof.
 - [ ] Prove `NINJA_ENABLED=false` preserves the existing fleet
 - [ ] Run the promoted Ninja in dry-run / shadow and record its inputs, decisions and outcomes
 - [ ] Accumulate prospective dry-run outcomes
-- [ ] Do not modify trades
+- [ ] Keep live capital disabled until explicit approval
 
 ## Phase 8 — live approval
 
