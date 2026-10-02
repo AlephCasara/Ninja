@@ -49,15 +49,23 @@ Financial impact must be learned from outcomes.
 
 ## Main test
 
-Let (d_M(i,j)) be event/morphology distance and (d_R(i,j)) be response-distance.
+Let $d_M(i,j)$ be event/morphology distance and $d_R(i,j)$ be response distance.
 
 Test whether:
 
-[
-E[d_R(i,j)mid d_M(i,j)	ext{ small}]
+$
+E!left[
+d_R(i,j)
+mid
+d_M(i,j)	ext{ small}
+ight]
 <
-E[d_R(i,k)mid k	ext{ matched control}]
-]
+E!left[
+d_R(i,k)
+mid
+k	ext{ matched control}
+ight]
+$
 
 on held-out events.
 
