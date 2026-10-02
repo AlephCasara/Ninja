@@ -25,7 +25,7 @@ feature prototype
 → validation
 → frozen feature version
 → prospective shadow
-→ deterministic policy candidate
+→ deterministic runtime candidate
 ```
 
 ## Required artifacts per completed experiment
