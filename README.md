@@ -632,8 +632,9 @@ For normalized embeddings $z_i$:
 H_S
 =
 \frac{2}{n(n-1)}
-\sum_{i<j}
-z_i^\top z_j.
+\sum_{i=1}^{n-1}
+\sum_{j=i+1}^{n}
+\cos\!\left(z_i,z_j\right)
 ```
 
 This can help distinguish:
