@@ -173,11 +173,11 @@ The key hypothesis is interaction: the same information shock can have different
 
 The canonical conceptual state is:
 
-$
+```math
 N_{a,t}
 =
 [ATT, DIV, NAR, TRN, EVT, CTX]_{a,t}
-$
+```
 
 No global `NinjaScore` is defined.
 
@@ -246,9 +246,9 @@ For honest replay, `published_at` is not sufficient.
 
 A historical/live decision at time $t$ may use an observation only if the system could actually have known it:
 
-$
-first_seen_at le t
-$
+```math
+first\_seen\_at \le t
+```
 
 Prospective collection therefore records at least:
 
