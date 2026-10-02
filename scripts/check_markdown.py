@@ -52,8 +52,43 @@ for path in sorted(ROOT.rglob("*.md")):
     if tilde_fences % 2:
         errors.append(f"{path.relative_to(ROOT)}: unbalanced tilde fences ({tilde_fences} delimiter lines)")
 
-    if text.count("$$") % 2:
-        errors.append(f"{path.relative_to(ROOT)}: unbalanced $$ math delimiters ({text.count('$$')} occurrences)")
+    if text.count("$") % 2:
+        errors.append(f"{path.relative_to(ROOT)}: unbalanced $ math delimiters ({text.count('$')} occurrences)")
+
+    # Validate brace balance inside GitHub math fences. This does not replace
+    # MathJax parsing, but it catches the most common malformed-LaTeX failure.
+    in_math = False
+    math_start = 0
+    math_lines: list[str] = []
+
+    for number, line in enumerate(lines, 1):
+        stripped = line.strip()
+        if not in_math and stripped == (backtick * 3 + "math"):
+            in_math = True
+            math_start = number
+            math_lines = []
+            continue
+
+        if in_math and stripped == backtick * 3:
+            math = "\n".join(math_lines)
+            depth = 0
+            for ch in math:
+                if ch == "{":
+                    depth += 1
+                elif ch == "}":
+                    depth -= 1
+                    if depth < 0:
+                        add(path, math_start, "math block has an extra closing brace")
+                        break
+
+            if depth > 0:
+                add(path, math_start, f"math block has {depth} unclosed brace(s)")
+
+            in_math = False
+            continue
+
+        if in_math:
+            math_lines.append(line)
 
 
 if errors:
