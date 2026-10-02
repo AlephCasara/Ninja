@@ -11,11 +11,11 @@
     <marker id="as" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0 0L12 6L0 12Z" fill="#94a3b8"/></marker>
   </defs>
   <rect class="bg" width="1500" height="1000"/>
-  <text x="60" y="62" class="title">Ninja: research foundry → deterministic bots inside Master Trader</text>
+  <text x="60" y="62" class="title">Ninja: research → validated deterministic bots in Master Trader</text>
   <text x="60" y="96" class="sub">Research may be probabilistic. Runtime Ninjas are ordinary Python strategies/modules with frozen behavior.</text>
 
   <rect class="group" x="55" y="135" rx="22" ry="22" width="1390" height="355"/>
-  <text x="85" y="170" class="gt">Ninja repository — research foundry</text>
+  <text x="85" y="170" class="gt">Ninja repository — research and validation</text>
   <rect class="box" x="95" y="215" rx="14" ry="14" width="230" height="82"/>
   <text x="210" y="247" class="label">Historical information</text>
   <text x="210" y="273" class="small">social • news • official sources</text>
@@ -88,7 +88,7 @@
   <path class="arrowGreen" d="M1195 672 L1250 672"/>
   <path class="dash" d="M1205 785 C1100 760 965 745 920 730"/>
   <path class="arrowBlue" d="M1298 425 C1298 510 900 510 842 600"/>
-  <text x="1085" y="520" class="note">validated code/specs enter the Master Trader fleet</text>
+  <text x="1085" y="520" class="note">validated implementation enters the Master Trader fleet</text>
 
   <text x="85" y="906" class="note">A research feature vector may exist for analysis, but there is no mandatory runtime “Ninja State” service or generic policy engine.</text>
 </svg>
