@@ -367,10 +367,10 @@ AZ_{a,p,t}
 \frac{
 N_{a,p,t}
 -
-\operatorname{median}(\mathcal W_{a,p,t})
+\mathrm{median}(\mathcal W_{a,p,t})
 }{
 1.4826
-\operatorname{MAD}(\mathcal W_{a,p,t})
+\mathrm{MAD}(\mathcal W_{a,p,t})
 +\epsilon
 }.
 ```
