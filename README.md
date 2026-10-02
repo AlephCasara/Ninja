@@ -225,34 +225,17 @@ But these services do not place trades.
 
 # From internet noise to deterministic action
 
-```mermaid
-flowchart LR
-    A[Public information<br/>social / news / official sources] --> B[Acquisition]
-    B --> C[Timestamped observations]
-    C --> D[Normalization / semantic extraction]
-    D --> E[Six Ninja Scouts]
-    E --> F[Ninja State]
-    F --> G[Historical validation]
-    G -->|fails| X[Reject]
-    G -->|survives OOS| H[Versioned factor]
-    H --> I[Prospective shadow]
-    I -->|survives| J[Deterministic policy]
-    J --> K[Master Trader]
-```
+Ninja transforms unstructured public information into validated, versioned inputs that Master Trader can consume deterministically.
 
-The key rule is:
+<p align="center">
+  <img src="docs/assets/ninja-pipeline.svg" alt="Ninja pipeline: public information to validated deterministic Master Trader policy" width="100%">
+</p>
 
-```math
-\boxed{
-Information
-\rightarrow
-Evidence
-\rightarrow
-Policy
-}
-```
+**Core rule:**
 
-Information never becomes action directly.
+> **Information → Evidence → Policy**
+
+Information never becomes trading action directly.
 
 ---
 
