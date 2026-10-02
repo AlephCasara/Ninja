@@ -53,6 +53,48 @@ NinjaState(asset, time) =
   + Market Susceptibility
 ```
 
+## Scientific core
+
+The simplified scout names sit on top of a substantially deeper quantitative program.
+
+Ninja currently treats the information/market system as a partially observed coupled dynamical system:
+
+$
+N_{a,t}
+=
+[ATT,DIV,NAR,TRN,EVT,CTX]_{a,t}
+$
+
+and tests whether that state adds information beyond conventional market state:
+
+$
+\Delta_h=
+\mathcal{L}(Y_{t+h},\hat f(M_t))
+-
+\mathcal{L}(Y_{t+h},\hat g(M_t,N_t)).
+$
+
+The research stack includes, where justified:
+
+- overdispersed count models and robust attention residuals;
+- author/community concentration and effective sample size;
+- PCA and dynamic common-attention factors;
+- stance variance, polarization and Jensen-Shannon divergence;
+- Shannon entropy, semantic novelty and change-point detection;
+- multiplex network statistics;
+- multivariate Hawkes processes and branching/cascade amplification;
+- effective/conditional Transfer Entropy;
+- mixed-type Event Morphology distance and historical analog distributions;
+- susceptibility interactions and hazard/state-transition models;
+- dependence-aware bootstrap, permutation/surrogate tests, multiple-testing control and chronological OOS validation.
+
+The detailed equations, assumptions and failure modes are documented in:
+
+- [Mathematical framework](docs/MATHEMATICAL_FRAMEWORK.md)
+- [Complexity and information dynamics](docs/COMPLEXITY_AND_INFORMATION_DYNAMICS.md)
+
+The project explicitly distinguishes **complex-systems mathematics** from metaphor. For example, cascade/intermittency/multiscale concepts may transfer; literal Navier-Stokes dynamics do not currently have a scientific basis here.
+
 ## From internet noise to deterministic action
 
 ```mermaid
@@ -138,7 +180,11 @@ After useful factors are identified, live collectors such as Last30Days, dedicat
 
 ## Master Trader relationship
 
-Ninja is a separate repository because crawling, NLP, embeddings, network models and research data should not live inside the trading runtime.
+The **logical boundary** between Ninja research/inference and Master Trader execution is required. The **physical repository boundary is provisional**.
+
+Ninja is separate today because crawling, NLP, embeddings, network models and research data have a radically different lifecycle from a conservative trading runtime. However, this is not an ideological commitment: if the surviving production surface becomes small enough, the deterministic serving layer may eventually move into the Master Trader repository without changing the feature contract.
+
+See [ADR-001 — Ninja / Master Trader repository boundary](docs/ADR-001-REPOSITORY-BOUNDARY.md).
 
 Master Trader should see only a small, deterministic interface:
 
@@ -173,7 +219,10 @@ The project therefore distinguishes:
 See:
 
 - [Scientific foundation](docs/SCIENTIFIC_FOUNDATION.md)
+- [Mathematical framework](docs/MATHEMATICAL_FRAMEWORK.md)
+- [Complexity and information dynamics](docs/COMPLEXITY_AND_INFORMATION_DYNAMICS.md)
 - [Architecture](docs/ARCHITECTURE.md)
+- [Repository-boundary ADR](docs/ADR-001-REPOSITORY-BOUNDARY.md)
 - [Hypothesis registry](docs/HYPOTHESES.md)
 - [Research program](docs/RESEARCH_PROGRAM.md)
 - [Master Trader integration](docs/MASTER_TRADER_INTEGRATION.md)
