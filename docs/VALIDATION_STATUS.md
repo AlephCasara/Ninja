@@ -49,6 +49,6 @@ Therefore no current Ninja factor should be described as "proven", "validated" o
 | Transfer entropy | methodological precedent; Ninja application pending |
 | Event morphology | Ninja hypothesis; unvalidated |
 | Shock × transmission × susceptibility | core Ninja hypothesis; unvalidated as a combined model |
-| Master Trader policy value | unvalidated |
+| Master Trader runtime integration value | unvalidated |
 
 This file should be updated whenever a headline claim changes status.
