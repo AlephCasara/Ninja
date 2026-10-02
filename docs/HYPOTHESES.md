@@ -363,7 +363,7 @@ $$
 
 ### Effective attention
 
-For weights \(w_i\):
+For weights $w_i$:
 
 $$
 N_{\mathrm{eff}}
@@ -393,7 +393,7 @@ L_{p\to q}
 t_q^\*-t_p^\*
 $$
 
-where \(t_p^\*\) is the first threshold-crossing time on platform \(p\).
+where $t_p^\*$ is the first threshold-crossing time on platform $p$.
 
 ### Effective Transfer Entropy
 
