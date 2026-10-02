@@ -275,7 +275,7 @@ Every model needs a market-only baseline.
 
 For example:
 
-$
+```math
 RV_{t+h}
 =
 f(
@@ -286,17 +286,17 @@ Funding_t,
 OI_t,
 Regime_t
 )
-$
+```
 
 Ninja value is:
 
-$
-Delta Performance
+```math
+\Delta Performance
 =
 Performance(Market+Ninja)
 -
 Performance(MarketOnly)
-$
+```
 
 A factor that is statistically interesting but adds no useful OOS performance is not promoted.
 
