@@ -795,7 +795,7 @@ The actual comparison is
 $$
 Strategy_{baseline}
 \quad\text{vs}\quad
-Strategy_{baseline+NinjaPolicy}.
+Strategy_{baseline+NinjaImplementation}.
 $$
 
 Required outputs include:
