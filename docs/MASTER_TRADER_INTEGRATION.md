@@ -2,263 +2,211 @@
 
 ## Goal
 
-Ninja must add optional information without converting Master Trader into an agentic trading system.
+A validated Ninja should feel like another member of the Master Trader fleet, not like a second trading system.
 
-The integration is deliberately asymmetric:
+Master Trader already provides:
 
-- Ninja may be complex internally;
-- Master Trader receives a small deterministic contract.
+- Freqtrade strategy execution;
+- receiver-managed execution for signal bots;
+- `bots_config.json` as the fleet registry/source of truth;
+- per-strategy runtime configs;
+- dry-run/live modes;
+- monitoring;
+- portfolio circuit breaking;
+- capital-account semantics.
 
-## Operating modes
+Ninja should integrate into those mechanisms.
 
-### OFF
+## Global family switch
 
-No Ninja dependency.
+Proposed behavior:
 
 ```text
 NINJA_ENABLED=false
-```
+  → ignore all Ninja-family bots and Ninja-only feed services
 
-Existing Master Trader behavior is unchanged.
-
-### SHADOW
-
-Ninja features are read and logged beside strategy opportunities, but cannot alter orders.
-
-```text
 NINJA_ENABLED=true
-NINJA_MODE=shadow
+  → load Ninja-family entries that are individually enabled
 ```
 
-This should be the first live integration mode.
+This is a family-level kill switch.
 
-### POLICY
+It does not replace per-bot configuration.
 
-Only explicitly approved policies may alter behavior.
+## Per-Ninja configuration
 
-```text
-NINJA_ENABLED=true
-NINJA_MODE=policy
-```
-
-A policy must name the supporting experiment and version.
-
-## Feature contract
-
-Illustrative shape:
+A future registry entry could look conceptually like:
 
 ```json
 {
-  "schema": "ninja.features/1.0",
-  "generated_at": "2026-10-02T01:00:00Z",
-  "valid_until": "2026-10-02T02:00:00Z",
-  "assets": {
-    "SOL": {
-      "features": {
-        "attention_surprise_1h": 3.42,
-        "attention_acceleration_1h": 2.18,
-        "polarization_1h": 0.72,
-        "narrative_entropy_4h": 0.34,
-        "propagation_signal_1h": 1.83
-      },
-      "quality": {
-        "coverage": 0.91,
-        "feature_version": "nf-1.0",
-        "source_failures": []
-      }
-    }
+  "NinjaExampleV1": {
+    "family": "ninja",
+    "active": true,
+    "runtime_config": "NinjaExampleV1.json",
+    "port": 8110,
+    "timeframe": "15m",
+    "type": "attention-propagation"
   }
 }
 ```
 
-This is a contract example, not a frozen schema.
+The actual `dry_run` flag should remain in the strategy runtime config, consistent with the existing Master Trader model.
 
-## Why no `NinjaScore`
+The example name and fields are illustrative until the first Ninja is validated.
 
-A scalar score would force arbitrary weights between attention, propagation, novelty, disagreement and context before evidence exists.
+## Runtime artifact types
 
-Master Trader should initially receive individually versioned factors.
+### Standalone Ninja strategy
 
-## Policy contract
+A normal Freqtrade strategy.
 
-A production-capable Ninja action is a deterministic policy.
+It may open and manage its own trades.
 
-Illustrative shape:
+### Ninja overlay
 
-```yaml
-policy_id: keltner-event-risk-v1
-status: shadow
-strategy: KeltnerBounceV1
-experiment_id: E4-KELTNER-003
-feature_contract: ninja.features/1.x
-requirements:
-  max_staleness_seconds: 900
-  min_quality: 0.85
-conditions:
-  # Values intentionally omitted until historical validation freezes them.
-action:
-  type: block_new_entry
-failure_mode: ignore_ninja
-```
+A deterministic Python module imported by an existing strategy.
 
-The policy must define:
-
-- target strategy;
-- required factor version;
-- freshness requirement;
-- quality requirement;
-- deterministic conditions;
-- action type;
-- behavior on missing Ninja data;
-- experiment supporting the rule.
-
-## Action classes
-
-Ninja may eventually support only a small set of action primitives:
-
-### Observe
-
-No effect. Logging only.
-
-### Entry gate
+Example:
 
 ```text
-ALLOW
-BLOCK
+KeltnerBounceV1
++ validated event-risk gate
 ```
 
-No model-generated explanation is required at decision time.
+This should be used only if the overlay adds OOS value over the original strategy.
 
-### Position-size multiplier
+### Ninja risk/regime module
 
-A frozen finite set is safer than arbitrary continuous model sizing:
+A deterministic module that selects among predefined risk behaviors.
+
+It does not invent risk settings at runtime.
+
+## Live data dependencies
+
+A Ninja may depend on public-information features.
+
+For example:
 
 ```text
-0.00
-0.25
-0.50
-0.75
-1.00
+Last30Days / crawler / public feed
+        ↓
+normalization
+        ↓
+typed feature file/cache
+        ↓
+Ninja strategy
 ```
 
-Exact choices require validation.
+This should follow the same causal discipline already used by external funding/OI inputs:
 
-### Risk mode
+- timestamp data at observation;
+- detect staleness;
+- never fabricate historical values;
+- do not copy current observations backward into old candles;
+- define failure behavior explicitly.
 
-Switch between predefined Master Trader risk profiles.
+## Promotion into Master Trader
 
-Example conceptual states:
+A candidate Ninja should move through:
 
 ```text
-normal
-cautious
-halt-new-risk
+historical research
+→ frozen implementation
+→ backtest / walk-forward
+→ Master Trader dry-run
+→ prospective evidence
+→ human live approval
 ```
 
-### Strategy input
+There is no separate global `POLICY` mode.
 
-Expose a numeric factor to strategy code.
+Dry-run/shadow status belongs to each promoted Ninja.
 
-This should be used only when direct feature conditioning outperforms simpler gates.
+## Strategy comparison
 
-## What Ninja may never do by default
+For a standalone Ninja:
 
-- place exchange orders;
-- modify wallet credentials;
-- dynamically write strategy code in production;
-- ask an LLM for BUY/SELL;
-- let an LLM choose arbitrary leverage;
-- alter stops/TPs from prose reasoning;
-- silently fail open when a policy declares Ninja input mandatory.
+```text
+Ninja strategy
+vs
+appropriate market-only / simple-strategy baselines
+```
 
-## Strategy evaluation
-
-For each integration candidate:
+For an overlay:
 
 ```text
 OriginalStrategy
 vs
-OriginalStrategy + NinjaPolicy
+OriginalStrategy + NinjaOverlay
 ```
-
-The original strategy remains the baseline.
 
 Required analysis includes:
 
-- trades removed;
-- winners removed;
-- losers removed;
-- change in MAE/MFE;
-- change in max drawdown;
+- trade count;
+- winners/losers;
+- MAE/MFE;
+- max drawdown;
+- expected shortfall;
 - opportunity cost;
 - fees/slippage;
-- regime dependence.
+- regime stability.
 
-## Shadow event log
+## Existing fleet must remain intact
 
-Master Trader should eventually record enough information to replay the counterfactual:
-
-```text
-decision_time
-strategy
-pair
-baseline_signal
-baseline_action
-ninja_feature_version
-ninja_features
-ninja_policy_version
-ninja_would_action
-actual_action
-future_outcome
-```
-
-In shadow mode:
+The first Master Trader PR should prove:
 
 ```text
-actual_action = baseline_action
+NINJA_ENABLED=false
+→ current fleet semantics unchanged
 ```
 
-This produces forward evidence without risk.
+The integration should not change existing strategies merely because Ninja exists.
 
-## Fail isolation
+## What stays out of Master Trader
 
-An unavailable Ninja feed must not stop unrelated Master Trader operation.
+Unless required by a promoted bot, Master Trader should not contain:
 
-Default integration rule:
+- historical corpora;
+- notebooks;
+- experiment search code;
+- model-training code;
+- large embedding indexes;
+- literature artifacts.
+
+Only promoted runtime code and the minimum live data adapters it requires should cross the boundary.
+
+## LLM rule
+
+A runtime Ninja must never ask an LLM what trade to make.
+
+An upstream model may transform unstructured text into typed fields.
+
+For example:
 
 ```text
-Ninja failure → existing strategies continue unchanged
+raw post
+  ↓
+event_family = operational_disruption
+first_party = true
+confirmation = confirmed
 ```
 
-A future policy may explicitly choose fail-closed for **new entries** if the policy itself has demonstrated that the factor is a required risk control. Exits/position management should not become dependent on social-data availability without very strong evidence.
+The Ninja strategy may then use those fields through deterministic Python logic.
 
-## Bot/scout naming
+## Naming
 
-Ninja's internal workers should not be called trading bots because they do not trade.
+The six research domains should not be named as runtime bots by default.
 
-Recommended runtime names:
+Runtime bot names should describe a validated behavior only after it exists.
+
+That keeps the ontology honest:
 
 ```text
-ninja-attention
-ninja-divergence
-ninja-narrative
-ninja-propagation
-ninja-events
-ninja-susceptibility
-ninja-state
-ninja-serving
+Attention
+Propagation
+Event Morphology
+    = research domains
+
+<future validated strategy name>
+    = runtime Ninja
 ```
-
-A future Master Trader strategy using a validated Ninja factor may receive a separate strategy name, but the data scouts themselves remain information services.
-
-## PR boundary for Master Trader
-
-The first Master Trader PR should remain small:
-
-1. optional Ninja configuration;
-2. read-only feature client;
-3. schema/freshness validation;
-4. shadow logging;
-5. tests proving `NINJA_ENABLED=false` is behaviorally identical to current baseline.
-
-It should **not** introduce crawlers, embeddings, LLM dependencies or research datasets into Master Trader.
