@@ -19,15 +19,15 @@ Measure:
 
 Candidate multivariate Hawkes model:
 
-[
+$
 lambda_p(t)
 =
 mu_p(t)
 +
 sum_q
 int_0^t
-phi_{pq}(t-s)dN_q(s)
-]
+phi_{pq}(t-s),dN_q(s)
+$
 
 Derived candidates:
 
