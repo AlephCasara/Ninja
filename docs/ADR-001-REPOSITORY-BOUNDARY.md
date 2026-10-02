@@ -5,12 +5,12 @@
 
 ## Context
 
-Two separate questions were being mixed together:
+The project has two separate placement questions:
 
-1. where should Ninja research live?
-2. where should validated Ninja trading code execute?
+1. where research and experimental dependencies should live;
+2. where validated trading code should execute.
 
-They do not need the same answer.
+They do not require the same repository boundary.
 
 ## Decision
 
@@ -18,13 +18,13 @@ They do not need the same answer.
 
 Ninja remains a separate repository during the research phase.
 
-It owns:
+It contains:
 
-- historical information datasets/manifests;
+- historical information datasets and manifests;
 - literature and mathematical framework;
 - feature engineering;
-- event morphology research;
-- Hawkes / information-flow experiments;
+- Event Morphology research;
+- Hawkes and information-flow experiments;
 - local-model evaluation;
 - failed hypotheses;
 - validation evidence;
@@ -32,35 +32,29 @@ It owns:
 
 ### Runtime
 
-Validated Ninja implementations should normally execute **inside the Master Trader runtime model**.
+Validated Ninja implementations normally execute in Master Trader.
 
-A promoted Ninja may become:
+A promoted artifact may be:
 
 - a Freqtrade strategy;
 - a deterministic overlay used by an existing strategy;
 - a deterministic risk/regime module;
-- an optional data-feed service required by one of those implementations.
+- an optional feed service required by one of those implementations.
 
-It should use the same registry, monitoring, risk and live/dry-run concepts as the existing fleet.
+It uses the same registry, monitoring, risk controls and live/dry-run semantics as the existing fleet.
 
-## Why this split
+## Rationale
 
-The research stack may require large datasets, browsers, embeddings, PyTorch, graph libraries and experimental dependencies.
+Research may require large datasets, browser automation, embeddings, PyTorch, graph libraries and other experimental dependencies. Those dependencies do not belong in the trading runtime unless a promoted implementation requires them.
 
-The runtime bot should not.
+The separation therefore isolates research without creating a second trading system.
 
-Separating research from production therefore has operational value without requiring Ninja to become a permanent external trading microservice.
+## Invariant
 
-## Required invariant
-
-Research code has zero order authority.
-
-Promotion requires a concrete deterministic implementation.
-
-Conceptually:
+Research code has no order authority. Promotion requires a concrete deterministic implementation.
 
 ```text
-Ninja research repository
+Ninja research
         ↓
 validated Python artifact
         ↓
@@ -69,31 +63,25 @@ Master Trader fleet
 shared risk / monitoring / execution
 ```
 
-## Global enable/disable
+## Family switch
 
-The intended Master Trader behavior is:
+Target behavior:
 
 ```text
 NINJA_ENABLED=false
-→ Ninja family absent; current fleet unchanged
+→ Ninja family absent; existing fleet unchanged
 
 NINJA_ENABLED=true
 → individually enabled Ninja bots may run
 ```
 
-This matches the existing multi-bot architecture more closely than introducing a separate generic Ninja policy runtime.
-
 ## Live data
 
-A Ninja that needs current public-information features may depend on optional collector/feed services.
+Promoted Ninjas may depend on optional collector/feed services. These services provide data; they do not own trading decisions.
 
-Those services can remain separately packaged if useful, but they are data providers, not trading authorities.
+## Monorepo alternative
 
-## Alternative: monorepo
-
-A future monorepo is still valid.
-
-For example:
+A future monorepo is compatible with the decision:
 
 ```text
 Master-Trader/
@@ -102,15 +90,14 @@ Master-Trader/
   services/ninja-data/
 ```
 
-The repository layout is secondary.
+Repository topology is secondary to the research/runtime boundary.
 
-The important distinction is:
+## Superseded design
 
-- experimental research;
-- promoted deterministic runtime code.
+The earlier mandatory chain
 
-## Consequence
+```text
+NinjaState → Policy Engine → Master Trader
+```
 
-The original idea of a mandatory `NinjaState → Policy Engine → Master Trader` chain is rejected as unnecessary abstraction.
-
-A research feature vector may still be useful analytically, but it is not a required production component.
+is not part of the current architecture. A research feature vector remains useful analytically, but is not required in production.
