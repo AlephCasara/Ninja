@@ -1,22 +1,25 @@
 # Ninja
 
-**Ninja is an alternative-information research engine for Master Trader.**
+**Ninja is a quantitative research project for alternative-information factors intended for deterministic execution in Master Trader.**
 
-Markets do not react only to price, volume, funding or open interest. They also react to information: an event appears, people notice it, communities retransmit it, narratives converge or disagree, and that information interacts with the current financial state of the market.
+The project has four concrete objectives:
 
-Ninja exists to measure that process.
+1. reconstruct or collect timestamped public information from social, news and official sources;
+2. convert that information into measurable variables;
+3. test whether those variables add out-of-sample information beyond conventional market data and existing strategy baselines;
+4. promote only validated results as deterministic Python strategies, overlays or risk modules in Master Trader.
 
-It is **not** an AI trader. It does not ask a language model whether BTC should be bought or sold. Its job is to turn noisy, unstructured public information into timestamped, testable quantitative factors. Only factors that survive historical and out-of-sample validation may cross the deterministic boundary into Master Trader.
+Ninja is not an autonomous trading agent. Language models or embeddings may be used during information extraction and research, but live trading behavior is implemented as ordinary versioned Python code.
 
-> **Current status:** research foundation. The scientific ideas below have meaningful support in the literature, but Ninja has **not yet independently validated them on its own historical cross-platform dataset**. Reproducing or falsifying them is Phase 1.
+> **Current status:** research foundation. The repository contains literature review, mathematical hypotheses and experiment designs. Ninja has **not yet completed its own historical cross-platform validation**, and no Ninja strategy currently has validated trading authority.
 
 ---
 
 ## Contents
 
-1. [Ninja in plain language](#ninja-in-plain-language)
-2. [The core idea: Shock → Transmission × Susceptibility](#the-core-idea-shock--transmission--susceptibility)
-3. [What Ninja is actually trying to measure](#what-ninja-is-actually-trying-to-measure)
+1. [Problem definition](#problem-definition)
+2. [Working systems hypothesis](#working-systems-hypothesis)
+3. [Research variables](#research-variables)
 4. [Research domains and runtime Ninjas](#research-domains-and-runtime-ninjas)
 5. [From research to deterministic Ninja bots](#from-research-to-deterministic-ninja-bots)
 6. [Scientific model](#scientific-model)
@@ -33,7 +36,7 @@ It is **not** an AI trader. It does not ask a language model whether BTC should 
 9. [Research program](#research-program)
 10. [The first four experiments](#the-first-four-experiments)
 11. [Historical data strategy](#historical-data-strategy)
-12. [How Ninja is allowed to become action](#how-ninja-is-allowed-to-become-action)
+12. [Promotion and deployment criteria](#promotion-and-deployment-criteria)
 13. [Master Trader integration](#master-trader-integration)
 14. [Ninja OFF / ON and per-bot dry-run](#ninja-off--on-and-per-bot-dry-run)
 15. [Repository boundary: separate project or part of Master Trader?](#repository-boundary-separate-project-or-part-of-master-trader)
@@ -45,151 +48,123 @@ It is **not** an AI trader. It does not ask a language model whether BTC should 
 
 ---
 
-# Ninja in plain language
+# Problem definition
 
-Imagine two price drops that look similar on a chart.
+A conventional trading strategy usually observes variables such as price, volume, volatility, funding and open interest.
 
-In the first case:
+Ninja investigates whether **public information dynamics** add useful information that is not already captured by those variables.
 
-- price is stretched;
-- volatility is normal;
-- social activity is normal;
-- there is no new event;
-- the market may simply be oversold.
+Consider two otherwise similar mean-reversion setups. In one case, public discussion and event activity are normal. In the other, a newly reported exchange problem is spreading across multiple independent sources while leverage and open interest are already elevated.
 
-In the second case:
+The research question is not whether the second case "feels worse". It is whether measurable information variables improve prediction of outcomes such as:
 
-- price is stretched;
-- discussion of an exchange problem has suddenly exploded;
-- several independent communities are repeating the same new claim;
-- propagation across platforms is accelerating;
-- first-party confirmation is appearing;
-- open interest is elevated;
-- funding is extreme;
-- liquidity is deteriorating.
+- realized volatility;
+- jump probability;
+- maximum adverse excursion;
+- stop-hit probability;
+- liquidity deterioration;
+- regime transition;
+- and, only if justified, directional return.
 
-A pure technical strategy may initially see two similar price patterns.
-
-Ninja asks whether the **information state surrounding the market** can distinguish them.
-
-The project therefore tries to answer questions such as:
-
-- Is collective attention unusually high?
-- Is the attention broad or concentrated in a handful of accounts?
-- Are independent communities converging on the same event?
-- Is the discussion becoming more polarized?
-- Is a genuinely new narrative emerging?
-- Which platform saw the event first?
-- How quickly did it spread?
-- Does social activity appear to lead the market, or merely react to it?
-- Is the event structurally similar to historical events with known outcomes?
-- Is the current market in a state where a small information shock can be amplified?
-
-This is not "sentiment analysis" in the ordinary sense.
-
-The real target is a **quantitative information state**.
+The project therefore treats public-information activity as a potential source of **quantitative explanatory and predictive variables**, not as a qualitative sentiment feed.
 
 ---
 
-# The core idea: Shock → Transmission × Susceptibility
+# Working systems hypothesis
 
-Ninja starts from three ideas.
+The current research program separates three mechanisms:
 
-## 1. Shock
+## 1. Information shock
 
-Did genuinely new information appear?
+Did materially new information appear?
 
-Examples:
+Examples include:
 
-- exploit;
-- exchange outage;
-- listing/delisting;
-- regulation;
+- exploit or outage;
+- listing or delisting;
+- regulation or enforcement;
 - legal action;
 - geopolitical escalation;
-- first-party corporate announcement;
-- sudden narrative formation;
-- unusual community attention.
+- first-party announcement;
+- sudden emergence of a new market narrative.
 
 ## 2. Transmission
 
-How is that information spreading?
+How did the information spread?
 
-Examples:
+Relevant measurements may include:
 
-- one account → many accounts;
-- Reddit → X → news;
-- official source → news → retail communities;
-- rapid cross-platform activation;
-- deep repost/reply cascade;
-- rising self-excitation;
-- falling propagation latency.
+- number of independent sources;
+- cross-platform activation order;
+- propagation latency;
+- cascade depth;
+- self- and cross-excitation;
+- community breadth.
 
-## 3. Susceptibility
+## 3. Market susceptibility
 
-How vulnerable is the market to amplification at that moment?
+What was the financial state when the information arrived?
 
-Examples:
+Relevant variables may include:
 
-- elevated open interest;
-- extreme funding;
-- thin liquidity;
-- high realized volatility;
+- realized volatility;
+- liquidity;
+- open interest;
+- funding;
 - liquidation pressure;
-- unstable market regime;
-- existing technical overextension.
+- leverage proxies;
+- broad market regime.
 
-The central systems hypothesis is:
+A compact working model is:
 
 ```math
-\boxed{
-\text{Response Distribution}_{t+h}
+Y_{t+h}
 =
 f(
-\text{Market State}_t,
-\text{Shock}_t,
-\text{Transmission}_t,
-\text{Susceptibility}_t
+M_t,
+Q_t,
+T_t,
+S_t
 )
-}
++
+\epsilon_{t+h}
 ```
 
-The same event can produce different outcomes in different market states.
+where $M_t$ is conventional market state, $Q_t$ information shock, $T_t$ transmission and $S_t$ susceptibility.
 
-That is the mathematical version of the "same cyclone, different environment" intuition.
+This is a **research decomposition**, not a claim that the effects are literally multiplicative or that all three terms must appear in every production strategy.
 
 ---
 
-# What Ninja is actually trying to measure
+# Research variables
 
-Ninja does **not** attempt to infer a single number such as:
-
-```text
-social_sentiment = -0.61
-```
-
-That would collapse too much information.
-
-Instead, the project treats the information environment as a multidimensional state:
+For research, candidate information features are grouped as:
 
 ```math
 N_{a,t}
 =
-[ATT,DIV,NAR,TRN,EVT,CTX]_{a,t}
+[
+ATT,
+DIV,
+NAR,
+TRN,
+EVT,
+CTX
+]_{a,t}
 ```
 
 where:
 
-- **ATT** = attention;
-- **DIV** = divergence / disagreement;
-- **NAR** = narrative structure;
-- **TRN** = transmission / propagation;
-- **EVT** = event morphology;
-- **CTX** = financial susceptibility / market context.
+- **ATT** — attention;
+- **DIV** — disagreement / divergence;
+- **NAR** — narrative structure;
+- **TRN** — transmission / propagation;
+- **EVT** — event morphology;
+- **CTX** — market susceptibility / context.
 
-There is intentionally **no global NinjaScore**.
+This vector is only a notation for organizing experiments. It is not a required runtime object and there is intentionally no global `NinjaScore`.
 
-A scalar score would force arbitrary weights before evidence exists.
+A production Ninja should consume only the variables required by its validated implementation.
 
 ---
 
@@ -236,7 +211,7 @@ Names should be assigned to runtime Ninjas only after the underlying behavior ha
 
 # From research to deterministic Ninja bots
 
-The Ninja repository is primarily a **research foundry**. Its job is to discover, test and package deterministic trading logic that can join the Master Trader fleet.
+The Ninja repository is primarily the **research and validation layer**. Its job is to discover, test and package deterministic trading logic that can join the Master Trader fleet.
 
 <p align="center">
   <img src="docs/assets/ninja-runtime-architecture.svg" alt="Ninja research foundry producing deterministic Ninja bots inside the Master Trader runtime" width="100%">
@@ -1640,7 +1615,7 @@ must not be treated as if they existed at publication time.
 
 ---
 
-# How Ninja is allowed to become action
+# Promotion and deployment criteria
 
 A feature does not become a trading rule because it looks convincing.
 
