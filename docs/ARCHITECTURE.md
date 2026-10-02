@@ -1,20 +1,14 @@
 # Architecture
 
-## Decision
+## Scope
 
-Ninja is a **research and strategy-development project**.
+Ninja owns research, validation and candidate implementation of alternative-information strategies. Master Trader owns production execution.
 
-Master Trader is the **runtime**.
+A promoted Ninja runs as deterministic Python inside the Master Trader fleet. No mandatory `NinjaState` service or generic policy engine is required.
 
-The purpose of Ninja is to discover, validate and package deterministic trading logic. Once a Ninja implementation is promoted, it should run inside the Master Trader fleet using the same operational model as the existing bots.
+## Runtime determinism
 
-There is no mandatory `NinjaState` runtime service and no generic Ninja policy engine.
-
-## Determinism
-
-A runtime Ninja (k) is a deterministic Python program.
-
-Conceptually:
+For implementation (k):
 
 ```math
 a_{k,t}
@@ -28,19 +22,17 @@ F_{k,t};
 
 where:
 
-- $M_t$ is conventional market state;
-- $F_{k,t}$ is the subset of Ninja-derived inputs required by that implementation;
+- $M_t$ is market state;
+- $F_{k,t}$ is the subset of Ninja-derived inputs used by the implementation;
 - $\theta_k$ is the frozen parameter set;
-- $\pi_k$ is the Python strategy/module;
+- $\pi_k$ is the Python strategy or module;
 - $a_{k,t}$ is the resulting action.
 
-Given the same inputs, code version and parameters, the same action must be produced.
+A runtime build must reproduce the same action for the same serialized inputs, code version and parameters.
 
-That is the relevant deterministic boundary.
+## Research domains
 
-## Research architecture
-
-The six Ninja domains organize research:
+Ninja organizes research into six domains:
 
 1. Attention
 2. Divergence
@@ -49,39 +41,25 @@ The six Ninja domains organize research:
 5. Event Morphology
 6. Susceptibility
 
-They are **not** six required services and do not map one-to-one to runtime bots.
+These are analytical categories, not required services. One candidate implementation may combine several domains.
 
-A candidate strategy may combine any subset of these domains.
+## Runtime artifact types
 
-Example:
-
-```text
-candidate Ninja
-  attention surprise
-  + propagation latency
-  + funding state
-  + open interest state
-        ↓
-  deterministic Python strategy
-```
-
-## Research outputs
-
-A successful research line may produce one of three runtime artifact classes.
+Validated research may be promoted as:
 
 ### Standalone strategy
 
-A new Freqtrade strategy with its own entry, exit and risk logic.
+A Freqtrade strategy with its own entry, exit and risk logic.
 
 ### Strategy overlay
 
-A deterministic module or feature used by an existing Master Trader strategy.
+Deterministic logic used by an existing Master Trader strategy.
 
-### Risk/regime module
+### Risk or regime module
 
-A deterministic module used to change predefined risk behavior or block new entries under validated conditions.
+Deterministic selection among predefined risk behaviors.
 
-The project should prefer the simplest artifact that captures the validated effect.
+Use the smallest runtime artifact that preserves the validated effect.
 
 ## Promotion path
 
@@ -90,40 +68,34 @@ hypothesis
 → historical dataset
 → registered experiment
 → chronological OOS validation
-→ deterministic implementation
-→ Master Trader dry-run
+→ frozen Python implementation
+→ Master Trader backtest / walk-forward
+→ dry-run / shadow
 → live approval
 ```
 
-Research code has no trading authority.
-
-Promotion happens by moving a concrete implementation into the Master Trader runtime.
+Research code has no order authority.
 
 ## Live information inputs
 
-Some Ninjas may require current public-information data.
+A promoted Ninja may require current public-information data. Inputs can come from Last30Days, dedicated crawlers, public web/news collectors or source-specific adapters.
 
-Those inputs can be produced by:
+The runtime strategy should consume timestamped typed values, following the same causal-data discipline used by existing external funding and OI inputs:
 
-- Last30Days;
-- dedicated crawlers;
-- public web/news collectors;
-- source-specific adapters;
-- deterministic feature calculators.
+- record observation time;
+- detect staleness;
+- do not backfill current observations into historical candles;
+- define missing-data behavior explicitly.
 
-The resulting data should be exposed to a strategy as typed values or files.
+The collector may use probabilistic extraction. Trade decisions remain deterministic.
 
-This is analogous to the existing Master Trader pattern in which strategies consume external funding or OI data.
+## Research data layers
 
-The collector may be complex. The strategy decision remains deterministic.
-
-## Historical data layers
-
-Bronze / Silver / Gold remain useful for research.
+Bronze / Silver / Gold are research-storage conventions, not runtime requirements.
 
 ### Bronze
 
-Raw or near-raw observations and provenance.
+Raw or near-raw observations with provenance.
 
 ### Silver
 
@@ -131,13 +103,11 @@ Normalized observations, entities, event extraction and semantic representations
 
 ### Gold
 
-Research features and time-series panels.
+Features and time-series panels used by experiments.
 
-These layers belong to the Ninja research process. They are not a required runtime abstraction in Master Trader.
+## Research notation
 
-## Research feature notation
-
-For analysis, Ninja uses:
+For analysis:
 
 ```math
 N_{a,t}
@@ -152,9 +122,7 @@ CTX
 ]_{a,t}
 ```
 
-This is mathematical notation for the candidate feature space.
-
-A runtime Ninja consumes only what it needs:
+A runtime implementation consumes only the required subset:
 
 ```math
 F_{k,t}
@@ -162,23 +130,21 @@ F_{k,t}
 N_{a,t}
 ```
 
-There is no requirement to serialize the entire vector in production.
+The complete vector does not need to be serialized in production.
 
 ## Master Trader runtime
 
-The Master Trader fleet already provides the correct operational structure:
+Master Trader already provides:
 
-- strategy registry;
-- per-bot runtime configs;
+- the bot registry;
+- per-bot runtime configuration;
 - live/dry-run execution;
 - monitoring;
 - portfolio risk controls;
 - capital-account semantics;
-- health and validation tooling.
+- validation and health tooling.
 
-Ninja should reuse this machinery.
-
-Conceptually:
+Ninja should reuse those mechanisms.
 
 ```text
 Master Trader
@@ -194,33 +160,33 @@ Master Trader
     └── <validated Ninja 3>
 ```
 
-## Family-level switch
+## Family switch
 
-The intended global behavior is:
+Target behavior:
 
 ```text
 NINJA_ENABLED=false
-  → no Ninja-tagged bot or Ninja-only feed is started
+  → Ninja-family bots and Ninja-only feeds are not started
 
 NINJA_ENABLED=true
   → individually enabled Ninja bots may run
 ```
 
-Each Ninja still retains its own runtime config and dry-run/live status.
+Per-bot runtime configuration remains authoritative for active/dry-run/live behavior.
 
-The exact implementation may use a registry field, Compose profile or startup filter. The behavior matters more than the mechanism.
+The implementation can use a registry field, Compose profile or startup filter. That choice belongs in the Master Trader PR.
 
 ## Failure isolation
 
-1. `NINJA_ENABLED=false` must preserve the existing Master Trader fleet.
-2. A failed Ninja collector must not stop unrelated bots.
-3. A Ninja requiring a missing/stale feed must follow its own declared fail behavior.
+1. `NINJA_ENABLED=false` preserves the existing fleet.
+2. A failed Ninja feed does not stop unrelated bots.
+3. Missing or stale input follows the affected Ninja's declared behavior.
 4. Existing Master Trader risk controls remain authoritative.
-5. No LLM or research process receives direct order authority.
+5. LLMs and research processes have no direct order authority.
 
 ## Repository boundary
 
-The current split is:
+Current ownership:
 
 ```text
 Ninja repository
@@ -231,13 +197,11 @@ Ninja repository
   validation evidence
         ↓ promotion
 Master Trader repository/runtime
-  promoted Ninja Python code
-  bot configs
+  promoted Ninja code
+  runtime configs
   monitoring
   risk
   execution
 ```
 
-This is not a requirement to run Ninja as an external production microservice.
-
-A monorepo remains possible later. The important separation is between experimental research and promoted deterministic runtime code.
+A future monorepo is compatible with this design. The relevant boundary is experimental research versus promoted runtime code.
