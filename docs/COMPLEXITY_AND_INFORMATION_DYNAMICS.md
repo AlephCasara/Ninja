@@ -34,11 +34,11 @@ $$
 
 where:
 
-- \(\mathcal G(t)\) is interaction/network structure;
-- \(\mathcal I(t)\) is information and attention state;
-- \(\mathcal M(t)\) is financial-market state.
+- $\mathcal G(t)$ is interaction/network structure;
+- $\mathcal I(t)$ is information and attention state;
+- $\mathcal M(t)$ is financial-market state.
 
-A public-information event can perturb \(\mathcal I\), alter \(\mathcal G\) through diffusion, and interact with \(\mathcal M\).
+A public-information event can perturb $\mathcal I$, alter $\mathcal G$ through diffusion, and interact with $\mathcal M$.
 
 This is best understood as a partially observed state-estimation problem.
 
@@ -138,7 +138,7 @@ Ninja must never rename a social variable with a physical term unless it has an 
 
 ## 3. Branching and self-excitation
 
-For a scalar branching process with reproduction mean \(n<1\),
+For a scalar branching process with reproduction mean $n<1$,
 
 $$
 E[C]=\frac{1}{1-n}.
@@ -146,11 +146,11 @@ $$
 
 This gives a useful interpretation:
 
-- \(n\ll1\): dying cascade;
-- \(n\to1^{-}\): strong amplification;
-- \(n\ge1\): stationary assumptions fail / explosive behavior may occur.
+- $n\ll1$: dying cascade;
+- $n\to1^{-}$: strong amplification;
+- $n\ge1$: stationary assumptions fail / explosive behavior may occur.
 
-For multitype systems, let \(G\) be the offspring/excitation matrix. Stability of a linear Hawkes system requires, under standard assumptions,
+For multitype systems, let $G$ be the offspring/excitation matrix. Stability of a linear Hawkes system requires, under standard assumptions,
 
 $$
 \rho(G)<1.
@@ -176,7 +176,7 @@ $$
 \sum_{t_i<t}\phi(t-t_i),
 $$
 
-where \(\mu(t)\) is background intensity and the summation is endogenous excitation.
+where $\mu(t)$ is background intensity and the summation is endogenous excitation.
 
 This decomposition is attractive because Ninja needs to distinguish:
 
@@ -252,7 +252,7 @@ No graph statistic is retained unless it is stable under sampling and useful out
 
 ## 6. Information diversity
 
-If community attention shares are \(p_c\),
+If community attention shares are $p_c$,
 
 $$
 H_C
@@ -283,7 +283,7 @@ A generic "entropy score" would be scientifically ambiguous.
 
 ## 7. Information topology
 
-For a semantic graph \(G_t\), possible change statistics include:
+For a semantic graph $G_t$, possible change statistics include:
 
 $$
 \Delta \lambda_1(A_t)
@@ -382,7 +382,7 @@ If Ninja tests cascade tails, the correct procedure is not "it looks straight on
 
 A defensible tail analysis should:
 
-1. estimate a lower cutoff \(x_{min}\);
+1. estimate a lower cutoff $x_{min}$;
 2. fit candidate heavy-tail distributions;
 3. compare power-law, lognormal, exponential and related alternatives;
 4. use likelihood-ratio or bootstrap-based goodness-of-fit diagnostics.
@@ -401,7 +401,7 @@ $$
 Z(q,s)\sim s^{\tau(q)}.
 $$
 
-Nonlinear \(\tau(q)\) suggests multiscaling.
+Nonlinear $\tau(q)$ suggests multiscaling.
 
 Potential Ninja applications:
 
@@ -443,7 +443,7 @@ ABMs belong in Ninja as mechanism laboratories, not as evidence substitutes or p
 
 ## 14. Regimes as latent states
 
-Let \(Z_t\) be a latent regime.
+Let $Z_t$ be a latent regime.
 
 A generic model is
 
@@ -471,7 +471,7 @@ A latent-state model must beat simpler change-point/threshold models OOS before 
 
 The term "susceptibility" is useful if operationalized.
 
-Let \(Q\) be information shock and \(S\) the current market state.
+Let $Q$ be information shock and $S$ the current market state.
 
 Define local susceptibility:
 
