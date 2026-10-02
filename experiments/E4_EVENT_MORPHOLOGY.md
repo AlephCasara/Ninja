@@ -53,19 +53,19 @@ Let $d_M(i,j)$ be event/morphology distance and $d_R(i,j)$ be response distance.
 
 Test whether:
 
-$
-E!left[
+```math
+E\!\left[
 d_R(i,j)
-mid
-d_M(i,j)	ext{ small}
-ight]
+\mid
+d_M(i,j)\text{ small}
+\right]
 <
-E!left[
+E\!\left[
 d_R(i,k)
-mid
-k	ext{ matched control}
-ight]
-$
+\mid
+k\text{ matched control}
+\right]
+```
 
 on held-out events.
 
