@@ -1,17 +1,16 @@
 # Ninja
 
-**Ninja is a quantitative research project for alternative-information factors intended for deterministic execution in Master Trader.**
+**Ninja researches alternative-information signals for deterministic strategies in Master Trader.**
 
-The project has four concrete objectives:
+The project has three jobs:
 
-1. reconstruct or collect timestamped public information from social, news and official sources;
-2. convert that information into measurable variables;
-3. test whether those variables add out-of-sample information beyond conventional market data and existing strategy baselines;
-4. promote only validated results as deterministic Python strategies, overlays or risk modules in Master Trader.
+1. collect or reconstruct timestamped public information;
+2. measure whether that information adds out-of-sample value beyond market data and existing strategy baselines;
+3. turn validated results into versioned Python strategies or modules for the Master Trader fleet.
 
-Ninja is not an autonomous trading agent. Language models or embeddings may be used during information extraction and research, but live trading behavior is implemented as ordinary versioned Python code.
+LLMs and embeddings may be used to structure unstructured data. They do not receive order authority.
 
-> **Current status:** research foundation. The repository contains literature review, mathematical hypotheses and experiment designs. Ninja has **not yet completed its own historical cross-platform validation**, and no Ninja strategy currently has validated trading authority.
+> **Status:** the repository currently contains the research framework, hypotheses and experiment designs. Ninja has not yet completed an independent historical cross-platform validation, and no Ninja implementation is approved for live trading.
 
 ---
 
@@ -20,8 +19,8 @@ Ninja is not an autonomous trading agent. Language models or embeddings may be u
 1. [Problem definition](#problem-definition)
 2. [Working systems hypothesis](#working-systems-hypothesis)
 3. [Research variables](#research-variables)
-4. [Research domains and runtime Ninjas](#research-domains-and-runtime-ninjas)
-5. [From research to deterministic Ninja bots](#from-research-to-deterministic-ninja-bots)
+4. [Research domains and Ninja implementations](#research-domains-and-ninja-implementations)
+5. [Runtime model](#runtime-model)
 6. [Scientific model](#scientific-model)
 7. [Mathematical core](#mathematical-core)
    - [Attention](#1-attention)
@@ -34,51 +33,37 @@ Ninja is not an autonomous trading agent. Language models or embeddings may be u
    - [Susceptibility](#8-susceptibility)
 8. [Complexity science: what transfers and what does not](#complexity-science-what-transfers-and-what-does-not)
 9. [Research program](#research-program)
-10. [The first four experiments](#the-first-four-experiments)
+10. [Initial experiments](#initial-experiments)
 11. [Historical data strategy](#historical-data-strategy)
 12. [Promotion and deployment criteria](#promotion-and-deployment-criteria)
 13. [Master Trader integration](#master-trader-integration)
 14. [Ninja OFF / ON and per-bot dry-run](#ninja-off--on-and-per-bot-dry-run)
 15. [Repository boundary: separate project or part of Master Trader?](#repository-boundary-separate-project-or-part-of-master-trader)
-16. [Role of LLMs, embeddings and local models](#role-of-llms-embeddings-and-local-models)
+16. [Semantic processing](#semantic-processing)
 17. [Validation rules](#validation-rules)
 18. [Current evidence status](#current-evidence-status)
 19. [Roadmap](#roadmap)
-20. [Project map and deeper technical documents](#project-map-and-deeper-technical-documents)
+20. [Repository map](#repository-map)
 
 ---
 
 # Problem definition
 
-A conventional trading strategy usually observes variables such as price, volume, volatility, funding and open interest.
+Master Trader already combines deterministic market strategies with externally supplied signals. Ninja tests a narrower question: whether public-information data can be converted into quantitative variables that improve those systems.
 
-Ninja investigates whether **public information dynamics** add useful information that is not already captured by those variables.
+The initial targets are realized volatility, jump probability, maximum adverse excursion, stop-hit probability, liquidity deterioration and regime transitions. Directional return is secondary.
 
-Consider two otherwise similar mean-reversion setups. In one case, public discussion and event activity are normal. In the other, a newly reported exchange problem is spreading across multiple independent sources while leverage and open interest are already elevated.
-
-The research question is not whether the second case "feels worse". It is whether measurable information variables improve prediction of outcomes such as:
-
-- realized volatility;
-- jump probability;
-- maximum adverse excursion;
-- stop-hit probability;
-- liquidity deterioration;
-- regime transition;
-- and, only if justified, directional return.
-
-The project therefore treats public-information activity as a potential source of **quantitative explanatory and predictive variables**, not as a qualitative sentiment feed.
+The unit of analysis is not a generic sentiment score. It is the measurable state of attention, disagreement, narrative structure, propagation, event type and market context at a specific time.
 
 ---
 
 # Working systems hypothesis
 
-The current research program separates three mechanisms:
+The research model separates three mechanisms.
 
 ## 1. Information shock
 
-Did materially new information appear?
-
-Examples include:
+New information entering the observed system, including:
 
 - exploit or outage;
 - listing or delisting;
@@ -90,9 +75,7 @@ Examples include:
 
 ## 2. Transmission
 
-How did the information spread?
-
-Relevant measurements may include:
+The path and rate at which information spreads, measured with variables such as:
 
 - number of independent sources;
 - cross-platform activation order;
@@ -103,9 +86,7 @@ Relevant measurements may include:
 
 ## 3. Market susceptibility
 
-What was the financial state when the information arrived?
-
-Relevant variables may include:
+The financial state in which the information arrives, including:
 
 - realized volatility;
 - liquidity;
@@ -132,7 +113,7 @@ S_t
 
 where $M_t$ is conventional market state, $Q_t$ information shock, $T_t$ transmission and $S_t$ susceptibility.
 
-This is a **research decomposition**, not a claim that the effects are literally multiplicative or that all three terms must appear in every production strategy.
+This decomposition defines the research variables. It does not require a particular functional form or require every term to appear in a production strategy.
 
 ---
 
@@ -168,9 +149,9 @@ A production Ninja should consume only the variables required by its validated i
 
 ---
 
-# Research domains and runtime Ninjas
+# Research domains and Ninja implementations
 
-The six domains below are **research domains**. They organize what Ninja studies; they are not six mandatory services and they are not automatically six trading bots.
+The six domains organize the research space. They do not map one-to-one to services or trading bots.
 
 | Research domain | Main question | Candidate measurements |
 |---|---|---|
@@ -181,15 +162,13 @@ The six domains below are **research domains**. They organize what Ninja studies
 | **Event Morphology** | What kind of event is this structurally? | actor/action/target/family/authority/confirmation/scope |
 | **Susceptibility** | Is the current market vulnerable to amplification? | volatility, liquidity, funding, OI, liquidations, regime |
 
-A **runtime Ninja** is something different: it is a validated deterministic implementation that runs inside the Master Trader fleet.
-
-A validated research result may become one of three things:
+A promoted Ninja is a deterministic implementation in the Master Trader fleet. A validated result may become:
 
 1. a standalone Freqtrade strategy;
 2. a deterministic filter/overlay used by an existing strategy;
 3. a deterministic risk or regime module.
 
-A single runtime Ninja may use several research domains at once. There is no requirement that "Attention", "Propagation" or "Narrative" each become their own service or bot.
+One implementation may combine several research domains.
 
 Example only:
 
@@ -205,19 +184,19 @@ Ninja X
     deterministic Python entry/exit/risk logic
 ```
 
-Names should be assigned to runtime Ninjas only after the underlying behavior has survived historical validation.
+Runtime names are assigned after the behavior and inputs are defined by a validated experiment.
 
 ---
 
-# From research to deterministic Ninja bots
+# Runtime model
 
-The Ninja repository is primarily the **research and validation layer**. Its job is to discover, test and package deterministic trading logic that can join the Master Trader fleet.
+Ninja contains research, validation and candidate implementations. Promoted code runs in Master Trader.
 
 <p align="center">
-  <img src="docs/assets/ninja-runtime-architecture.svg" alt="Ninja research foundry producing deterministic Ninja bots inside the Master Trader runtime" width="100%">
+  <img src="docs/assets/ninja-runtime-architecture.svg" alt="Ninja research and validation producing deterministic Ninja implementations for the Master Trader runtime" width="100%">
 </p>
 
-The operational path is:
+Promotion path:
 
 ```text
 historical data + market history
@@ -233,11 +212,7 @@ Python strategy / overlay / risk module
 Master Trader fleet
 ```
 
-The crucial distinction is:
-
-> **Research may be probabilistic; runtime behavior must be deterministic.**
-
-There is no mandatory runtime `NinjaState` service and no generic policy engine required between Ninja and Master Trader.
+Research may use probabilistic models. Runtime decisions are deterministic Python. No `NinjaState` service or generic policy engine is required.
 
 ---
 
@@ -293,7 +268,7 @@ A validated runtime Ninja $k$ consumes only the subset of features it actually n
 
 ```math
 F_{k,t}
-subseteq
+\subseteq
 N_{a,t}
 ```
 
@@ -302,18 +277,16 @@ and executes a frozen Python decision rule:
 ```math
 a_{k,t}
 =
-pi_k(
+\pi_k(
 M_t,
 F_{k,t};
-	heta_k
+\theta_k
 )
 ```
 
-where $\pi_k$ is the implemented strategy/module and $\theta_k$ is its frozen parameter set. Given the same inputs, code version and parameters, the same action is produced.
+where $\pi_k$ is the implementation and $\theta_k$ its frozen parameter set. The same inputs, code version and parameters must produce the same action.
 
-For future target $Y_{a,t+h}$, the research question is not whether a Ninja coefficient looks interesting.
-
-It is whether Ninja adds predictive information beyond market data:
+For target $Y_{a,t+h}$, the primary test is incremental out-of-sample performance:
 
 ```math
 \Delta_h
@@ -329,15 +302,7 @@ Y_{t+h},
 ).
 ```
 
-If:
-
-```math
-\Delta_h \le 0
-```
-
-out of sample, the additional complexity is not justified.
-
-This is the central scientific criterion of the project.
+A candidate is rejected when the added information does not improve the relevant out-of-sample loss by a practically meaningful amount.
 
 ---
 
@@ -368,7 +333,7 @@ Raw counts are not enough because activity is highly seasonal and overdispersed.
 
 ### Robust attention surprise
 
-A first candidate:
+Candidate robust estimator:
 
 ```math
 AZ_{a,p,t}
@@ -431,7 +396,7 @@ f_{trend}(t)
 \gamma_p.
 ```
 
-This lets Ninja compare attention across different assets, platforms and times of day more honestly than raw count.
+The model adjusts raw counts for expected activity and overdispersion.
 
 ### Attention acceleration
 
@@ -451,7 +416,7 @@ and
 (A_{t-1}-A_{t-2}).
 ```
 
-This measures not only whether attention is high, but whether its growth itself is accelerating.
+The second difference is a candidate measure of attention acceleration.
 
 ### Author concentration
 
@@ -482,7 +447,7 @@ High entropy means attention is distributed across many authors.
 
 ### Effective attention
 
-Ten thousand messages copied from a small cluster of accounts do not equal ten thousand independent observations.
+Raw message count overstates independent activity when many posts are duplicated or concentrated among a small set of accounts.
 
 Given redundancy weights $w_i$:
 
@@ -523,7 +488,7 @@ A_{a,P,t}
 ]^\top.
 ```
 
-Ninja keeps these separate first.
+Platform series are estimated separately before any common factor is fitted.
 
 A simple common-attention factor can be estimated using PCA:
 
@@ -564,15 +529,13 @@ F_t
 \rho F_{t-1}+\eta_t.
 ```
 
-The project will not decide in advance whether common attention or platform residuals are more useful.
-
-That is an empirical question.
+Common and platform-specific components are compared by ablation.
 
 ---
 
 ## 3. Divergence and polarization
 
-Mean sentiment alone loses structure.
+Mean stance does not capture dispersion or polarization.
 
 Let stance values be:
 
@@ -605,7 +568,7 @@ Population B:
 50% extremely bearish
 ```
 
-They are not the same information state.
+The two distributions have the same mean but different dispersion and polarization.
 
 A candidate polarization measure is:
 
@@ -813,7 +776,7 @@ Official Source → News → X
 X → Reddit → YouTube
 ```
 
-These patterns may themselves carry information.
+Activation order is tested as an additional feature, not assumed to be informative.
 
 ### Multivariate Hawkes process
 
@@ -897,7 +860,7 @@ Market+Attention
 Market+Attention+HawkesFeatures.
 ```
 
-If Hawkes adds nothing out of sample, it is removed.
+Hawkes features are retained only if they add out-of-sample value over attention-only baselines.
 
 ---
 
@@ -999,9 +962,7 @@ Transfer Entropy is evidence of asymmetric predictive information under a chosen
 
 ## 7. Event Morphology
 
-The same class of event rarely repeats with identical wording.
-
-Ninja therefore represents an event structurally.
+Event Morphology represents events by structured attributes rather than exact wording.
 
 For event $e_i$:
 
@@ -1516,7 +1477,7 @@ The original strategy remains the baseline.
 
 ---
 
-# The first four experiments
+# Initial experiments
 
 The current preregistered experiment families are:
 
@@ -1617,116 +1578,48 @@ must not be treated as if they existed at publication time.
 
 # Promotion and deployment criteria
 
-A feature does not become a trading rule because it looks convincing.
+Research results do not affect live trading until they are implemented, frozen and retested as runtime code.
 
-The promotion ladder is:
-
-```text
-idea
-→ literature-backed
-→ preregistered
-→ replicated
-→ validated OOS
-→ prospective shadow
-→ production candidate
-→ Master Trader approval
-```
-
-A promoted factor becomes a versioned object.
-
-Example:
+The promotion sequence is:
 
 ```text
-feature:
-  name: attention_surprise_1h
-  version: att-1.2
-  estimator: negbin-residual
-  source_set: [...]
-  max_staleness: ...
-  quality_contract: ...
+hypothesis
+→ preregistered experiment
+→ historical replication
+→ chronological OOS validation
+→ deterministic Python implementation
+→ Master Trader backtest / walk-forward
+→ dry-run / shadow
+→ live approval
 ```
 
-Only then can a deterministic policy reference it.
+A promoted artifact must record:
 
----
+- experiment ID and supporting results;
+- code commit;
+- feature definitions and versions;
+- frozen parameters;
+- input freshness and missing-data behavior;
+- runtime configuration;
+- applicable assets, venues and horizons.
 
-## Policy action classes
+Runtime forms are limited to three categories:
 
-Ninja itself does not place orders.
+- **standalone strategy** — a normal Freqtrade strategy;
+- **strategy overlay** — deterministic logic added to an existing strategy;
+- **risk/regime module** — deterministic selection among predefined risk behaviors.
 
-Allowed policy outputs are intentionally narrow:
-
-### Observe
-
-Log only.
-
-### Entry gate
-
-```text
-ALLOW
-BLOCK
-```
-
-### Position-size multiplier
-
-Potentially a frozen finite set such as:
-
-```text
-0.00
-0.25
-0.50
-0.75
-1.00
-```
-
-Exact values require validation.
-
-### Risk mode
-
-Examples:
-
-```text
-normal
-cautious
-halt-new-risk
-```
-
-### Strategy input
-
-Expose a validated numeric factor to strategy code.
-
----
-
-## Example policy contract
-
-```yaml
-policy_id: keltner-event-risk-v1
-status: shadow
-strategy: KeltnerBounceV1
-experiment_id: E4-KELTNER-003
-feature_contract: ninja.features/1.x
-
-requirements:
-  max_staleness_seconds: 900
-  min_quality: 0.85
-
-action:
-  type: block_new_entry
-
-failure_mode: ignore_ninja
-```
-
-Threshold values are intentionally absent until established by a frozen validation process.
+Live approval is separate from research validation. A statistically useful factor can still be rejected if latency, data quality, fees, slippage or opportunity cost make it operationally useless.
 
 ---
 
 # Master Trader integration
 
-Master Trader already has the correct execution abstraction: **a fleet of deterministic bots and services**.
+Master Trader already provides the execution model Ninja needs: a registry of deterministic bots and services.
 
 The current repository uses `ft_userdata/bots_config.json` as the runtime registry/source of truth for which strategies are active. Ninja should integrate with that model rather than introducing a parallel policy runtime.
 
-The intended production shape is:
+Target runtime layout:
 
 ```text
 Master Trader fleet
@@ -1742,7 +1635,7 @@ Master Trader fleet
     └── Ninja C
 ```
 
-Each Ninja is normal deterministic Python code and participates in the same operational machinery as other bots:
+Each promoted Ninja uses the same operational machinery as the existing fleet:
 
 - its own runtime config;
 - dry-run or live mode;
@@ -1752,9 +1645,9 @@ Each Ninja is normal deterministic Python code and participates in the same oper
 - health reporting;
 - backtesting and walk-forward validation.
 
-For Ninjas that require public-information data, live collectors provide typed inputs in the same architectural spirit as the existing funding/OI external-data feeds. The strategy still consumes concrete values and executes deterministic code.
+Ninjas that require public-information data consume timestamped typed inputs, following the same causal-data pattern already used for external funding and OI.
 
-The first Master Trader integration should therefore focus on:
+The first integration PR should provide:
 
 1. a global family switch such as `NINJA_ENABLED`;
 2. a way to mark/register Ninja bots in the existing bot registry;
@@ -1784,7 +1677,7 @@ The existing Master Trader fleet behaves exactly as before.
 NINJA_ENABLED=true
 ```
 
-The configured Ninja family becomes eligible to run.
+Individually enabled Ninja entries may run.
 
 Each individual Ninja still has its own runtime status, for example:
 
@@ -1801,13 +1694,11 @@ NinjaC:
   dry_run: false
 ```
 
-This means `NINJA_ENABLED` is a **family-level kill switch**, not a replacement for per-bot control.
+`NINJA_ENABLED` is a family-level switch; per-bot configuration remains authoritative.
 
 ## Dry-run / shadow evidence
 
-A newly validated Ninja should enter Master Trader in dry-run or equivalent shadow mode before receiving live capital.
-
-That is not a separate global architecture layer; it is the normal promotion path of an individual bot.
+A promoted Ninja enters dry-run or equivalent shadow mode before live capital is enabled.
 
 Conceptually:
 
@@ -1823,9 +1714,7 @@ validated research
 
 # Repository boundary: separate project or part of Master Trader?
 
-This is intentionally not treated as settled forever.
-
-There are two technically defensible positions.
+Repository layout is an implementation choice; the research/runtime boundary is the invariant.
 
 ## Separate Ninja repository
 
@@ -1851,9 +1740,7 @@ Advantages:
 
 ## Current decision
 
-The **logical boundary is mandatory**.
-
-The **physical repository boundary is provisional**.
+Ninja remains separate while research requires large datasets and experimental dependencies. Promoted runtime code belongs with Master Trader.
 
 Today Ninja is separate because the current workload is dominated by historical research, large datasets, semantic extraction and experimental mathematics.
 
@@ -1885,11 +1772,9 @@ The full architectural decision is documented in:
 
 ---
 
-# Role of LLMs, embeddings and local models
+# Semantic processing
 
-Ninja may use probabilistic models before the deterministic boundary.
-
-The correct pattern is:
+Probabilistic models may be used to normalize or classify unstructured inputs:
 
 ```text
 unstructured text
@@ -1905,13 +1790,7 @@ validation
 deterministic factor contract
 ```
 
-Not:
-
-```text
-LLM
- ↓
-BUY / SELL
-```
+Order decisions remain in deterministic runtime code.
 
 ---
 
@@ -1935,7 +1814,7 @@ The actual routing will be benchmarked.
 
 ## Extraction versus financial meaning
 
-This distinction is fundamental.
+Semantic extraction and financial weighting are separate problems.
 
 A model may extract:
 
@@ -1946,21 +1825,19 @@ first_party = true
 confirmation = confirmed
 ```
 
-But it should not invent:
+Financial impact is not assigned by the extractor:
 
 ```text
 financial_severity = 0.93
 ```
 
-The financial consequence must be learned from historical outcomes.
-
-> **Semantic extraction may be probabilistic. Financial weighting must be empirical.**
+Financial weights are estimated from historical outcomes and frozen by the validated implementation.
 
 ---
 
 # Validation rules
 
-Ninja is structurally vulnerable to overfitting because it can generate many features.
+The search space is large enough that multiple-testing and selection bias are first-order risks.
 
 Suppose the project considers:
 
@@ -1980,9 +1857,7 @@ Suppose the project considers:
 
 possible combinations.
 
-Some will look excellent by chance.
-
-Therefore headline claims require:
+Accordingly, headline claims require:
 
 - chronological train/validation/test;
 - untouched final test;
@@ -2000,7 +1875,7 @@ Therefore headline claims require:
 
 Messages are not independent experiments.
 
-One million tweets about one event may still represent essentially one event episode.
+Many messages can belong to the same underlying event and cannot be treated as independent samples.
 
 Ninja therefore distinguishes:
 
@@ -2014,7 +1889,7 @@ event episodes
 effective sample size
 ```
 
-Raw post count is never treated as statistical N without justification.
+Reported sample size must reflect the effective independent unit used by the test.
 
 ---
 
@@ -2087,7 +1962,7 @@ Depending on target:
 
 # Current evidence status
 
-The project intentionally labels what is known and what is not.
+Status labels distinguish literature support from Ninja's own validation.
 
 | Area | Current status |
 |---|---|
@@ -2225,15 +2100,13 @@ prospective shadow
 execution economics
 ```
 
-may a Ninja policy become a production candidate.
+may a Ninja implementation be considered for live approval.
 
 ---
 
-# Project map and deeper technical documents
+# Repository map
 
-The README is intended to explain the complete project at a high level.
-
-The files below exist for deeper technical review, not because the core concept is hidden from the README.
+Detailed specifications are split into the following documents.
 
 | Document | Purpose |
 |---|---|
@@ -2244,7 +2117,7 @@ The files below exist for deeper technical review, not because the core concept 
 | [Repository-boundary ADR](docs/ADR-001-REPOSITORY-BOUNDARY.md) | Ninja vs Master Trader repo tradeoff |
 | [Hypothesis registry](docs/HYPOTHESES.md) | preregistered N1–N10 hypotheses |
 | [Research program](docs/RESEARCH_PROGRAM.md) | staged empirical protocol |
-| [Master Trader integration](docs/MASTER_TRADER_INTEGRATION.md) | feature/policy boundary and runtime integration |
+| [Master Trader integration](docs/MASTER_TRADER_INTEGRATION.md) | runtime integration and promotion model |
 | [Validation status](docs/VALIDATION_STATUS.md) | exactly what is and is not validated |
 | [Experiments](experiments/README.md) | E1–E4 experimental program |
 | [Roadmap](ROADMAP.md) | project phases |
@@ -2252,27 +2125,21 @@ The files below exist for deeper technical review, not because the core concept 
 
 ---
 
-# Current thesis
+# Primary hypothesis and falsification criterion
 
-The strongest current working hypothesis is:
+The broad hypothesis is:
 
 ```math
-\boxed{
-\text{Market Response}
+Y_{t+h}
 =
 f(
-\text{Information Shock},
-\text{Propagation},
-\text{Market Susceptibility},
-\text{Market State}
+M_t,
+Q_t,
+T_t,
+S_t
 )
-}
++
+\epsilon_{t+h}
 ```
 
-The project is not designed to prove that equation.
-
-It is designed to make every component measurable enough to **reject it if it is wrong**.
-
-A beautiful model that does not add incremental out-of-sample information is discarded.
-
-That is the central rule of Ninja.
+Ninja is useful only if information-derived variables improve relevant out-of-sample metrics over market-only and existing-strategy baselines. Feature families or models that fail that test are not promoted.
