@@ -1,8 +1,8 @@
 # Master Trader integration
 
-## Goal
+## Objective
 
-A validated Ninja should feel like another member of the Master Trader fleet, not like a second trading system.
+Promoted Ninja implementations run through the existing Master Trader fleet model.
 
 Master Trader already provides:
 
@@ -15,27 +15,25 @@ Master Trader already provides:
 - portfolio circuit breaking;
 - capital-account semantics.
 
-Ninja should integrate into those mechanisms.
+Ninja should reuse these mechanisms rather than introduce a second runtime.
 
-## Global family switch
+## Family switch
 
 Proposed behavior:
 
 ```text
 NINJA_ENABLED=false
-  → ignore all Ninja-family bots and Ninja-only feed services
+  → ignore Ninja-family bots and Ninja-only feeds
 
 NINJA_ENABLED=true
-  → load Ninja-family entries that are individually enabled
+  → load individually enabled Ninja-family entries
 ```
 
-This is a family-level kill switch.
-
-It does not replace per-bot configuration.
+This is a family-level switch. Per-bot configuration remains authoritative.
 
 ## Per-Ninja configuration
 
-A future registry entry could look conceptually like:
+Illustrative registry entry:
 
 ```json
 {
@@ -50,21 +48,17 @@ A future registry entry could look conceptually like:
 }
 ```
 
-The actual `dry_run` flag should remain in the strategy runtime config, consistent with the existing Master Trader model.
+The example is not a frozen schema. The runtime `dry_run` flag should remain in the strategy configuration, consistent with the current Master Trader setup.
 
-The example name and fields are illustrative until the first Ninja is validated.
+## Supported runtime forms
 
-## Runtime artifact types
+### Standalone strategy
 
-### Standalone Ninja strategy
+A normal Freqtrade strategy that owns its entry, exit and risk logic.
 
-A normal Freqtrade strategy.
+### Strategy overlay
 
-It may open and manage its own trades.
-
-### Ninja overlay
-
-A deterministic Python module imported by an existing strategy.
+Deterministic logic imported by an existing strategy.
 
 Example:
 
@@ -73,41 +67,34 @@ KeltnerBounceV1
 + validated event-risk gate
 ```
 
-This should be used only if the overlay adds OOS value over the original strategy.
+The overlay is retained only if it improves the original strategy out of sample.
 
-### Ninja risk/regime module
+### Risk or regime module
 
-A deterministic module that selects among predefined risk behaviors.
-
-It does not invent risk settings at runtime.
+Deterministic selection among predefined risk behaviors.
 
 ## Live data dependencies
 
-A Ninja may depend on public-information features.
-
-For example:
+A Ninja may depend on public-information features:
 
 ```text
 Last30Days / crawler / public feed
         ↓
 normalization
         ↓
-typed feature file/cache
+typed feature file or cache
         ↓
 Ninja strategy
 ```
 
-This should follow the same causal discipline already used by external funding/OI inputs:
+Causal-data requirements:
 
-- timestamp data at observation;
-- detect staleness;
-- never fabricate historical values;
-- do not copy current observations backward into old candles;
-- define failure behavior explicitly.
+- timestamp observations when seen;
+- detect stale inputs;
+- never copy current observations backward into historical candles;
+- define failure behavior for missing data.
 
-## Promotion into Master Trader
-
-A candidate Ninja should move through:
+## Promotion
 
 ```text
 historical research
@@ -118,19 +105,11 @@ historical research
 → human live approval
 ```
 
-There is no separate global `POLICY` mode.
+Dry-run/shadow status belongs to each promoted implementation. There is no global `POLICY` mode.
 
-Dry-run/shadow status belongs to each promoted Ninja.
+## Evaluation
 
-## Strategy comparison
-
-For a standalone Ninja:
-
-```text
-Ninja strategy
-vs
-appropriate market-only / simple-strategy baselines
-```
+For a standalone strategy, compare against appropriate market-only or simple-strategy baselines.
 
 For an overlay:
 
@@ -140,48 +119,44 @@ vs
 OriginalStrategy + NinjaOverlay
 ```
 
-Required analysis includes:
+Report at least:
 
 - trade count;
-- winners/losers;
+- winners and losers;
 - MAE/MFE;
-- max drawdown;
+- maximum drawdown;
 - expected shortfall;
 - opportunity cost;
 - fees/slippage;
 - regime stability.
 
-## Existing fleet must remain intact
+## Compatibility requirement
 
-The first Master Trader PR should prove:
+The first Master Trader integration must prove:
 
 ```text
 NINJA_ENABLED=false
-→ current fleet semantics unchanged
+→ existing fleet semantics unchanged
 ```
 
-The integration should not change existing strategies merely because Ninja exists.
+Existing strategies should not change because the Ninja integration is present.
 
-## What stays out of Master Trader
+## What remains outside Master Trader
 
-Unless required by a promoted bot, Master Trader should not contain:
+Unless required by a promoted implementation, Master Trader should not contain:
 
 - historical corpora;
 - notebooks;
-- experiment search code;
+- experiment-search code;
 - model-training code;
 - large embedding indexes;
 - literature artifacts.
 
 Only promoted runtime code and the minimum live data adapters it requires should cross the boundary.
 
-## LLM rule
+## LLM use
 
-A runtime Ninja must never ask an LLM what trade to make.
-
-An upstream model may transform unstructured text into typed fields.
-
-For example:
+An upstream model may convert unstructured text into typed fields:
 
 ```text
 raw post
@@ -191,22 +166,8 @@ first_party = true
 confirmation = confirmed
 ```
 
-The Ninja strategy may then use those fields through deterministic Python logic.
+The trading implementation consumes those fields through deterministic Python. It does not request BUY/SELL decisions from an LLM.
 
 ## Naming
 
-The six research domains should not be named as runtime bots by default.
-
-Runtime bot names should describe a validated behavior only after it exists.
-
-That keeps the ontology honest:
-
-```text
-Attention
-Propagation
-Event Morphology
-    = research domains
-
-<future validated strategy name>
-    = runtime Ninja
-```
+Attention, Propagation, Event Morphology and the other domains are research categories. Runtime names should identify a concrete validated implementation, not a research domain.
