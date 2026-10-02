@@ -250,7 +250,7 @@ Comparison:
 ~~~text
 original strategy
 vs
-same strategy + frozen Ninja policy
+same strategy + frozen Ninja overlay
 ~~~
 
 The original strategy remains the explicit baseline.
