@@ -2099,7 +2099,7 @@ The project intentionally labels what is known and what is not.
 | Transfer Entropy | methodological precedent; Ninja application pending |
 | Event Morphology | Ninja hypothesis; unvalidated |
 | Shock × Transmission × Susceptibility | core Ninja hypothesis; unvalidated as a combined model |
-| Master Trader policy value | unvalidated |
+| Master Trader runtime value | unvalidated |
 
 Ninja has **not yet**:
 
@@ -2144,7 +2144,7 @@ The project uses published evidence as **motivation**, not as local proof.
 ## Phase 0 — foundation
 
 - [x] Define Ninja / Master Trader boundary
-- [x] Define the six scouts
+- [x] Define the six research domains
 - [x] Record scientific foundation
 - [x] Formalize mathematical framework
 - [x] Formalize complexity-science interpretation
@@ -2203,15 +2203,15 @@ The project uses published evidence as **motivation**, not as local proof.
 - [ ] Store first_seen_at
 - [ ] Compare retrospective reconstruction against prospective capture
 
-## Phase 7 — Master Trader shadow
+## Phase 7 — first promoted Ninja implementation
 
-- [ ] Add optional Ninja client PR
-- [ ] Prove Ninja OFF parity
-- [ ] Log Ninja State beside trade opportunities
-- [ ] Accumulate prospective outcomes
+- [ ] Add the first validated Ninja strategy/module to the Master Trader fleet
+- [ ] Prove `NINJA_ENABLED=false` preserves the existing fleet
+- [ ] Run the promoted Ninja in dry-run / shadow and record its inputs, decisions and outcomes
+- [ ] Accumulate prospective dry-run outcomes
 - [ ] Do not modify trades
 
-## Phase 8 — first deterministic policy
+## Phase 8 — live approval
 
 Only after:
 
