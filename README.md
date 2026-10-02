@@ -1056,9 +1056,7 @@ k\in matched\ controls
 ].
 ```
 
-In plain language:
-
-> events that are structurally close should produce more similar market-response distributions than matched unrelated events.
+Operationally, the hypothesis is that structurally similar events should have more similar response distributions than matched controls.
 
 If that inequality does not survive held-out events, the event-morphology hypothesis fails.
 
@@ -1462,15 +1460,15 @@ Examples:
 ```text
 Keltner baseline
 vs
-Keltner + Ninja policy
+Keltner + Ninja overlay
 
 FundingFade baseline
 vs
-FundingFade + Ninja policy
+FundingFade + Ninja overlay
 
 OITrend baseline
 vs
-OITrend + Ninja policy
+OITrend + Ninja overlay
 ```
 
 The original strategy remains the baseline.
@@ -1495,9 +1493,7 @@ Detailed specifications:
 - [E3 — Propagation](experiments/E3_PROPAGATION.md)
 - [E4 — Event Morphology](experiments/E4_EVENT_MORPHOLOGY.md)
 
-The gating rule is explicit:
-
-> If E1 cannot reproduce a simple attention effect honestly, Ninja should not jump directly into sophisticated cascade models.
+E1 is a gate: if a basic attention effect cannot be reproduced under the registered protocol, propagation and morphology work should not be treated as higher-priority evidence.
 
 ---
 
@@ -1806,7 +1802,7 @@ Order decisions remain in deterministic runtime code.
 | ambiguous extraction | fast local LLM |
 | hard semantic cases | larger local LLM |
 | financial weighting | statistical model |
-| trade decision | deterministic Master Trader policy |
+| trade decision | deterministic Python strategy/module |
 
 The actual routing will be benchmarked.
 
