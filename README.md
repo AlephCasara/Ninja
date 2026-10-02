@@ -17,8 +17,8 @@ It is **not** an AI trader. It does not ask a language model whether BTC should 
 1. [Ninja in plain language](#ninja-in-plain-language)
 2. [The core idea: Shock → Transmission × Susceptibility](#the-core-idea-shock--transmission--susceptibility)
 3. [What Ninja is actually trying to measure](#what-ninja-is-actually-trying-to-measure)
-4. [The six scouts](#the-six-scouts)
-5. [From internet noise to deterministic action](#from-internet-noise-to-deterministic-action)
+4. [Research domains and runtime Ninjas](#research-domains-and-runtime-ninjas)
+5. [From research to deterministic Ninja bots](#from-research-to-deterministic-ninja-bots)
 6. [Scientific model](#scientific-model)
 7. [Mathematical core](#mathematical-core)
    - [Attention](#1-attention)
@@ -35,7 +35,7 @@ It is **not** an AI trader. It does not ask a language model whether BTC should 
 11. [Historical data strategy](#historical-data-strategy)
 12. [How Ninja is allowed to become action](#how-ninja-is-allowed-to-become-action)
 13. [Master Trader integration](#master-trader-integration)
-14. [Ninja OFF / SHADOW / POLICY](#ninja-off--shadow--policy)
+14. [Ninja OFF / ON and per-bot dry-run](#ninja-off--on-and-per-bot-dry-run)
 15. [Repository boundary: separate project or part of Master Trader?](#repository-boundary-separate-project-or-part-of-master-trader)
 16. [Role of LLMs, embeddings and local models](#role-of-llms-embeddings-and-local-models)
 17. [Validation rules](#validation-rules)
@@ -193,49 +193,76 @@ A scalar score would force arbitrary weights before evidence exists.
 
 ---
 
-# The six scouts
+# Research domains and runtime Ninjas
 
-The six scouts are **feature families**, not trading bots.
+The six domains below are **research domains**. They organize what Ninja studies; they are not six mandatory services and they are not automatically six trading bots.
 
-| Scout | Main question | Example outputs |
+| Research domain | Main question | Candidate measurements |
 |---|---|---|
-| **Attention** | Is collective attention abnormal? | attention surprise, acceleration, breadth, concentration |
-| **Divergence** | Do people/platforms agree? | stance variance, polarization, semantic homogeneity, cross-platform divergence |
-| **Narrative** | What is the information structure? | novelty, entropy, concentration, emergence, change points |
-| **Propagation** | How does information spread? | activation order, latency, Hawkes excitation, directed information flow |
+| **Attention** | Is collective attention abnormal? | surprise, acceleration, breadth, concentration |
+| **Divergence** | Do participants or platforms disagree? | stance variance, polarization, homogeneity, cross-platform divergence |
+| **Narrative** | Is the information structure changing? | novelty, entropy, concentration, emergence, change points |
+| **Propagation** | How is information spreading? | activation order, latency, Hawkes excitation, directed information flow |
 | **Event Morphology** | What kind of event is this structurally? | actor/action/target/family/authority/confirmation/scope |
-| **Susceptibility** | Can the current market amplify the event? | volatility, liquidity, funding, OI, liquidation and regime state |
+| **Susceptibility** | Is the current market vulnerable to amplification? | volatility, liquidity, funding, OI, liquidations, regime |
 
-A future runtime may expose workers such as:
+A **runtime Ninja** is something different: it is a validated deterministic implementation that runs inside the Master Trader fleet.
+
+A validated research result may become one of three things:
+
+1. a standalone Freqtrade strategy;
+2. a deterministic filter/overlay used by an existing strategy;
+3. a deterministic risk or regime module.
+
+A single runtime Ninja may use several research domains at once. There is no requirement that "Attention", "Propagation" or "Narrative" each become their own service or bot.
+
+Example only:
 
 ```text
-ninja-attention
-ninja-divergence
-ninja-narrative
-ninja-propagation
-ninja-events
-ninja-susceptibility
-ninja-state
-ninja-serving
+Ninja X
+  inputs:
+    attention surprise
+    propagation latency
+    funding
+    open interest
+
+  behavior:
+    deterministic Python entry/exit/risk logic
 ```
 
-But these services do not place trades.
+Names should be assigned to runtime Ninjas only after the underlying behavior has survived historical validation.
 
 ---
 
-# From internet noise to deterministic action
+# From research to deterministic Ninja bots
 
-Ninja transforms unstructured public information into validated, versioned inputs that Master Trader can consume deterministically.
+The Ninja repository is primarily a **research foundry**. Its job is to discover, test and package deterministic trading logic that can join the Master Trader fleet.
 
 <p align="center">
-  <img src="docs/assets/ninja-pipeline.svg" alt="Ninja pipeline: public information to validated deterministic Master Trader policy" width="100%">
+  <img src="docs/assets/ninja-runtime-architecture.svg" alt="Ninja research foundry producing deterministic Ninja bots inside the Master Trader runtime" width="100%">
 </p>
 
-**Core rule:**
+The operational path is:
 
-> **Information → Evidence → Policy**
+```text
+historical data + market history
+        ↓
+research domains
+        ↓
+registered experiments
+        ↓
+validated implementation
+        ↓
+Python strategy / overlay / risk module
+        ↓
+Master Trader fleet
+```
 
-Information never becomes trading action directly.
+The crucial distinction is:
+
+> **Research may be probabilistic; runtime behavior must be deterministic.**
+
+There is no mandatory runtime `NinjaState` service and no generic policy engine required between Ninja and Master Trader.
 
 ---
 
@@ -270,7 +297,7 @@ where the vector may include:
 - liquidations / order flow;
 - broad-market or BTC regime.
 
-Let Ninja state be
+For research, it is useful to denote the candidate Ninja feature space as:
 
 ```math
 N_{a,t}
@@ -285,7 +312,31 @@ CTX
 ]_{a,t}.
 ```
 
-For future target $Y_{a,t+h}$, the core test is not whether a Ninja coefficient looks interesting.
+This is **mathematical notation for a feature space**, not a required runtime object or service.
+
+A validated runtime Ninja $k$ consumes only the subset of features it actually needs:
+
+```math
+F_{k,t}
+subseteq
+N_{a,t}
+```
+
+and executes a frozen Python decision rule:
+
+```math
+a_{k,t}
+=
+pi_k(
+M_t,
+F_{k,t};
+	heta_k
+)
+```
+
+where $\pi_k$ is the implemented strategy/module and $\theta_k$ is its frozen parameter set. Given the same inputs, code version and parameters, the same action is produced.
+
+For future target $Y_{a,t+h}$, the research question is not whether a Ninja coefficient looks interesting.
 
 It is whether Ninja adds predictive information beyond market data:
 
@@ -1696,41 +1747,51 @@ Threshold values are intentionally absent until established by a frozen validati
 
 # Master Trader integration
 
-Master Trader is deterministic today.
+Master Trader already has the correct execution abstraction: **a fleet of deterministic bots and services**.
 
-Ninja must preserve that property.
+The current repository uses `ft_userdata/bots_config.json` as the runtime registry/source of truth for which strategies are active. Ninja should integrate with that model rather than introducing a parallel policy runtime.
 
-The intended relationship is:
+The intended production shape is:
 
 ```text
-NINJA
-  research / extraction / models
-          ↓
-  versioned typed factors
-════════ deterministic boundary ════════
-MASTER TRADER
-  policies / risk / execution
+Master Trader fleet
+├── existing bots
+│   ├── FundingFadeV1
+│   ├── KeltnerBounceV1
+│   ├── OITrendPullbackV1
+│   └── ...
+│
+└── Ninja family
+    ├── Ninja A
+    ├── Ninja B
+    └── Ninja C
 ```
 
-The first Master Trader integration should be small:
+Each Ninja is normal deterministic Python code and participates in the same operational machinery as other bots:
 
-1. optional Ninja configuration;
-2. read-only feature client;
-3. schema/freshness validation;
-4. shadow logging;
-5. tests proving Ninja OFF parity.
+- its own runtime config;
+- dry-run or live mode;
+- monitoring;
+- shared or dedicated capital-account semantics;
+- portfolio risk controls;
+- health reporting;
+- backtesting and walk-forward validation.
 
-Master Trader should **not** import:
+For Ninjas that require public-information data, live collectors provide typed inputs in the same architectural spirit as the existing funding/OI external-data feeds. The strategy still consumes concrete values and executes deterministic code.
 
-- crawlers;
-- browser automation;
-- LLM clients;
-- embedding models;
-- historical research code.
+The first Master Trader integration should therefore focus on:
+
+1. a global family switch such as `NINJA_ENABLED`;
+2. a way to mark/register Ninja bots in the existing bot registry;
+3. individual `active` and dry-run/live configuration per Ninja;
+4. optional Ninja data-feed services only for bots that require them;
+5. tests proving `NINJA_ENABLED=false` preserves the existing fleet.
+
+There is no need for Master Trader to import historical datasets, research notebooks or model-training code.
 
 ---
 
-# Ninja OFF / SHADOW / POLICY
+# Ninja OFF / ON and per-bot dry-run
 
 ## OFF
 
@@ -1738,51 +1799,50 @@ Master Trader should **not** import:
 NINJA_ENABLED=false
 ```
 
-Master Trader behaves exactly as it does today.
+No Ninja-tagged bot or optional Ninja feed service is started.
 
-This parity should be tested.
+The existing Master Trader fleet behaves exactly as before.
 
-## SHADOW
-
-```text
-NINJA_ENABLED=true
-NINJA_MODE=shadow
-```
-
-Ninja features are logged beside trade opportunities.
-
-No order is changed.
-
-A shadow record should include:
-
-```text
-decision_time
-strategy
-pair
-baseline_signal
-baseline_action
-ninja_feature_version
-ninja_features
-ninja_policy_version
-ninja_would_action
-actual_action
-future_outcome
-```
-
-In shadow:
-
-```text
-actual_action = baseline_action
-```
-
-## POLICY
+## ON
 
 ```text
 NINJA_ENABLED=true
-NINJA_MODE=policy
 ```
 
-Only explicitly approved versioned policies may alter behavior.
+The configured Ninja family becomes eligible to run.
+
+Each individual Ninja still has its own runtime status, for example:
+
+```text
+NinjaA:
+  active: true
+  dry_run: true
+
+NinjaB:
+  active: false
+
+NinjaC:
+  active: true
+  dry_run: false
+```
+
+This means `NINJA_ENABLED` is a **family-level kill switch**, not a replacement for per-bot control.
+
+## Dry-run / shadow evidence
+
+A newly validated Ninja should enter Master Trader in dry-run or equivalent shadow mode before receiving live capital.
+
+That is not a separate global architecture layer; it is the normal promotion path of an individual bot.
+
+Conceptually:
+
+```text
+validated research
+→ Ninja implementation
+→ backtest / walk-forward
+→ dry-run / shadow
+→ live approval
+```
 
 ---
 
@@ -1820,19 +1880,29 @@ The **logical boundary is mandatory**.
 
 The **physical repository boundary is provisional**.
 
-Today Ninja is separate because the current workload is dominated by:
+Today Ninja is separate because the current workload is dominated by historical research, large datasets, semantic extraction and experimental mathematics.
 
-```math
-research+data+probabilistic\ extraction
+That does **not** imply that validated Ninja bots should execute outside Master Trader.
+
+A reasonable long-term split is:
+
+```text
+Ninja repository
+  research
+  datasets/manifests
+  experiments
+  candidate implementations
+  validation evidence
+        ↓ promotion
+Master Trader repository/runtime
+  validated Ninja strategies/modules
+  bot configs
+  monitoring
+  risk
+  execution
 ```
 
-rather than:
-
-```math
-production\ trading\ logic.
-```
-
-If the live serving surface eventually becomes very small, it may be correct to move that serving layer into Master Trader.
+If the team prefers a monorepo later, this can be merged without changing the scientific method. The important boundary is between experimental research and promoted deterministic runtime code, not between two GitHub URLs.
 
 The full architectural decision is documented in:
 
