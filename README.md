@@ -141,7 +141,7 @@ Examples:
 
 The central systems hypothesis is:
 
-\[
+$
 \boxed{
 \text{Response Distribution}_{t+h}
 =
@@ -152,7 +152,7 @@ f(
 \text{Susceptibility}_t
 )
 }
-\]
+$
 
 The same event can produce different outcomes in different market states.
 
@@ -164,19 +164,19 @@ That is the mathematical version of the "same cyclone, different environment" in
 
 Ninja does **not** attempt to infer a single number such as:
 
-\`\`\`text
+```text
 social_sentiment = -0.61
-\`\`\`
+```
 
 That would collapse too much information.
 
 Instead, the project treats the information environment as a multidimensional state:
 
-\[
+$
 N_{a,t}
 =
 [ATT,DIV,NAR,TRN,EVT,CTX]_{a,t}
-\]
+$
 
 where:
 
@@ -208,7 +208,7 @@ The six scouts are **feature families**, not trading bots.
 
 A future runtime may expose workers such as:
 
-\`\`\`text
+```text
 ninja-attention
 ninja-divergence
 ninja-narrative
@@ -217,7 +217,7 @@ ninja-events
 ninja-susceptibility
 ninja-state
 ninja-serving
-\`\`\`
+```
 
 But these services do not place trades.
 
@@ -225,7 +225,7 @@ But these services do not place trades.
 
 # From internet noise to deterministic action
 
-\`\`\`mermaid
+```mermaid
 flowchart LR
     A[Public information<br/>social / news / official sources] --> B[Acquisition]
     B --> C[Timestamped observations]
@@ -238,11 +238,11 @@ flowchart LR
     H --> I[Prospective shadow]
     I -->|survives| J[Deterministic policy]
     J --> K[Master Trader]
-\`\`\`
+```
 
 The key rule is:
 
-\[
+$
 \boxed{
 Information
 \rightarrow
@@ -250,7 +250,7 @@ Evidence
 \rightarrow
 Policy
 }
-\]
+$
 
 Information never becomes action directly.
 
@@ -260,7 +260,7 @@ Information never becomes action directly.
 
 Let the conventional market state be
 
-\[
+$
 M_{a,t}
 =
 [
@@ -274,7 +274,7 @@ Q,
 B,
 \ldots
 ]_{a,t}
-\]
+$
 
 where the vector may include:
 
@@ -289,7 +289,7 @@ where the vector may include:
 
 Let Ninja state be
 
-\[
+$
 N_{a,t}
 =
 [
@@ -300,13 +300,13 @@ TRN,
 EVT,
 CTX
 ]_{a,t}.
-\]
+$
 
-For future target \(Y_{a,t+h}\), the core test is not whether a Ninja coefficient looks interesting.
+For future target $Y_{a,t+h}$, the core test is not whether a Ninja coefficient looks interesting.
 
 It is whether Ninja adds predictive information beyond market data:
 
-\[
+$
 \Delta_h
 =
 \mathcal L(
@@ -318,13 +318,13 @@ Y_{t+h},
 Y_{t+h},
 \hat g(M_t,N_t)
 ).
-\]
+$
 
 If:
 
-\[
+$
 \Delta_h \le 0
-\]
+$
 
 out of sample, the additional complexity is not justified.
 
@@ -342,9 +342,9 @@ The following section summarizes the main mathematical families directly in the 
 
 ### Raw counting process
 
-For asset \(a\), platform \(p\), interval \((t-\Delta,t]\):
+For asset $a$, platform $p$, interval $(t-\Delta,t]$:
 
-\[
+$
 N_{a,p,t}^{(\Delta)}
 =
 \sum_i
@@ -353,7 +353,7 @@ a\in entity(o_i),
 p_i=p,
 t-\Delta<t_i\le t
 ].
-\]
+$
 
 Raw counts are not enough because activity is highly seasonal and overdispersed.
 
@@ -361,7 +361,7 @@ Raw counts are not enough because activity is highly seasonal and overdispersed.
 
 A first candidate:
 
-\[
+$
 AZ_{a,p,t}
 =
 \frac{
@@ -373,7 +373,7 @@ N_{a,p,t}
 \operatorname{MAD}(\mathcal W_{a,p,t})
 +\epsilon
 }.
-\]
+$
 
 This measures how abnormal the current attention level is relative to a trailing historical baseline.
 
@@ -383,30 +383,30 @@ Social counts often have variance much larger than their mean.
 
 Assume:
 
-\[
+$
 N_t\sim NB(\mu_t,\phi)
-\]
+$
 
 with:
 
-\[
+$
 Var(N_t)
 =
 \mu_t+\frac{\mu_t^2}{\phi}.
-\]
+$
 
 Then:
 
-\[
+$
 AS_t
 =
 \frac{N_t-\mu_t}
 {\sqrt{\mu_t+\mu_t^2/\phi}}.
-\]
+$
 
 A baseline intensity may include:
 
-\[
+$
 \log\mu_t
 =
 \beta_0
@@ -420,45 +420,45 @@ f_{trend}(t)
 \gamma_a
 +
 \gamma_p.
-\]
+$
 
 This lets Ninja compare attention across different assets, platforms and times of day more honestly than raw count.
 
 ### Attention acceleration
 
-For normalized attention \(A_t\):
+For normalized attention $A_t$:
 
-\[
+$
 \Delta A_t=A_t-A_{t-1}
-\]
+$
 
 and
 
-\[
+$
 \Delta^2A_t
 =
 (A_t-A_{t-1})
 -
 (A_{t-1}-A_{t-2}).
-\]
+$
 
 This measures not only whether attention is high, but whether its growth itself is accelerating.
 
 ### Author concentration
 
-If author \(u\) produces share \(s_u\) of messages:
+If author $u$ produces share $s_u$ of messages:
 
-\[
+$
 HHI
 =
 \sum_u s_u^2.
-\]
+$
 
 A high HHI means attention is concentrated among few authors.
 
 ### Author entropy
 
-\[
+$
 H_A
 =
 -
@@ -467,7 +467,7 @@ H_A
 }{
 \log U
 }.
-\]
+$
 
 High entropy means attention is distributed across many authors.
 
@@ -475,9 +475,9 @@ High entropy means attention is distributed across many authors.
 
 Ten thousand messages copied from a small cluster of accounts do not equal ten thousand independent observations.
 
-Given redundancy weights \(w_i\):
+Given redundancy weights $w_i$:
 
-\[
+$
 N_{\text{eff}}
 =
 \frac{
@@ -485,15 +485,15 @@ N_{\text{eff}}
 }{
 \sum_i w_i^2
 }.
-\]
+$
 
 A candidate echo statistic is:
 
-\[
+$
 EchoRatio
 =
 1-\frac{N_{\text{eff}}}{N}.
-\]
+$
 
 This is a Ninja hypothesis that must be validated.
 
@@ -501,9 +501,9 @@ This is a Ninja hypothesis that must be validated.
 
 ## 2. Cross-platform attention
 
-For \(P\) sources:
+For $P$ sources:
 
-\[
+$
 \mathbf A_{a,t}
 =
 [
@@ -512,27 +512,27 @@ A_{a,2,t},
 \ldots,
 A_{a,P,t}
 ]^\top.
-\]
+$
 
 Ninja keeps these separate first.
 
 A simple common-attention factor can be estimated using PCA:
 
-\[
+$
 F_t
 =
 w_1^\top\mathbf A_t.
-\]
+$
 
 Platform-specific residual:
 
-\[
+$
 R_{p,t}
 =
 A_{p,t}
 -
 \hat\lambda_p F_t.
-\]
+$
 
 This gives two different objects:
 
@@ -541,19 +541,19 @@ This gives two different objects:
 
 A richer dynamic factor model is:
 
-\[
+$
 A_{p,t}
 =
 \lambda_pF_t+\epsilon_{p,t}
-\]
+$
 
 with latent dynamics such as:
 
-\[
+$
 F_t
 =
 \rho F_{t-1}+\eta_t.
-\]
+$
 
 The project will not decide in advance whether common attention or platform residuals are more useful.
 
@@ -567,74 +567,74 @@ Mean sentiment alone loses structure.
 
 Let stance values be:
 
-\[
+$
 s_i\in[-1,1].
-\]
+$
 
 Mean:
 
-\[
+$
 \mu_s=E[s].
-\]
+$
 
 Variance:
 
-\[
+$
 \sigma_s^2
 =
 E[(s-\mu_s)^2].
-\]
+$
 
 Two populations can both have mean zero:
 
-\`\`\`text
+```text
 Population A:
 everyone neutral
 
 Population B:
 50% extremely bullish
 50% extremely bearish
-\`\`\`
+```
 
 They are not the same information state.
 
 A candidate polarization measure is:
 
-\[
+$
 P
 =
 E[|s|]-|E[s]|.
-\]
+$
 
-For platform distributions \(P_p(s)\) and \(P_q(s)\), Ninja may use Jensen-Shannon divergence:
+For platform distributions $P_p(s)$ and $P_q(s)$, Ninja may use Jensen-Shannon divergence:
 
-\[
+$
 JSD(P_p,P_q)
 =
 \frac12 KL(P_p\|M)
 +
 \frac12 KL(P_q\|M),
-\]
+$
 
 where:
 
-\[
+$
 M
 =
 \frac12(P_p+P_q).
-\]
+$
 
 ### Semantic homogeneity
 
-For normalized embeddings \(z_i\):
+For normalized embeddings $z_i$:
 
-\[
+$
 H_S
 =
 \frac{2}{n(n-1)}
 \sum_{i<j}
 z_i^\top z_j.
-\]
+$
 
 This can help distinguish:
 
@@ -651,17 +651,17 @@ Interpretation remains empirical.
 
 Let topic proportions be:
 
-\[
+$
 \pi_t
 =
 [
 \pi_{1,t},\ldots,\pi_{K,t}
 ].
-\]
+$
 
 Normalized Shannon entropy:
 
-\[
+$
 H_N(t)
 =
 -
@@ -670,45 +670,45 @@ H_N(t)
 }{
 \log K
 }.
-\]
+$
 
 Narrative concentration:
 
-\[
+$
 C_N(t)
 =
 1-H_N(t).
-\]
+$
 
 High concentration means discussion is converging on fewer narratives.
 
 ### Novelty
 
-For embedding \(z_i\) and historical reference set \(\mathcal H_t\):
+For embedding $z_i$ and historical reference set $\mathcal H_t$:
 
-\[
+$
 Novelty_i
 =
 1-
 \max_{j\in\mathcal H_t}
 \cos(z_i,z_j).
-\]
+$
 
 A distribution-aware alternative is Mahalanobis distance:
 
-\[
+$
 D_M^2(z_i)
 =
 (z_i-\mu_t)^\top
 \Sigma_t^{-1}
 (z_i-\mu_t).
-\]
+$
 
 ### Narrative emergence
 
 A deliberately falsifiable Ninja candidate is:
 
-\[
+$
 Emergence_t
 =
 Novelty_t
@@ -716,7 +716,7 @@ Novelty_t
 AttentionAcceleration_t
 \times
 Breadth_t.
-\]
+$
 
 This exact multiplicative form is **not assumed to be correct**.
 
@@ -731,7 +731,7 @@ It must compete against:
 
 Narrative change can also be represented as a sequential change problem:
 
-\[
+$
 \tau^\*
 =
 \inf
@@ -744,7 +744,7 @@ P_{X,\text{post}}
 >
 \theta
 \}.
-\]
+$
 
 Candidate methods include:
 
@@ -759,9 +759,9 @@ Candidate methods include:
 
 ### Activation time
 
-For source \(p\):
+For source $p$:
 
-\[
+$
 t_p^\*
 =
 \inf
@@ -769,23 +769,23 @@ t_p^\*
 t:
 A_{p,t}>\theta_p
 \}.
-\]
+$
 
 Cross-platform latency:
 
-\[
+$
 L_{p\to q}
 =
 t_q^\*-t_p^\*.
-\]
+$
 
 This is more precise than calling it "velocity" because social platforms do not have a physical spatial distance.
 
 ### Activation order
 
-For event \(e\):
+For event $e$:
 
-\[
+$
 \Pi_e
 =
 rank(
@@ -793,23 +793,23 @@ t_1^\*,
 \ldots,
 t_P^\*
 ).
-\]
+$
 
 Examples:
 
-\`\`\`text
+```text
 Reddit → X → News
 Official Source → News → X
 X → Reddit → YouTube
-\`\`\`
+```
 
 These patterns may themselves carry information.
 
 ### Multivariate Hawkes process
 
-For source/type \(p\):
+For source/type $p$:
 
-\[
+$
 \lambda_p(t)
 =
 \mu_p(t)
@@ -817,75 +817,75 @@ For source/type \(p\):
 \sum_q
 \int_0^t
 \phi_{pq}(t-s)dN_q(s).
-\]
+$
 
 With exponential kernel:
 
-\[
+$
 \phi_{pq}(\tau)
 =
 \alpha_{pq}
 e^{-\beta_{pq}\tau}
 \mathbf 1_{\tau>0}.
-\]
+$
 
 Integrated excitation:
 
-\[
+$
 G_{pq}
 =
 \int_0^\infty
 \phi_{pq}(\tau)d\tau
 =
 \frac{\alpha_{pq}}{\beta_{pq}}.
-\]
+$
 
 Interpretation:
 
-\[
+$
 G_{pq}
 \approx
 \text{expected direct offspring in process }p
 \text{ produced by one event in }q.
-\]
+$
 
 For a stationary linear Hawkes process:
 
-\[
+$
 \rho(G)<1
-\]
+$
 
 is the standard stability condition.
 
-In the scalar case, if branching ratio is \(n<1\):
+In the scalar case, if branching ratio is $n<1$:
 
-\[
+$
 E[C]
 =
 \frac{1}{1-n}.
-\]
+$
 
-As \(n\to1^{-}\), expected cascade amplification grows sharply.
+As $n\to1^{-}$, expected cascade amplification grows sharply.
 
 In the multivariate case:
 
-\[
+$
 (I-G)^{-1}
-\]
+$
 
 is related to cumulative excitation/amplification under the model assumptions.
 
-Ninja does **not** assume that a large \(\rho(G)\) automatically predicts financial risk.
+Ninja does **not** assume that a large $\rho(G)$ automatically predicts financial risk.
 
 The actual test is:
 
-\[
+$
 Market+Attention
 \quad
 \text{vs}
 \quad
 Market+Attention+HawkesFeatures.
-\]
+$
 
 If Hawkes adds nothing out of sample, it is removed.
 
@@ -895,19 +895,19 @@ If Hawkes adds nothing out of sample, it is removed.
 
 Correlation cannot distinguish:
 
-\[
+$
 Social\to Market
-\]
+$
 
 from:
 
-\[
+$
 Market\to Social.
-\]
+$
 
 Transfer Entropy attempts to measure directional predictive information.
 
-\[
+$
 TE_{X\to Y}
 =
 \sum
@@ -918,17 +918,17 @@ p(y_{t+1}\mid y_t^{(k)},x_t^{(l)})
 }{
 p(y_{t+1}\mid y_t^{(k)})
 }.
-\]
+$
 
 Interpretation:
 
-> How much extra information about the future of \(Y\) is provided by the past of \(X\), beyond the past of \(Y\) itself?
+> How much extra information about the future of $Y$ is provided by the past of $X$, beyond the past of $Y$ itself?
 
 Finite samples produce bias.
 
 A surrogate-corrected form is:
 
-\[
+$
 ETE_{X\to Y}
 =
 TE_{X\to Y}
@@ -936,21 +936,21 @@ TE_{X\to Y}
 E[
 TE_{X^{shuffle}\to Y}
 ].
-\]
+$
 
 Candidate directional diagnostic:
 
-\[
+$
 NetFlow_{X,Y}
 =
 ETE_{X\to Y}
 -
 ETE_{Y\to X}.
-\]
+$
 
 A more relevant form for Ninja is conditional Transfer Entropy:
 
-\[
+$
 TE_{X\to Y\mid Z}
 =
 I(
@@ -960,9 +960,9 @@ Y_{future}
 Y_{past},
 Z_{past}
 ).
-\]
+$
 
-Here \(Z\) can represent:
+Here $Z$ can represent:
 
 - current market state;
 - common news source;
@@ -971,17 +971,17 @@ Here \(Z\) can represent:
 
 This helps reduce false conclusions such as:
 
-\`\`\`text
+```text
 X → BTC
-\`\`\`
+```
 
 when the true structure is:
 
-\`\`\`text
+```text
 macro announcement
    ├──→ X
    └──→ BTC
-\`\`\`
+```
 
 Transfer Entropy is evidence of asymmetric predictive information under a chosen estimator. It is **not automatic proof of causality**.
 
@@ -993,9 +993,9 @@ The same class of event rarely repeats with identical wording.
 
 Ninja therefore represents an event structurally.
 
-For event \(e_i\):
+For event $e_i$:
 
-\[
+$
 e_i
 =
 (
@@ -1004,18 +1004,18 @@ c_i,
 z_i,
 m_i
 )
-\]
+$
 
 where:
 
-- \(t_i\) = timestamp;
-- \(c_i\) = categorical morphology;
-- \(z_i\) = semantic embedding;
-- \(m_i\) = numerical/context state.
+- $t_i$ = timestamp;
+- $c_i$ = categorical morphology;
+- $z_i$ = semantic embedding;
+- $m_i$ = numerical/context state.
 
 Candidate categorical fields:
 
-\`\`\`text
+```text
 actor_class
 action_class
 target_class
@@ -1026,11 +1026,11 @@ authority
 confirmation
 scope
 affected_entities
-\`\`\`
+```
 
 A mixed event distance may be:
 
-\[
+$
 d_E(i,j)
 =
 w_c d_G(c_i,c_j)
@@ -1043,15 +1043,15 @@ w_s
 w_n d_M(m_i,m_j)
 +
 w_x d_X(x_i,x_j).
-\]
+$
 
-The weights \(w\) cannot be tuned on the final test set.
+The weights $w$ cannot be tuned on the final test set.
 
 ### Market-response vector
 
-For horizon \(h\):
+For horizon $h$:
 
-\[
+$
 R_i(h)
 =
 [
@@ -1065,13 +1065,13 @@ MAE_i,
 MFE_i,
 J_i
 ].
-\]
+$
 
 ### Core morphology hypothesis
 
 If morphology is meaningful:
 
-\[
+$
 E[
 d_R(R_i,R_j)
 \mid
@@ -1083,7 +1083,7 @@ d_R(R_i,R_k)
 \mid
 k\in matched\ controls
 ].
-\]
+$
 
 In plain language:
 
@@ -1095,7 +1095,7 @@ If that inequality does not survive held-out events, the event-morphology hypoth
 
 Only if morphology works:
 
-\[
+$
 w_i(e)
 \propto
 \exp
@@ -1106,11 +1106,11 @@ d_E(e,i)^2
 2\sigma^2
 }
 \right).
-\]
+$
 
 Then:
 
-\[
+$
 \hat P(R\mid e)
 =
 \frac{
@@ -1119,7 +1119,7 @@ w_i(e)\delta_{R_i}
 }{
 \sum_i w_i(e)
 }.
-\]
+$
 
 The output is not:
 
@@ -1127,13 +1127,13 @@ The output is not:
 
 It is something closer to:
 
-\`\`\`text
+```text
 Among structurally similar historical events:
 P(jump > 3σ within 4h)      = ...
 P(drawdown > 5% in 24h)    = ...
 median volatility increase = ...
 median volume surprise      = ...
-\`\`\`
+```
 
 That remains quantitative and auditable.
 
@@ -1143,7 +1143,7 @@ That remains quantitative and auditable.
 
 Define market susceptibility as:
 
-\[
+$
 S_{a,t}
 =
 [
@@ -1159,11 +1159,11 @@ Regime_t,
 LeverageProxy_t,
 \ldots
 ].
-\]
+$
 
 The core interaction model is:
 
-\[
+$
 Y_{t+h}
 =
 f(
@@ -1178,17 +1178,17 @@ Q_tT_tS_t
 )
 +
 \epsilon_{t+h}
-\]
+$
 
 where:
 
-- \(Q\) = information shock;
-- \(T\) = transmission;
-- \(S\) = susceptibility.
+- $Q$ = information shock;
+- $T$ = transmission;
+- $S$ = susceptibility.
 
 A useful operational definition is:
 
-\[
+$
 \chi(S)
 =
 \frac{
@@ -1196,7 +1196,7 @@ A useful operational definition is:
 }{
 \partial Q
 }.
-\]
+$
 
 This asks:
 
@@ -1305,13 +1305,13 @@ SOC is explanatory inspiration unless it produces validated state variables.
 
 A generic scaling relation is:
 
-\[
+$
 Z(q,s)
 \sim
 s^{\tau(q)}.
-\]
+$
 
-Nonlinear \(\tau(q)\) suggests multiscaling.
+Nonlinear $\tau(q)$ suggests multiscaling.
 
 Potential future applications include:
 
@@ -1348,7 +1348,7 @@ Ninja should not start with the most sophisticated mathematics.
 
 The order is:
 
-\`\`\`text
+```text
 simple, falsifiable effects
         ↓
 cross-platform structure
@@ -1362,7 +1362,7 @@ event morphology
 strategy overlays
         ↓
 prospective live validation
-\`\`\`
+```
 
 ---
 
@@ -1403,7 +1403,7 @@ This is the first scientific gate.
 
 Only after individual platforms work:
 
-\`\`\`text
+```text
 market only
 market + X
 market + Reddit
@@ -1412,7 +1412,7 @@ market + YouTube
 market + common attention
 market + platform residuals
 market + validated combinations
-\`\`\`
+```
 
 This directly answers:
 
@@ -1450,13 +1450,13 @@ Estimate:
 
 Primary test:
 
-\[
+$
 Market+Attention
 \quad
 \text{vs}
 \quad
 Market+Attention+Propagation.
-\]
+$
 
 ---
 
@@ -1488,7 +1488,7 @@ Only validated factors may be tested against actual Master Trader strategies.
 
 Examples:
 
-\`\`\`text
+```text
 Keltner baseline
 vs
 Keltner + Ninja policy
@@ -1500,7 +1500,7 @@ FundingFade + Ninja policy
 OITrend baseline
 vs
 OITrend + Ninja policy
-\`\`\`
+```
 
 The original strategy remains the baseline.
 
@@ -1552,13 +1552,13 @@ Candidate historical sources include:
 
 The storage philosophy is:
 
-\`\`\`text
+```text
 temporary Bronze
       ↓
 normalized Silver
       ↓
 small analytical Gold
-\`\`\`
+```
 
 Raw public data may be deleted after reproducibility manifests/hashes are preserved when it can be regenerated.
 
@@ -1572,25 +1572,25 @@ Historical reconstruction has a major trap.
 
 A document may have:
 
-\`\`\`text
+```text
 published_at = 13:30
-\`\`\`
+```
 
 but the research system may only have observed it at:
 
-\`\`\`text
+```text
 first_seen_at = 14:17
-\`\`\`
+```
 
 A simulated decision at 14:00 cannot use it.
 
 Prospective Ninja therefore records at least:
 
-\`\`\`text
+```text
 published_at
 first_seen_at
 collected_at
-\`\`\`
+```
 
 Historical datasets that cannot reconstruct first-seen time receive lower epistemic confidence.
 
@@ -1611,7 +1611,7 @@ A feature does not become a trading rule because it looks convincing.
 
 The promotion ladder is:
 
-\`\`\`text
+```text
 idea
 → literature-backed
 → preregistered
@@ -1620,13 +1620,13 @@ idea
 → prospective shadow
 → production candidate
 → Master Trader approval
-\`\`\`
+```
 
 A promoted factor becomes a versioned object.
 
 Example:
 
-\`\`\`text
+```text
 feature:
   name: attention_surprise_1h
   version: att-1.2
@@ -1634,7 +1634,7 @@ feature:
   source_set: [...]
   max_staleness: ...
   quality_contract: ...
-\`\`\`
+```
 
 Only then can a deterministic policy reference it.
 
@@ -1652,22 +1652,22 @@ Log only.
 
 ### Entry gate
 
-\`\`\`text
+```text
 ALLOW
 BLOCK
-\`\`\`
+```
 
 ### Position-size multiplier
 
 Potentially a frozen finite set such as:
 
-\`\`\`text
+```text
 0.00
 0.25
 0.50
 0.75
 1.00
-\`\`\`
+```
 
 Exact values require validation.
 
@@ -1675,11 +1675,11 @@ Exact values require validation.
 
 Examples:
 
-\`\`\`text
+```text
 normal
 cautious
 halt-new-risk
-\`\`\`
+```
 
 ### Strategy input
 
@@ -1689,7 +1689,7 @@ Expose a validated numeric factor to strategy code.
 
 ## Example policy contract
 
-\`\`\`yaml
+```yaml
 policy_id: keltner-event-risk-v1
 status: shadow
 strategy: KeltnerBounceV1
@@ -1704,7 +1704,7 @@ action:
   type: block_new_entry
 
 failure_mode: ignore_ninja
-\`\`\`
+```
 
 Threshold values are intentionally absent until established by a frozen validation process.
 
@@ -1718,7 +1718,7 @@ Ninja must preserve that property.
 
 The intended relationship is:
 
-\`\`\`text
+```text
 NINJA
   research / extraction / models
           ↓
@@ -1726,7 +1726,7 @@ NINJA
 ════════ deterministic boundary ════════
 MASTER TRADER
   policies / risk / execution
-\`\`\`
+```
 
 The first Master Trader integration should be small:
 
@@ -1750,9 +1750,9 @@ Master Trader should **not** import:
 
 ## OFF
 
-\`\`\`text
+```text
 NINJA_ENABLED=false
-\`\`\`
+```
 
 Master Trader behaves exactly as it does today.
 
@@ -1760,10 +1760,10 @@ This parity should be tested.
 
 ## SHADOW
 
-\`\`\`text
+```text
 NINJA_ENABLED=true
 NINJA_MODE=shadow
-\`\`\`
+```
 
 Ninja features are logged beside trade opportunities.
 
@@ -1771,7 +1771,7 @@ No order is changed.
 
 A shadow record should include:
 
-\`\`\`text
+```text
 decision_time
 strategy
 pair
@@ -1783,20 +1783,20 @@ ninja_policy_version
 ninja_would_action
 actual_action
 future_outcome
-\`\`\`
+```
 
 In shadow:
 
-\`\`\`text
+```text
 actual_action = baseline_action
-\`\`\`
+```
 
 ## POLICY
 
-\`\`\`text
+```text
 NINJA_ENABLED=true
 NINJA_MODE=policy
-\`\`\`
+```
 
 Only explicitly approved versioned policies may alter behavior.
 
@@ -1838,15 +1838,15 @@ The **physical repository boundary is provisional**.
 
 Today Ninja is separate because the current workload is dominated by:
 
-\[
+$
 research+data+probabilistic\ extraction
-\]
+$
 
 rather than:
 
-\[
+$
 production\ trading\ logic.
-\]
+$
 
 If the live serving surface eventually becomes very small, it may be correct to move that serving layer into Master Trader.
 
@@ -1862,7 +1862,7 @@ Ninja may use probabilistic models before the deterministic boundary.
 
 The correct pattern is:
 
-\`\`\`text
+```text
 unstructured text
       ↓
 rules / embeddings / classifier / LLM
@@ -1874,15 +1874,15 @@ statistics / factor construction
 validation
       ↓
 deterministic factor contract
-\`\`\`
+```
 
 Not:
 
-\`\`\`text
+```text
 LLM
  ↓
 BUY / SELL
-\`\`\`
+```
 
 ---
 
@@ -1910,18 +1910,18 @@ This distinction is fundamental.
 
 A model may extract:
 
-\`\`\`text
+```text
 actor_type = exchange
 action = withdrawal_pause
 first_party = true
 confirmation = confirmed
-\`\`\`
+```
 
 But it should not invent:
 
-\`\`\`text
+```text
 financial_severity = 0.93
-\`\`\`
+```
 
 The financial consequence must be learned from historical outcomes.
 
@@ -1935,7 +1935,7 @@ Ninja is structurally vulnerable to overfitting because it can generate many fea
 
 Suppose the project considers:
 
-\[
+$
 40\ features
 \times
 10\ horizons
@@ -1947,7 +1947,7 @@ Suppose the project considers:
 5\ regimes
 =
 280{,}000
-\]
+$
 
 possible combinations.
 
@@ -1975,7 +1975,7 @@ One million tweets about one event may still represent essentially one event epi
 
 Ninja therefore distinguishes:
 
-\`\`\`text
+```text
 messages
 unique authors
 independent communities
@@ -1983,7 +1983,7 @@ independent platforms
 time windows
 event episodes
 effective sample size
-\`\`\`
+```
 
 Raw post count is never treated as statistical N without justification.
 
@@ -1995,7 +1995,7 @@ Every claim must beat a conventional baseline.
 
 Example:
 
-\[
+$
 RV_{t+4h}
 =
 f(
@@ -2006,19 +2006,19 @@ Funding_t,
 OI_t,
 Regime_t
 ).
-\]
+$
 
 Then compare:
 
-\[
+$
 MarketOnly
-\]
+$
 
 against:
 
-\[
+$
 Market+Ninja.
-\]
+$
 
 A factor that is interesting but adds no OOS value is not promoted.
 
@@ -2030,7 +2030,7 @@ Depending on target:
 
 ### Regression
 
-- OOS \(R^2\);
+- OOS $R^2$;
 - MAE;
 - RMSE;
 - likelihood.
@@ -2186,7 +2186,7 @@ The project uses published evidence as **motivation**, not as local proof.
 
 Only after:
 
-\`\`\`text
+```text
 historical OOS
 +
 robustness
@@ -2194,7 +2194,7 @@ robustness
 prospective shadow
 +
 execution economics
-\`\`\`
+```
 
 may a Ninja policy become a production candidate.
 
@@ -2227,7 +2227,7 @@ The files below exist for deeper technical review, not because the core concept 
 
 The strongest current working hypothesis is:
 
-\[
+$
 \boxed{
 \text{Market Response}
 =
@@ -2238,7 +2238,7 @@ f(
 \text{Market State}
 )
 }
-\]
+$
 
 The project is not designed to prove that equation.
 
