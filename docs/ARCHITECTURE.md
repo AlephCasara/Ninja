@@ -290,7 +290,9 @@ Rules:
 
 ## Repository boundary
 
-Ninja owns:
+The logical boundary is stronger than the repository boundary.
+
+Ninja owns the *information-research domain*:
 
 - data acquisition interfaces;
 - historical research;
@@ -299,7 +301,7 @@ Ninja owns:
 - validation;
 - live factor serving.
 
-Master Trader owns:
+Master Trader owns the *trading-authority domain*:
 
 - strategy logic;
 - risk authority;
@@ -307,4 +309,18 @@ Master Trader owns:
 - portfolio circuit breaking;
 - capital allocation.
 
-The integration surface should remain small enough that Ninja can be replaced without rewriting Master Trader.
+Today these domains are in separate repositories because their dependencies, data volumes and release cadences differ. That decision is provisional. If only a small deterministic serving surface survives research, the serving layer may later move into Master Trader while historical research remains external.
+
+The invariant is the contract:
+
+```text
+probabilistic / research side
+        ↓
+versioned Ninja factors
+════════ deterministic boundary ════════
+Master Trader policy / execution
+```
+
+See [ADR-001](ADR-001-REPOSITORY-BOUNDARY.md).
+
+The integration surface should remain small enough that Ninja can be replaced, relocated or merged without rewriting strategy semantics.
