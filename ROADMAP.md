@@ -2,12 +2,12 @@
 
 ## Phase 0 — foundation — current
 
-- [x] Define Ninja / Master Trader boundary
-- [x] Define six scout families
+- [x] Define Ninja as a research/validation project
+- [x] Define six research domains
 - [x] Record scientific foundation
 - [x] Create hypothesis registry
 - [x] Define validation ladder
-- [x] Define Master Trader deterministic policy boundary
+- [x] Align promoted Ninja implementations with the existing Master Trader bot fleet
 - [x] State clearly that independent historical validation is still pending
 
 ## Phase 1 — historical validation substrate
@@ -22,7 +22,7 @@
 
 ## Phase 2 — E1 Attention Replication
 
-- [ ] Build first Attention Scout feature set
+- [ ] Build first attention feature set
 - [ ] Reproduce simple attention statistics
 - [ ] Test volatility
 - [ ] Test volume
@@ -32,7 +32,7 @@
 
 **Gate:** do not escalate infrastructure merely because E1 is interesting in-sample.
 
-## Phase 3 — Cross-platform / structure
+## Phase 3 — cross-platform / information structure
 
 - [ ] Add second information platform
 - [ ] Run platform ablation
@@ -40,12 +40,12 @@
 - [ ] Preserve platform residuals
 - [ ] Run E2 disagreement/narrative tests
 
-## Phase 4 — Propagation
+## Phase 4 — propagation
 
 - [ ] Activation timing
 - [ ] Hawkes prototype
-- [ ] Transfer-entropy prototype
-- [ ] Compare propagation vs attention-only
+- [ ] Transfer Entropy prototype
+- [ ] Compare propagation against attention-only baselines
 
 ## Phase 5 — Event Morphology
 
@@ -61,33 +61,37 @@
 - [ ] Integrate Last30Days as one collector/provider
 - [ ] Add dedicated source adapters where justified
 - [ ] Store first_seen_at
-- [ ] Compare historical-reconstruction factors with prospective factors
+- [ ] Compare historical reconstruction against prospective capture
 
-## Phase 7 — Master Trader shadow
+## Phase 7 — first promoted Ninja implementation
 
-- [ ] Add optional Ninja client PR
-- [ ] Prove Ninja OFF parity
-- [ ] Log Ninja State beside trade opportunities
-- [ ] Accumulate prospective outcomes
-- [ ] No trade modification
+Only after a factor or factor combination survives historical validation:
 
-## Phase 8 — first deterministic policy
+- [ ] choose the smallest useful runtime artifact: standalone strategy, overlay or risk/regime module
+- [ ] freeze Python implementation and parameters
+- [ ] add it to the Master Trader fleet as a Ninja-family component
+- [ ] add `NINJA_ENABLED` family-level control
+- [ ] prove `NINJA_ENABLED=false` preserves current fleet semantics
+- [ ] run the promoted Ninja in dry-run / shadow
+- [ ] collect prospective outcomes
 
-Only if a factor survives:
+## Phase 8 — live approval
+
+Only if the implementation survives:
 
 ```text
 historical OOS
-+ robustness
-+ prospective shadow
++ robustness checks
++ prospective dry-run/shadow
 + execution economics
 ```
 
-Then create a policy candidate and test:
+then compare:
 
 ```text
-MasterTrader baseline
+baseline strategy/fleet
 vs
-same strategy + frozen Ninja policy
+baseline + promoted Ninja implementation
 ```
 
-Human approval remains required for promotion.
+Human approval remains required before live capital is enabled.
