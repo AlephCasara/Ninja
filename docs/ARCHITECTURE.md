@@ -1,326 +1,243 @@
 # Architecture
 
-## Design principle
+## Decision
 
-Ninja separates **information inference** from **financial action**.
+Ninja is a **research and strategy-development project**.
 
-The upstream side may contain probabilistic NLP, embeddings, clustering or language models. The downstream interface presented to Master Trader must be typed, timestamped, versioned and deterministic.
+Master Trader is the **runtime**.
 
-```mermaid
-flowchart TB
-    subgraph Research_and_Acquisition["Ninja — research and acquisition"]
-      S[Sources] --> O[Observations]
-      O --> A[Attention Scout]
-      O --> D[Divergence Scout]
-      O --> N[Narrative Scout]
-      O --> P[Propagation Scout]
-      O --> E[Event Morphology Scout]
-      M[Market data] --> U[Susceptibility Scout]
-      A --> NS[Ninja State]
-      D --> NS
-      N --> NS
-      P --> NS
-      E --> NS
-      U --> NS
-    end
+The purpose of Ninja is to discover, validate and package deterministic trading logic. Once a Ninja implementation is promoted, it should run inside the Master Trader fleet using the same operational model as the existing bots.
 
-    NS --> V[Validation Engine]
-    V -->|rejected| R[Research archive]
-    V -->|survives OOS| C[Versioned Factor Contract]
-    C --> B[Deterministic Policy Engine]
-    B --> MT[Master Trader]
+There is no mandatory `NinjaState` runtime service and no generic Ninja policy engine.
+
+## Determinism
+
+A runtime Ninja (k) is a deterministic Python program.
+
+Conceptually:
+
+```math
+a_{k,t}
+=
+\pi_k(
+M_t,
+F_{k,t};
+\theta_k
+)
 ```
 
-## Two planes
+where:
 
-### Research plane
+- $M_t$ is conventional market state;
+- $F_{k,t}$ is the subset of Ninja-derived inputs required by that implementation;
+- $\theta_k$ is the frozen parameter set;
+- $\pi_k$ is the Python strategy/module;
+- $a_{k,t}$ is the resulting action.
 
-Allowed to be broad and experimental:
+Given the same inputs, code version and parameters, the same action must be produced.
 
-- historical datasets;
-- NLP and embeddings;
-- local LLMs;
-- Needle or other structured classifiers;
-- clustering;
-- dynamic-factor models;
-- Hawkes processes;
-- transfer entropy;
-- event studies;
-- statistical / ML models.
+That is the relevant deterministic boundary.
 
-Research-plane outputs have **zero trading authority**.
+## Research architecture
 
-### Serving plane
+The six Ninja domains organize research:
 
-Strictly controlled:
+1. Attention
+2. Divergence
+3. Narrative
+4. Propagation
+5. Event Morphology
+6. Susceptibility
 
-- frozen feature definitions;
-- frozen model/checkpoint when a model is required;
-- deterministic preprocessing;
-- versioned schema;
-- point-in-time timestamps;
-- freshness/quality metadata;
-- deterministic policy mapping.
+They are **not** six required services and do not map one-to-one to runtime bots.
 
-A serving artifact must be replayable from the same input snapshot.
+A candidate strategy may combine any subset of these domains.
 
-## Six scouts
-
-### Attention Scout
-
-Purpose: estimate abnormal allocation of collective attention.
-
-Candidate features:
-
-- message count by platform and horizon;
-- unique authors;
-- attention surprise;
-- attention acceleration;
-- author breadth;
-- author entropy;
-- concentration / HHI;
-- effective attention;
-- common attention factor;
-- platform-specific attention residuals.
-
-No feature is considered valid until replicated.
-
-### Divergence Scout
-
-Purpose: characterize disagreement rather than collapse discourse into one sentiment average.
-
-Candidate features:
-
-- mean stance;
-- stance variance;
-- polarization;
-- cross-platform divergence;
-- semantic homogeneity / echo-chamber measures.
-
-### Narrative Scout
-
-Purpose: measure information structure.
-
-Candidate features:
-
-- topic distribution;
-- narrative entropy;
-- narrative concentration;
-- semantic novelty;
-- emergence rate;
-- topic change points.
-
-### Propagation Scout
-
-Purpose: measure movement of information through communities.
-
-Candidate features:
-
-- first activation timestamp by platform;
-- activation order;
-- platform-to-platform latency;
-- cascade depth;
-- multivariate Hawkes excitation matrix;
-- branching / reproduction measures;
-- effective / conditional transfer entropy;
-- net social→market information flow.
-
-### Event Morphology Scout
-
-Purpose: convert heterogeneous events into comparable structural descriptions.
-
-Proposed event representation:
+Example:
 
 ```text
-actor
-actor_class
-action
-target
-target_class
-event_family
-domain
-direction
-authority
-credibility
-confirmation
-novelty
-scope
-affected_entities
-semantic_embedding
+candidate Ninja
+  attention surprise
+  + propagation latency
+  + funding state
+  + open interest state
+        ↓
+  deterministic Python strategy
 ```
 
-Semantic extraction may use local language models, but fields that carry financial meaning must not receive arbitrary model-generated weights.
+## Research outputs
 
-### Susceptibility Scout
+A successful research line may produce one of three runtime artifact classes.
 
-Purpose: represent the market state that may amplify an information shock.
+### Standalone strategy
 
-Candidate inputs:
+A new Freqtrade strategy with its own entry, exit and risk logic.
 
-- realized volatility;
-- volume/liquidity;
-- spread where available;
-- open interest;
-- funding;
-- liquidations;
-- market beta / BTC regime;
-- leverage proxies;
-- existing Master Trader indicators.
+### Strategy overlay
 
-The key hypothesis is interaction: the same information shock can have different effects under different susceptibility states.
+A deterministic module or feature used by an existing Master Trader strategy.
 
-## Ninja State
+### Risk/regime module
 
-The canonical conceptual state is:
+A deterministic module used to change predefined risk behavior or block new entries under validated conditions.
+
+The project should prefer the simplest artifact that captures the validated effect.
+
+## Promotion path
+
+```text
+hypothesis
+→ historical dataset
+→ registered experiment
+→ chronological OOS validation
+→ deterministic implementation
+→ Master Trader dry-run
+→ live approval
+```
+
+Research code has no trading authority.
+
+Promotion happens by moving a concrete implementation into the Master Trader runtime.
+
+## Live information inputs
+
+Some Ninjas may require current public-information data.
+
+Those inputs can be produced by:
+
+- Last30Days;
+- dedicated crawlers;
+- public web/news collectors;
+- source-specific adapters;
+- deterministic feature calculators.
+
+The resulting data should be exposed to a strategy as typed values or files.
+
+This is analogous to the existing Master Trader pattern in which strategies consume external funding or OI data.
+
+The collector may be complex. The strategy decision remains deterministic.
+
+## Historical data layers
+
+Bronze / Silver / Gold remain useful for research.
+
+### Bronze
+
+Raw or near-raw observations and provenance.
+
+### Silver
+
+Normalized observations, entities, event extraction and semantic representations.
+
+### Gold
+
+Research features and time-series panels.
+
+These layers belong to the Ninja research process. They are not a required runtime abstraction in Master Trader.
+
+## Research feature notation
+
+For analysis, Ninja uses:
 
 ```math
 N_{a,t}
 =
-[ATT, DIV, NAR, TRN, EVT, CTX]_{a,t}
+[
+ATT,
+DIV,
+NAR,
+TRN,
+EVT,
+CTX
+]_{a,t}
 ```
 
-No global `NinjaScore` is defined.
+This is mathematical notation for the candidate feature space.
 
-Premature scalar aggregation would discard potentially useful structure and introduce arbitrary weights.
-
-## Data layers
-
-The storage implementation is intentionally deferred, but the logical contract follows a Bronze/Silver/Gold model.
-
-### Bronze — observations
-
-Raw or near-raw point-in-time observations.
-
-Minimum provenance:
-
-```text
-observation_id
-source
-external_id
-url
-author
-published_at
-first_seen_at
-collected_at
-raw_payload_hash
-retrieval_version
-```
-
-### Silver — normalized information
-
-Platform-neutral records:
-
-```text
-observation_id
-platform
-community
-timestamp
-text
-language
-entities
-reply/repost relations
-event extraction
-embedding/version
-classifier/version
-```
-
-### Gold — factors
-
-Time-series features consumed by experiments and, only when validated, serving:
-
-```text
-asset
-timestamp
-feature_name
-value
-feature_version
-source_coverage
-freshness
-quality
-provenance_manifest
-```
-
-## Time semantics
-
-For honest replay, `published_at` is not sufficient.
-
-A historical/live decision at time $t$ may use an observation only if the system could actually have known it:
+A runtime Ninja consumes only what it needs:
 
 ```math
-first\_seen\_at \le t
+F_{k,t}
+\subseteq
+N_{a,t}
 ```
 
-Prospective collection therefore records at least:
+There is no requirement to serialize the entire vector in production.
 
-- `published_at`;
-- `first_seen_at`;
-- `collected_at`.
+## Master Trader runtime
 
-Historical reconstructed data must be labeled separately from genuinely point-in-time captured data.
+The Master Trader fleet already provides the correct operational structure:
 
-## Model routing
+- strategy registry;
+- per-bot runtime configs;
+- live/dry-run execution;
+- monitoring;
+- portfolio risk controls;
+- capital-account semantics;
+- health and validation tooling.
 
-Models are tools for information normalization, not autonomous traders.
+Ninja should reuse this machinery.
 
-Suggested routing:
+Conceptually:
 
 ```text
-literal/regex fields          → Python
-entity aliases                → rules + embeddings
-semantic deduplication        → embeddings
-topic clustering              → embeddings/statistics
-simple typed event extraction → compact classifier / Needle candidate
-ambiguous extraction          → fast local LLM
-hard semantic cases           → larger local LLM
-financial weighting           → empirical statistical model
-trade decision                → deterministic Master Trader policy
+Master Trader
+├── existing bots
+│   ├── FundingFadeV1
+│   ├── KeltnerBounceV1
+│   ├── OITrendPullbackV1
+│   └── ...
+│
+└── Ninja family
+    ├── <validated Ninja 1>
+    ├── <validated Ninja 2>
+    └── <validated Ninja 3>
 ```
+
+## Family-level switch
+
+The intended global behavior is:
+
+```text
+NINJA_ENABLED=false
+  → no Ninja-tagged bot or Ninja-only feed is started
+
+NINJA_ENABLED=true
+  → individually enabled Ninja bots may run
+```
+
+Each Ninja still retains its own runtime config and dry-run/live status.
+
+The exact implementation may use a registry field, Compose profile or startup filter. The behavior matters more than the mechanism.
 
 ## Failure isolation
 
-Ninja must never cause an unrelated Master Trader strategy to fail because a source, model or crawler is unavailable.
-
-Rules:
-
-1. existing strategies remain unchanged when Ninja is off;
-2. shadow mode never changes an order;
-3. a Ninja-aware policy must explicitly declare its freshness and quality requirements;
-4. missing required Ninja input must follow that policy's declared fail mode;
-5. position management must not depend on an external social source unless explicitly proven necessary.
+1. `NINJA_ENABLED=false` must preserve the existing Master Trader fleet.
+2. A failed Ninja collector must not stop unrelated bots.
+3. A Ninja requiring a missing/stale feed must follow its own declared fail behavior.
+4. Existing Master Trader risk controls remain authoritative.
+5. No LLM or research process receives direct order authority.
 
 ## Repository boundary
 
-The logical boundary is stronger than the repository boundary.
-
-Ninja owns the *information-research domain*:
-
-- data acquisition interfaces;
-- historical research;
-- information extraction;
-- factor construction;
-- validation;
-- live factor serving.
-
-Master Trader owns the *trading-authority domain*:
-
-- strategy logic;
-- risk authority;
-- order execution;
-- portfolio circuit breaking;
-- capital allocation.
-
-Today these domains are in separate repositories because their dependencies, data volumes and release cadences differ. That decision is provisional. If only a small deterministic serving surface survives research, the serving layer may later move into Master Trader while historical research remains external.
-
-The invariant is the contract:
+The current split is:
 
 ```text
-probabilistic / research side
-        ↓
-versioned Ninja factors
-════════ deterministic boundary ════════
-Master Trader policy / execution
+Ninja repository
+  research
+  data manifests
+  experiments
+  candidate implementations
+  validation evidence
+        ↓ promotion
+Master Trader repository/runtime
+  promoted Ninja Python code
+  bot configs
+  monitoring
+  risk
+  execution
 ```
 
-See [ADR-001](ADR-001-REPOSITORY-BOUNDARY.md).
+This is not a requirement to run Ninja as an external production microservice.
 
-The integration surface should remain small enough that Ninja can be replaced, relocated or merged without rewriting strategy semantics.
+A monorepo remains possible later. The important separation is between experimental research and promoted deterministic runtime code.
