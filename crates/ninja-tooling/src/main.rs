@@ -1,7 +1,7 @@
-use anyhow::{bail, Context, Result};
-use rmcp::{tool, tool_router, transport::stdio, ServiceExt};
+use anyhow::{Context, Result, bail};
+use rmcp::{ServiceExt, tool, tool_router, transport::stdio};
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::{env, path::Path};
 
 const CATALOG_JSON: &str = include_str!("../../../tools/catalog.json");
@@ -56,10 +56,7 @@ fn doctor_report(catalog: &Catalog) -> Value {
         .tools
         .iter()
         .map(|tool| {
-            let available = tool
-                .probe_binary
-                .as_deref()
-                .map(binary_on_path);
+            let available = tool.probe_binary.as_deref().map(binary_on_path);
 
             json!({
                 "id": tool.id,
@@ -115,7 +112,10 @@ async fn main() -> Result<()> {
         Some("catalog") => println!("{CATALOG_JSON}"),
         Some("doctor") => {
             let catalog = load_catalog()?;
-            println!("{}", serde_json::to_string_pretty(&doctor_report(&catalog))?);
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&doctor_report(&catalog))?
+            );
         }
         Some("mcp") => {
             let service = NinjaTooling.serve(stdio()).await?;
