@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "policy": {
+    "resident_core": "Rust. Long-lived Ninja services, contracts, orchestration and agent-facing tooling should not require a Python runtime.",
+    "external_tooling": "Use mature tools in their native implementation. Wrap capabilities; do not rewrite crawlers, browsers, archives or statistical packages merely to make them Rust.",
+    "python_boundary": "Python is permitted only behind isolated batch adapters when a scientific or data tool materially benefits from the Python ecosystem. It is not the resident Ninja core."
+  },
+  "tools": [
+    {
+      "id": "common-crawl",
+      "category": "discovery-history",
+      "kind": "dataset-api",
+      "role": "Historical web corpus and index before recrawling live pages.",
+      "adapter_status": "planned",
+      "notes": "Prefer archived historical material when it satisfies the experiment and preserves point-in-time evidence."
+    },
+    {
+      "id": "searxng",
+      "category": "discovery",
+      "kind": "service",
+      "role": "Self-hostable metasearch for source discovery.",
+      "adapter_status": "planned",
+      "notes": "Discovery output is not evidence until acquired and preserved through a reproducible collector."
+    },
+    {
+      "id": "last30days",
+      "category": "discovery",
+      "kind": "agent-skill",
+      "role": "Current-topic and narrative reconnaissance across multiple public sources.",
+      "adapter_status": "external",
+      "notes": "Reconnaissance only. Never use synthesized Last30Days output directly as a market feature."
+    },
+    {
+      "id": "arctic-shift",
+      "category": "source-reddit",
+      "kind": "api",
+      "role": "Historical Reddit acquisition.",
+      "adapter_status": "planned",
+      "notes": "Persist retrieval provenance and distinguish source timestamps from retrieval/first-seen quality."
+    },
+    {
+      "id": "curl-cffi",
+      "category": "acquisition-http",
+      "kind": "library",
+      "role": "Efficient HTTP acquisition with browser-like TLS/HTTP behavior where ordinary HTTP is insufficient.",
+      "adapter_status": "planned",
+      "notes": "Use before paying browser-process cost when possible."
+    },
+    {
+      "id": "crawlee",
+      "category": "crawling",
+      "kind": "library",
+      "role": "Crawler frontier, sessions, concurrency and retries.",
+      "adapter_status": "candidate",
+      "notes": "Benchmark against Scrapy for the first real acquisition workload instead of running two crawler frameworks by default."
+    },
+    {
+      "id": "scrapy",
+      "category": "crawling",
+      "kind": "cli-library",
+      "role": "Mature high-throughput crawling and extraction pipelines.",
+      "adapter_status": "candidate",
+      "probe_binary": "scrapy",
+      "notes": "Candidate workhorse when its mature pipeline model is a better fit than Crawlee."
+    },
+    {
+      "id": "playwright",
+      "category": "browser",
+      "kind": "cli-library",
+      "role": "Normal browser automation for JavaScript-heavy public pages.",
+      "adapter_status": "planned",
+      "probe_binary": "playwright",
+      "notes": "Browser acquisition is escalation, not the default for every URL."
+    },
+    {
+      "id": "patchright",
+      "category": "browser-hardened",
+      "kind": "cli-library",
+      "role": "Hardened Chromium-compatible browser path when normal automation is blocked or misclassified.",
+      "adapter_status": "planned",
+      "probe_binary": "patchright",
+      "notes": "Use as a specialized fallback; record challenge/failure rates by source."
+    },
+    {
+      "id": "camoufox",
+      "category": "browser-hardened",
+      "kind": "cli-library",
+      "role": "Independent Firefox-derived browser engine for acquisition diversity.",
+      "adapter_status": "challenger",
+      "probe_binary": "camoufox",
+      "notes": "Maintain engine diversity without making an experimental browser the only acquisition path."
+    },
+    {
+      "id": "cloakbrowser",
+      "category": "browser-hardened",
+      "kind": "external-browser",
+      "role": "Specialized Chromium challenger for difficult public web acquisition.",
+      "adapter_status": "challenger",
+      "notes": "Benchmark success rate, latency and maintenance burden before promotion to a default path."
+    },
+    {
+      "id": "browsertrix-crawler",
+      "category": "preservation",
+      "kind": "container-cli",
+      "role": "High-fidelity browser crawling and WARC/WACZ capture for replayable web evidence.",
+      "adapter_status": "planned",
+      "notes": "Use selectively for evidence that may change or disappear; do not archive the entire web by default."
+    },
+    {
+      "id": "trafilatura",
+      "category": "extraction",
+      "kind": "cli-library",
+      "role": "Main-content extraction from articles and HTML pages.",
+      "adapter_status": "planned",
+      "probe_binary": "trafilatura",
+      "notes": "Preserve raw capture/hash independently from extracted text."
+    },
+    {
+      "id": "docling",
+      "category": "documents",
+      "kind": "cli-library",
+      "role": "Structured parsing of PDFs, tables and complex documents.",
+      "adapter_status": "planned",
+      "probe_binary": "docling",
+      "notes": "Use OCR only when a usable text layer is unavailable."
+    },
+    {
+      "id": "duckdb",
+      "category": "analytics-storage",
+      "kind": "cli-library",
+      "role": "Local analytical engine over Parquet/Silver/Gold data.",
+      "adapter_status": "core-external",
+      "probe_binary": "duckdb",
+      "notes": "Preferred analytical substrate before introducing a resident database service."
+    },
+    {
+      "id": "dvc",
+      "category": "reproducibility",
+      "kind": "cli",
+      "role": "Dataset and artifact lineage tied to Git revisions.",
+      "adapter_status": "core-external",
+      "probe_binary": "dvc",
+      "notes": "DVC metadata belongs in Git; large data does not. Remote configuration comes after the first canonical dataset is selected."
+    },
+    {
+      "id": "freqtrade",
+      "category": "promotion-validation",
+      "kind": "cli-application",
+      "role": "Backtest/runtime compatibility check for artifacts promoted into Master Trader.",
+      "adapter_status": "external-existing",
+      "probe_binary": "freqtrade",
+      "notes": "Do not use Freqtrade as a substitute for E1/E2 statistical validation."
+    },
+    {
+      "id": "git",
+      "category": "reproducibility",
+      "kind": "cli",
+      "role": "Code/configuration version identity.",
+      "adapter_status": "required",
+      "probe_binary": "git",
+      "notes": "Experiment records must reference the exact code commit used."
+    },
+    {
+      "id": "cargo",
+      "category": "core-build",
+      "kind": "cli",
+      "role": "Build and test the resident Rust Ninja core/tooling.",
+      "adapter_status": "required",
+      "probe_binary": "cargo",
+      "notes": "Rust is the primary implementation language for resident Ninja software."
+    }
+  ]
+}
