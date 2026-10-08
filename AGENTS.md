@@ -12,12 +12,23 @@ Before changing code or experiments, read:
 
 ## Implementation boundary
 
-- Resident Ninja core, contracts, orchestration and agent-facing tooling are Rust-first.
-- Do not introduce a long-lived Python service into Ninja core.
+- Rust is the default for resident Ninja core, contracts, orchestration, process supervision and agent-facing tooling.
+- Python is a first-class research language for statistics, econometrics, time series, ML/semantic evaluation, feature prototyping, backtesting, walk-forward analysis, notebooks and scientific libraries where it materially improves correctness or research velocity.
 - Do not rewrite mature external tools merely to make them Rust. Wrap them behind typed adapters and keep the upstream/native implementation.
-- Python may be used behind an isolated batch adapter when a scientific/data package materially improves correctness or research velocity. The process should be disposable and bounded, not a resident control plane.
+- Prefer Python research jobs to be batch/ephemeral and resource bounded when practical. A long-lived Python service is allowed when latency, library constraints or operational simplicity justify it; document and measure that choice.
 - Do not add Go merely for language diversity. Introduce a second systems language only when a measured workload justifies the additional toolchain and maintenance cost.
-- Master Trader remains the production execution host. A promoted Freqtrade artifact may therefore require a small Python strategy/adapter because that is the host interface; that adapter is not the Ninja core.
+- Master Trader remains the production execution host. Promoted Freqtrade artifacts may use Python normally because that is the host interface.
+
+## Language decision rule
+
+Use the smallest justified runtime for the job:
+
+```text
+resident control/orchestration/high-throughput service -> Rust by default
+scientific/statistical/backtesting/ML research          -> Python when advantageous
+mature external tool                                   -> native implementation
+second systems language                                -> only after measured justification
+```
 
 ## Tooling
 
@@ -40,6 +51,7 @@ The MCP surface is intentionally narrow. Do not add a generic shell-execution to
 
 - Prefer streaming and bounded queues over loading corpora into memory.
 - Large analytical data belongs in Parquet and is queried through DuckDB; do not keep dataset-sized resident objects without a measured reason.
+- Python DataFrame workflows must be chunked/lazy where practical for large datasets; language choice does not excuse unbounded memory use.
 - Dataset/artifact lineage belongs in DVC once the first canonical dataset is selected.
 - Every acquired observation must preserve timestamps and provenance required by the no-lookahead policy.
 - Raw/high-value web evidence should be hashable and replayable where practical (for example WARC/WACZ capture for mutable sources).
