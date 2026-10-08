@@ -9,6 +9,21 @@
 - [x] Define validation ladder
 - [x] Align promoted Ninja implementations with the existing Master Trader bot fleet
 - [x] State clearly that independent historical validation is still pending
+- [x] Define shared Bronze/Silver Internet Intelligence substrate with domain-specific Gold layers for downstream consumers
+
+## Phase 0.5 — shared intelligence boundary
+
+Architecture only; do not escalate implementation merely because another consumer exists.
+
+- [x] Keep one Ninja repository while acquisition/provenance/normalization invariants remain shared
+- [x] Keep Bronze and Silver domain-neutral
+- [x] Keep Trade Gold and Business Gold semantically separate
+- [x] Preserve Master Trader as trading authority and Business Master as business/capital authority
+- [ ] Define the smallest typed Gold export contract required by the first Business Master integration
+- [ ] Reuse existing acquisition/capture tooling before adding new crawler frameworks
+- [ ] Split repositories/runtimes only if measured dependency, security, availability or lifecycle incompatibilities justify it
+
+See `docs/ADR-002-SHARED-INTERNET-INTELLIGENCE-DOMAIN-GOLDS.md`.
 
 ## Phase 1 — historical validation substrate
 
