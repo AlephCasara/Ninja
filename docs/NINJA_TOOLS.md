@@ -26,7 +26,7 @@ Claude Code / Hermes / future MCP clients
  Common       HTTP /       WARC/WACZ       DuckDB
  Crawl        crawlers      Browsertrix    Parquet
  SearXNG      browsers                     DVC lineage
- Last30Days
+ Last30Days                               Python research
 ```
 
 The MCP server is intentionally a thin capability/control surface. Large payloads belong in files/object stores/Parquet, not copied through agent context unless the caller explicitly needs them.
@@ -35,13 +35,14 @@ The MCP server is intentionally a thin capability/control surface. Large payload
 
 Memory pressure is controlled primarily through process lifetime and data movement:
 
-1. Rust owns resident Ninja processes and contracts.
-2. External tools run in their native runtime.
-3. Prefer ephemeral/batch execution for heavy extraction, semantic and statistical jobs.
-4. Prefer streaming, iterators, bounded queues and Parquet scans over whole-corpus resident objects.
-5. A service becomes long-lived only when its latency/throughput requirements justify the resident memory cost.
+1. Rust owns the default resident Ninja control plane, contracts and orchestration.
+2. Python is a supported research plane for scientific/statistical/backtesting/ML work where it is the better tool.
+3. External tools run in their native runtime.
+4. Prefer ephemeral/batch execution for heavy extraction, semantic and statistical jobs when latency does not require residency.
+5. Prefer streaming, iterators, bounded queues and Parquet scans over whole-corpus resident objects.
+6. A service becomes long-lived only when its latency/throughput/library requirements justify the resident memory cost, regardless of language.
 
-This is why `Python is banned` is not the rule. `Python is not the resident Ninja core` is the rule.
+The rule is not `Python is banned`. The rule is `Rust is the default core; Python is used deliberately where the scientific ecosystem creates value`.
 
 ## Capability ladder
 
@@ -127,11 +128,23 @@ Lineage: Git + DVC
 
 PostgreSQL or another resident database is introduced only when concurrent prospective collection requires it.
 
-### Statistical/research tools
+### Python research plane
 
-Statistical tools may remain Python-native if that is where the validated implementation exists. Ninja invokes them as isolated, versioned batch jobs rather than making the Python interpreter part of the resident control plane.
+Python is explicitly supported for workloads where its scientific ecosystem is an advantage, including:
 
-Critical tests should eventually have independent/reference implementations where practical; one third-party package should not be the sole arbiter of whether alpha exists.
+- NumPy/SciPy/statsmodels/scikit-learn style statistical work;
+- time-series and econometric validation;
+- feature prototyping and ablations;
+- notebooks and exploratory analysis;
+- ML/embedding/classifier evaluation;
+- purged CV, CPCV, bootstrap/placebo and multiple-testing workflows;
+- Freqtrade backtesting, walk-forward analysis and promotion adapters.
+
+Python code used for headline evidence must be reproducible: pinned environment, frozen experiment configuration, dataset/artifact versions, no-lookahead tests, recorded code commit and preserved outputs.
+
+For large jobs, prefer Polars/DuckDB/Arrow/Parquet-style lazy or chunked processing rather than materializing whole datasets into resident DataFrames. A long-lived Python service is allowed only when there is an operational reason for residency; measure its memory footprint rather than rejecting it on language identity alone.
+
+Critical statistical tests should eventually have independent/reference implementations where practical; one third-party package should not be the sole arbiter of whether alpha exists.
 
 ### Promotion validation
 
@@ -238,6 +251,6 @@ The CLI and MCP should share the same Rust domain code so humans, CI and agents 
 5. Introduce DVC metadata when the dataset is actually created.
 6. Add WARC/WACZ preservation for mutable sources that need replay.
 7. Add browser/challenge adapters only for sources where HTTP/archive paths are insufficient.
-8. Add semantic/statistical adapters after E1 establishes the basic data substrate.
+8. Build the Python research environment for E1 statistical validation and backtesting only when the first experiment requires it.
 
 Ninja Tools grows from demonstrated research needs, while the architecture remains capable of much broader web acquisition later.
