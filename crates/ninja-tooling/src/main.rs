@@ -2,9 +2,10 @@ use anyhow::{Context, Result, bail};
 use rmcp::{ServiceExt, tool, tool_router, transport::stdio};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use std::{env, path::Path};
+use std::{collections::HashSet, env, path::Path};
 
 const CATALOG_JSON: &str = include_str!("../../../tools/catalog.json");
+const SUPPORTED_SURFACES: [&str; 3] = ["tools", "labs", "core"];
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 struct Catalog {
@@ -34,8 +35,38 @@ struct ToolSpec {
     notes: String,
 }
 
+fn validate_catalog(catalog: &Catalog) -> Result<()> {
+    if catalog.schema_version != 2 {
+        bail!(
+            "unsupported tools/catalog.json schema_version: {}",
+            catalog.schema_version
+        );
+    }
+
+    let mut ids = HashSet::new();
+    for tool in &catalog.tools {
+        if !SUPPORTED_SURFACES.contains(&tool.surface.as_str()) {
+            bail!(
+                "tool '{}' has unsupported surface '{}'; expected one of {:?}",
+                tool.id,
+                tool.surface,
+                SUPPORTED_SURFACES
+            );
+        }
+
+        if !ids.insert(tool.id.as_str()) {
+            bail!("duplicate tool id in catalog: '{}'", tool.id);
+        }
+    }
+
+    Ok(())
+}
+
 fn load_catalog() -> Result<Catalog> {
-    serde_json::from_str(CATALOG_JSON).context("invalid tools/catalog.json")
+    let catalog: Catalog =
+        serde_json::from_str(CATALOG_JSON).context("invalid tools/catalog.json")?;
+    validate_catalog(&catalog)?;
+    Ok(catalog)
 }
 
 fn binary_on_path(binary: &str) -> bool {
@@ -133,4 +164,29 @@ async fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn embedded_catalog_is_valid() {
+        let catalog = load_catalog().expect("embedded catalog must validate");
+        assert!(!catalog.tools.is_empty());
+    }
+
+    #[test]
+    fn catalog_has_all_three_surfaces() {
+        let catalog = load_catalog().expect("embedded catalog must validate");
+        let surfaces: HashSet<&str> = catalog
+            .tools
+            .iter()
+            .map(|tool| tool.surface.as_str())
+            .collect();
+
+        for expected in SUPPORTED_SURFACES {
+            assert!(surfaces.contains(expected), "missing surface: {expected}");
+        }
+    }
 }
