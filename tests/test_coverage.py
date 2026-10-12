@@ -96,7 +96,8 @@ def test_coverage_report_records_causal_and_market_health(tmp_path):
     assert report["aligned"]["future_window_rows"] == 0
     assert report["aligned"]["future_observation_rows"] == 0
     assert report["aligned"]["rows_by_split"] == {
-        "train": 2,
+        "outside": 1,
+        "train": 1,
         "untouched_test": 1,
         "validation": 1,
     }
