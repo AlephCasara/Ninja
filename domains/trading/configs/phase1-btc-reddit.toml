@@ -1,3 +1,7 @@
+# Canonical E1 historical substrate.
+# Download Arctic Shift subreddit post JSONL files into .ninja-inputs/arctic-shift/
+# before running this config. Source files are hashed in the emitted manifest.
+
 [dataset]
 id = "btc-reddit-e1-v1"
 start = "2021-01-01T00:00:00Z"
