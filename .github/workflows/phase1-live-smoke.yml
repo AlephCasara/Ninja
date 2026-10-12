@@ -4,6 +4,9 @@ on:
   push:
     paths:
       - ".github/workflows/phase1-live-smoke.yml"
+  pull_request:
+    paths:
+      - ".github/workflows/phase1-live-smoke.yml"
   workflow_dispatch:
 
 jobs:
