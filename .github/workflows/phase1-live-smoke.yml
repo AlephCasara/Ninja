@@ -1,0 +1,37 @@
+name: Phase 1 live smoke
+
+on:
+  push:
+    paths:
+      - ".github/workflows/phase1-live-smoke.yml"
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          version: latest-known
+          enable-cache: true
+
+      - name: Install Python
+        run: uv python install 3.13
+
+      - name: Resolve environment
+        run: uv sync --all-groups
+
+      - name: Build bounded live substrate
+        run: uv run ninja-labs phase1 build --config domains/trading/configs/phase1-smoke.toml
+
+      - name: Inspect emitted manifest
+        shell: bash
+        run: |
+          manifest="$(find .ninja-data -name manifest.json -print -quit)"
+          test -n "$manifest"
+          cat "$manifest"
