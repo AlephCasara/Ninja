@@ -18,11 +18,13 @@ struct CatalogPolicy {
     resident_core: String,
     external_tooling: String,
     python_boundary: String,
+    implementation_rule: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 struct ToolSpec {
     id: String,
+    surface: String,
     category: String,
     kind: String,
     role: String,
@@ -60,6 +62,7 @@ fn doctor_report(catalog: &Catalog) -> Value {
 
             json!({
                 "id": tool.id,
+                "surface": tool.surface,
                 "category": tool.category,
                 "kind": tool.kind,
                 "adapter_status": tool.adapter_status,
@@ -72,6 +75,7 @@ fn doctor_report(catalog: &Catalog) -> Value {
     json!({
         "schema_version": catalog.schema_version,
         "resident_core": catalog.policy.resident_core,
+        "implementation_rule": catalog.policy.implementation_rule,
         "tools": tools,
     })
 }
@@ -82,14 +86,14 @@ struct NinjaTooling;
 #[tool_router(server_handler)]
 impl NinjaTooling {
     #[tool(
-        description = "Return the canonical Ninja tooling catalog. Use this before assuming a crawler, browser, archive, data, semantic, statistical, or backtesting capability is part of the project."
+        description = "Return the canonical Ninja external capability and instrument catalog, classified by Tools, Labs or core surface. Use this before assuming a crawler, browser, archive, data, scientific, optimization or backtesting capability is part of the project."
     )]
     fn ninja_tool_catalog(&self) -> String {
         CATALOG_JSON.to_owned()
     }
 
     #[tool(
-        description = "Inspect the local environment and report which catalogued CLI binaries are currently discoverable on PATH. A missing binary means unavailable, not permission to install it silently."
+        description = "Inspect the local environment and report which catalogued CLI binaries are currently discoverable on PATH, including their Ninja surface classification. A missing binary means unavailable, not permission to install it silently."
     )]
     fn ninja_tool_doctor(&self) -> String {
         match load_catalog() {
@@ -102,7 +106,7 @@ impl NinjaTooling {
 
 fn print_help() {
     eprintln!(
-        "ninja-tooling\n\nUSAGE:\n  ninja-tooling catalog   Print the canonical tool catalog\n  ninja-tooling doctor    Probe locally discoverable CLI tools\n  ninja-tooling mcp       Serve catalog + diagnostics over MCP stdio\n"
+        "ninja-tooling\n\nUSAGE:\n  ninja-tooling catalog   Print the canonical capability/instrument catalog\n  ninja-tooling doctor    Probe locally discoverable CLI tools\n  ninja-tooling mcp       Serve catalog + diagnostics over MCP stdio\n"
     );
 }
 
