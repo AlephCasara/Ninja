@@ -5,9 +5,12 @@ end = "2026-01-01T00:00:00Z"
 output_root = ".ninja-data"
 
 [reddit]
+mode = "jsonl"
 subreddits = ["Bitcoin", "CryptoCurrency"]
-page_limit = 100
-timeout_seconds = 60
+files = [
+  ".ninja-inputs/arctic-shift/r_Bitcoin_posts.jsonl",
+  ".ninja-inputs/arctic-shift/r_CryptoCurrency_posts.jsonl",
+]
 
 [market]
 symbol = "BTCUSDT"
