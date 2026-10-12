@@ -32,9 +32,12 @@ jobs:
       - name: Build bounded live substrate
         run: uv run ninja-labs phase1 build --config domains/trading/configs/phase1-smoke.toml
 
-      - name: Inspect emitted manifest
+      - name: Inspect emitted manifest and coverage
         shell: bash
         run: |
           manifest="$(find .ninja-data -name manifest.json -print -quit)"
           test -n "$manifest"
           cat "$manifest"
+          coverage="$(dirname "$manifest")/coverage.json"
+          test -f "$coverage"
+          cat "$coverage"
