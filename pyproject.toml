@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ninja-labs"
+version = "0.1.0"
+description = "Scientific research plane for Ninja information-intelligence experiments"
+requires-python = ">=3.12,<3.15"
+dependencies = [
+  "duckdb>=1.4,<2",
+  "httpx>=0.28,<1",
+]
+
+[project.scripts]
+ninja-labs = "ninja_labs.cli:main"
+
+[dependency-groups]
+dev = [
+  "pytest>=8.4,<9",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["python/ninja_labs"]
+
+[tool.pytest.ini_options]
+pythonpath = ["python"]
+testpaths = ["tests"]
+addopts = "-q"
