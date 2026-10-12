@@ -1,14 +1,16 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "policy": {
-    "resident_core": "Rust. Long-lived Ninja services, contracts, orchestration and agent-facing tooling should not require a Python runtime.",
-    "external_tooling": "Use mature tools in their native implementation. Wrap capabilities; do not rewrite crawlers, browsers, archives or statistical packages merely to make them Rust.",
-    "python_boundary": "Python is permitted only behind isolated batch adapters when a scientific or data tool materially benefits from the Python ecosystem. It is not the resident Ninja core."
+    "resident_core": "Rust is the default for long-lived Ninja-owned contracts, orchestration and agent-facing tooling.",
+    "external_tooling": "Use mature external tools in their native implementation. Ninja owns bounded adapters, provenance and contracts instead of rewriting upstream systems.",
+    "python_boundary": "Python is a first-class Ninja Labs research language for statistics, econometrics, ML, experimental optimization and backtesting where its ecosystem materially improves correctness or research velocity.",
+    "implementation_rule": "Catalog breadth does not imply implementation priority. Implement a capability when a registered experiment requires it."
   },
   "tools": [
     {
       "id": "common-crawl",
-      "category": "discovery-history",
+      "surface": "tools",
+      "category": "historical-acquisition",
       "kind": "dataset-api",
       "role": "Historical web corpus and index before recrawling live pages.",
       "adapter_status": "planned",
@@ -16,31 +18,62 @@
     },
     {
       "id": "searxng",
+      "surface": "tools",
       "category": "discovery",
       "kind": "service",
       "role": "Self-hostable metasearch for source discovery.",
       "adapter_status": "planned",
-      "notes": "Discovery output is not evidence until acquired and preserved through a reproducible collector."
+      "notes": "Discovery output is not evidence until acquired and preserved through a reproducible path."
     },
     {
       "id": "last30days",
+      "surface": "tools",
       "category": "discovery",
       "kind": "agent-skill",
-      "role": "Current-topic and narrative reconnaissance across multiple public sources.",
+      "role": "Current-topic, community and narrative reconnaissance across public sources.",
       "adapter_status": "external",
-      "notes": "Reconnaissance only. Never use synthesized Last30Days output directly as a market feature."
+      "notes": "Use for reconnaissance/source discovery. Synthesized output is not directly a historical market feature."
+    },
+    {
+      "id": "surfsense",
+      "surface": "tools",
+      "category": "discovery-acquisition",
+      "kind": "external-service",
+      "role": "External-information discovery and acquisition hub where its connectors cover the required source.",
+      "adapter_status": "external-existing",
+      "notes": "Treat connector output as source material; preserve Ninja temporal/provenance semantics before scientific use."
+    },
+    {
+      "id": "gdelt",
+      "surface": "tools",
+      "category": "historical-acquisition",
+      "kind": "dataset-api",
+      "role": "Structured historical and prospective global news/event source for event, entity and story discovery.",
+      "adapter_status": "candidate",
+      "notes": "Strong candidate for a second timestamped information stream and later cross-source propagation work."
+    },
+    {
+      "id": "changedetection",
+      "surface": "tools",
+      "category": "prospective-observation",
+      "kind": "service",
+      "role": "Sentinel for prospective page/resource changes and first-seen history.",
+      "adapter_status": "candidate",
+      "notes": "Useful after a validated workflow identifies pages/resources worth watching continuously."
     },
     {
       "id": "arctic-shift",
-      "category": "source-reddit",
+      "surface": "tools",
+      "category": "historical-acquisition",
       "kind": "api",
       "role": "Historical Reddit acquisition.",
       "adapter_status": "planned",
-      "notes": "Persist retrieval provenance and distinguish source timestamps from retrieval/first-seen quality."
+      "notes": "Current leading candidate for the first E1 information corpus, subject to source-quality verification. Preserve event-level timestamps and provenance."
     },
     {
       "id": "curl-cffi",
-      "category": "acquisition-http",
+      "surface": "tools",
+      "category": "targeted-acquisition",
       "kind": "library",
       "role": "Efficient HTTP acquisition with browser-like TLS/HTTP behavior where ordinary HTTP is insufficient.",
       "adapter_status": "planned",
@@ -48,42 +81,47 @@
     },
     {
       "id": "crawlee",
-      "category": "crawling",
+      "surface": "tools",
+      "category": "targeted-acquisition",
       "kind": "library",
       "role": "Crawler frontier, sessions, concurrency and retries.",
       "adapter_status": "candidate",
-      "notes": "Benchmark against Scrapy for the first real acquisition workload instead of running two crawler frameworks by default."
+      "notes": "Benchmark against Scrapy on a real acquisition workload instead of running two crawler frameworks by default."
     },
     {
       "id": "scrapy",
-      "category": "crawling",
+      "surface": "tools",
+      "category": "targeted-acquisition",
       "kind": "cli-library",
       "role": "Mature high-throughput crawling and extraction pipelines.",
       "adapter_status": "candidate",
       "probe_binary": "scrapy",
-      "notes": "Candidate workhorse when its mature pipeline model is a better fit than Crawlee."
+      "notes": "Candidate workhorse when its pipeline model is a better fit than Crawlee."
     },
     {
       "id": "playwright",
-      "category": "browser",
+      "surface": "tools",
+      "category": "browser-acquisition",
       "kind": "cli-library",
       "role": "Normal browser automation for JavaScript-heavy public pages.",
       "adapter_status": "planned",
       "probe_binary": "playwright",
-      "notes": "Browser acquisition is escalation, not the default for every URL."
+      "notes": "Browser acquisition is escalation, not the default for every source."
     },
     {
       "id": "patchright",
-      "category": "browser-hardened",
+      "surface": "tools",
+      "category": "browser-acquisition",
       "kind": "cli-library",
-      "role": "Hardened Chromium-compatible browser path when normal automation is blocked or misclassified.",
+      "role": "Hardened Chromium-compatible acquisition path when ordinary browser automation is insufficient.",
       "adapter_status": "planned",
       "probe_binary": "patchright",
-      "notes": "Use as a specialized fallback; record challenge/failure rates by source."
+      "notes": "Specialized fallback; measure success, latency and maintenance burden by source."
     },
     {
       "id": "camoufox",
-      "category": "browser-hardened",
+      "surface": "tools",
+      "category": "browser-acquisition",
       "kind": "cli-library",
       "role": "Independent Firefox-derived browser engine for acquisition diversity.",
       "adapter_status": "challenger",
@@ -92,14 +130,16 @@
     },
     {
       "id": "cloakbrowser",
-      "category": "browser-hardened",
+      "surface": "tools",
+      "category": "browser-acquisition",
       "kind": "external-browser",
-      "role": "Specialized Chromium challenger for difficult public web acquisition.",
+      "role": "Specialized Chromium challenger for difficult web acquisition.",
       "adapter_status": "challenger",
-      "notes": "Benchmark success rate, latency and maintenance burden before promotion to a default path."
+      "notes": "Benchmark information gain, success rate, latency and maintenance burden before promotion to a default path."
     },
     {
       "id": "browsertrix-crawler",
+      "surface": "tools",
       "category": "preservation",
       "kind": "container-cli",
       "role": "High-fidelity browser crawling and WARC/WACZ capture for replayable web evidence.",
@@ -108,66 +148,82 @@
     },
     {
       "id": "trafilatura",
-      "category": "extraction",
+      "surface": "tools",
+      "category": "observation-extraction",
       "kind": "cli-library",
-      "role": "Main-content extraction from articles and HTML pages.",
+      "role": "Main-content extraction from articles and HTML pages before normalization into observations.",
       "adapter_status": "planned",
       "probe_binary": "trafilatura",
       "notes": "Preserve raw capture/hash independently from extracted text."
     },
     {
       "id": "docling",
-      "category": "documents",
+      "surface": "tools",
+      "category": "observation-extraction",
       "kind": "cli-library",
-      "role": "Structured parsing of PDFs, tables and complex documents.",
+      "role": "Structured parsing of PDFs, tables and complex documents before observation normalization.",
       "adapter_status": "planned",
       "probe_binary": "docling",
       "notes": "Use OCR only when a usable text layer is unavailable."
     },
     {
       "id": "duckdb",
-      "category": "analytics-storage",
+      "surface": "labs",
+      "category": "analytical-data",
       "kind": "cli-library",
-      "role": "Local analytical engine over Parquet/Silver/Gold data.",
+      "role": "Analytical query engine over Parquet Bronze/Silver/Gold research data.",
       "adapter_status": "core-external",
       "probe_binary": "duckdb",
-      "notes": "Preferred analytical substrate before introducing a resident database service."
+      "notes": "Preferred analytical substrate before introducing a resident research database service."
     },
     {
       "id": "dvc",
+      "surface": "labs",
       "category": "reproducibility",
       "kind": "cli",
       "role": "Dataset and artifact lineage tied to Git revisions.",
       "adapter_status": "core-external",
       "probe_binary": "dvc",
-      "notes": "DVC metadata belongs in Git; large data does not. Remote configuration comes after the first canonical dataset is selected."
+      "notes": "Introduce concrete DVC metadata/remotes when the first canonical dataset actually exists."
+    },
+    {
+      "id": "ax",
+      "surface": "labs",
+      "category": "experiment-optimization",
+      "kind": "python-library",
+      "role": "Bounded adaptive experiment design and Bayesian optimization inside Ninja-owned experiment contracts.",
+      "adapter_status": "planned",
+      "notes": "Introduce after the fixed E1 pipeline works. Ax may optimize train/validation trials but must not access the untouched final test during adaptive search."
     },
     {
       "id": "freqtrade",
+      "surface": "labs",
       "category": "promotion-validation",
       "kind": "cli-application",
-      "role": "Backtest/runtime compatibility check for artifacts promoted into Master Trader.",
+      "role": "Strategy backtest/runtime compatibility check for artifacts promoted toward Master Trader.",
       "adapter_status": "external-existing",
       "probe_binary": "freqtrade",
-      "notes": "Do not use Freqtrade as a substitute for E1/E2 statistical validation."
+      "notes": "Do not use strategy backtesting as a substitute for E1/E2/E3 information-value validation."
     },
     {
       "id": "git",
+      "surface": "core",
       "category": "reproducibility",
       "kind": "cli",
       "role": "Code/configuration version identity.",
       "adapter_status": "required",
       "probe_binary": "git",
-      "notes": "Experiment records must reference the exact code commit used."
+      "notes": "Experiment records must reference the exact code revision used."
     },
     {
       "id": "cargo",
-      "category": "core-build",
+      "surface": "core",
+      "category": "build",
       "kind": "cli",
       "role": "Build and test the resident Rust Ninja core/tooling.",
       "adapter_status": "required",
       "probe_binary": "cargo",
-      "notes": "Rust is the primary implementation language for resident Ninja software."
+      "notes": "Rust remains the default implementation language for resident Ninja-owned control/orchestration code."
     }
   ]
 }
