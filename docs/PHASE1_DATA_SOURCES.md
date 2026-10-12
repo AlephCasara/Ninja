@@ -54,22 +54,24 @@ It is **not** the preferred way to materialize the five-year canonical E1 corpus
 
 #### JSONL mode — canonical historical corpus
 
-Arctic Shift exposes a subreddit download tool that produces files such as:
+Arctic Shift exposes a subreddit download tool. For each canonical community, download **posts** and retain the post JSONL; E1 does not require comments yet. The expected post files are:
 
 ```text
 r_Bitcoin_posts.jsonl
 r_CryptoCurrency_posts.jsonl
 ```
 
-The canonical Phase 1 configuration expects those files under:
+Place them under:
 
 ```text
 .ninja-inputs/arctic-shift/
 ```
 
-and streams them line by line. The source files are not committed to Git. Their SHA-256 and byte size are recorded in the dataset manifest.
+The files can be produced by the Arctic Shift download tool; compatible subreddit-level retrievers may also be used if they preserve the same underlying records. The Ninja adapter streams JSONL line by line, filters the frozen experiment interval/community set, deduplicates post IDs, and never materializes the entire input in memory.
 
-This path avoids thousands of API calls, avoids loading all of Reddit, and preserves the selective-laboratory design of Ninja. Full all-Reddit monthly dumps remain a fallback, not the default.
+The source files are not committed to Git. Their SHA-256 and byte size are recorded in the dataset manifest.
+
+This path avoids thousands of API calls, avoids downloading all of Reddit, and preserves the selective-laboratory design of Ninja. Full all-Reddit monthly dumps remain a fallback, not the default.
 
 ### Why Arctic Shift is suitable for E1
 
