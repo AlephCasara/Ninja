@@ -1,3 +1,8 @@
 /target/
+.venv/
+.ninja-data/
+.pytest_cache/
+**/__pycache__/
+*.pyc
 *.profraw
 .DS_Store
