@@ -25,7 +25,7 @@ The immediate program objective is the first reproducible, falsifiable historica
 
 **Phase 0 exit condition:** architecture documents, contracts and roadmap agree on `Tools -> Labs -> Ninja`, with no competing runtime model. The remaining README wording is documentation debt, not a blocker for the Phase 1 vertical slice.
 
-## Phase 1 — historical validation substrate — implementation complete; live materialization pending
+## Phase 1 — historical validation substrate — live-validated implementation; canonical materialization pending
 
 Priority vertical slice:
 
@@ -40,6 +40,7 @@ Binance BTCUSDT 15m
 
 attention Gold + market Silver
         -> causally aligned Gold panel
+        -> coverage + manifest
 ```
 
 Canonical initial sources are Arctic Shift Reddit posts from `r/Bitcoin` and `r/CryptoCurrency`, plus Binance public `BTCUSDT` 15-minute spot klines. Source-quality decisions and limitations are recorded in `docs/PHASE1_DATA_SOURCES.md`.
@@ -47,9 +48,11 @@ Canonical initial sources are Arctic Shift Reddit posts from `r/Bitcoin` and `r/
 - [x] Select the first canonical historical information corpus
 - [x] Select matching market-data source/universe
 - [x] Complete the source-quality review and record temporal limitations
-- [x] Implement the Arctic Shift historical acquisition adapter
+- [x] Implement a bounded/paced Arctic Shift API adapter for smoke tests and targeted gaps
+- [x] Implement streaming Arctic Shift subreddit-JSONL ingestion for the canonical historical corpus
 - [x] Implement the Binance public market-data adapter
 - [x] Implement dataset manifests and content/artifact hashes
+- [x] Hash external JSONL source files in the manifest
 - [x] Implement UTC causal alignment around `Observation.available_at` and market `decision_time`
 - [x] Keep entity scope intentionally single-asset (`BTC`) so no premature alias subsystem is required
 - [x] Implement no-lookahead tests
@@ -57,13 +60,38 @@ Canonical initial sources are Arctic Shift Reddit posts from `r/Bitcoin` and `r/
 - [x] Implement Bronze/Silver/Gold materializers with DuckDB/Parquet-compatible schemas
 - [x] Record exact event timestamps rather than retaining only aggregated counts
 - [x] Preserve source/platform/author/thread/community fields needed by later E3/Hawkes work when available
+- [x] Implement `coverage.json` for source temporal quality, market gaps, attention missingness and split counts
 - [x] Add an offline test suite so CI does not depend on external-source uptime
 - [x] Pass Python, Rust and Markdown CI on the Phase 1 implementation
-- [ ] Execute `phase1-smoke.toml` against live Arctic Shift + Binance from an authorized host
+- [x] Execute `phase1-smoke.toml` end-to-end against live Arctic Shift + Binance
+- [x] Verify the smoke has zero market gaps and zero future-window/future-observation violations
+- [x] Make external-source smoke manual-only after validation so CI does not repeatedly load a free upstream service
+- [ ] Download the canonical subreddit JSONL inputs for `r/Bitcoin` and `r/CryptoCurrency`
 - [ ] Materialize the canonical 2021-2025 dataset and preserve its final manifest
-- [ ] Inspect coverage/gaps/rate-limit behavior before declaring that dataset fit for E1
+- [ ] Inspect canonical coverage/gaps/temporal-quality results before admitting the dataset to E1
+- [ ] Commit a resolver-generated `uv.lock` before the first headline E1 result
 
-Canonical command:
+Live smoke evidence:
+
+```text
+2025-01-01 <= t < 2025-01-08
+r/Bitcoin
+BTCUSDT 15m
+
+Reddit observations       1,901
+unique authors            1,487
+archive-capture rows      1,901
+market candles              672
+market gaps                   0
+attention windows            672
+non-zero windows             612
+zero windows                  60
+max posts / 15m               23
+future-window violations       0
+future-observation violations  0
+```
+
+Canonical command after the two subreddit JSONL files are placed under `.ninja-inputs/arctic-shift/`:
 
 ```text
 uv run ninja-labs phase1 build --config domains/trading/configs/phase1-btc-reddit.toml
@@ -75,7 +103,7 @@ Bounded live smoke command:
 uv run ninja-labs phase1 build --config domains/trading/configs/phase1-smoke.toml
 ```
 
-**Gate:** do not add another crawler, browser or source merely because it is available. Add only what is necessary to complete the first reproducible dataset. A successful unit test is not evidence that the live historical extract is complete; the emitted manifest and coverage review are required before E1 consumes it.
+**Gate:** do not add another crawler, browser or source merely because it is available. A successful smoke proves the pipeline, not the completeness of the five-year corpus. E1 may consume the canonical dataset only after its final manifest and coverage audit are reviewed.
 
 ## Phase 2 — E1 Attention Replication / first information backtest
 
