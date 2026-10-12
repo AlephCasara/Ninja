@@ -5,6 +5,7 @@ end = "2025-01-08T00:00:00Z"
 output_root = ".ninja-data"
 
 [reddit]
+mode = "api"
 subreddits = ["Bitcoin"]
 page_limit = 100
 timeout_seconds = 60
