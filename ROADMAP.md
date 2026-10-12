@@ -4,7 +4,7 @@
 
 The immediate program objective is the first reproducible, falsifiable historical information backtest. Tool breadth, model sophistication and additional domains are subordinate to that objective.
 
-## Phase 0 — architecture freeze — in progress
+## Phase 0 — architecture freeze — substantially complete
 
 - [x] Define Ninja as a research/validation project
 - [x] Define six research domains
@@ -18,40 +18,64 @@ The immediate program objective is the first reproducible, falsifiable historica
 - [x] Keep one Ninja repository; treat trading and future business work as domain layers, not forks
 - [x] Keep one MCP surface initially; conceptual `tools.*`, `labs.*`, `intel.*` namespaces do not imply separate daemons
 - [x] Preserve Master Trader as the current execution/risk/capital authority
-- [ ] Align README terminology with the frozen architecture without deleting the existing mathematical/scientific material
+- [ ] Align the large README terminology with the frozen architecture without deleting the existing mathematical/scientific material
 - [x] Extend `tools/catalog.json` taxonomy to distinguish acquisition tools from Labs instruments
 - [x] Define `Observation v1` and `ExperimentSpec v1` contracts
 - [x] Add a minimal repository skeleton for Labs and domain-specific experiment configuration only where required by Phase 1/E1
 
-**Phase 0 exit condition:** architecture documents, contracts and roadmap agree on `Tools -> Labs -> Ninja`, with no competing runtime model.
+**Phase 0 exit condition:** architecture documents, contracts and roadmap agree on `Tools -> Labs -> Ninja`, with no competing runtime model. The remaining README wording is documentation debt, not a blocker for the Phase 1 vertical slice.
 
-## Phase 1 — historical validation substrate
+## Phase 1 — historical validation substrate — implementation complete; live materialization pending
 
 Priority vertical slice:
 
 ```text
-historical information source
+Arctic Shift / historical Reddit
         -> Bronze
         -> Observation v1 / Silver
         -> attention Gold panel
-        -> causally aligned market panel
+
+Binance BTCUSDT 15m
+        -> market Silver
+
+attention Gold + market Silver
+        -> causally aligned Gold panel
 ```
 
-Initial working candidate: historical Reddit data + BTC market data, subject to a final source-quality check before implementation.
+Canonical initial sources are Arctic Shift Reddit posts from `r/Bitcoin` and `r/CryptoCurrency`, plus Binance public `BTCUSDT` 15-minute spot klines. Source-quality decisions and limitations are recorded in `docs/PHASE1_DATA_SOURCES.md`.
 
-- [ ] Select the first canonical historical information corpus
-- [ ] Select matching market-data source/universe
-- [ ] Implement the single acquisition adapter required by that corpus
-- [ ] Implement dataset manifests and content/source hashes
-- [ ] Implement UTC causal alignment
-- [ ] Implement entity/asset aliases only as needed by the first corpus
-- [ ] Implement no-lookahead tests
-- [ ] Freeze train/validation/untouched-test periods
-- [ ] Materialize Bronze/Silver/Gold with DuckDB/Parquet-compatible schemas
-- [ ] Record exact event timestamps rather than retaining only aggregated counts
-- [ ] Preserve source/platform/author/thread relationships when available so later E3/Hawkes work remains possible
+- [x] Select the first canonical historical information corpus
+- [x] Select matching market-data source/universe
+- [x] Complete the source-quality review and record temporal limitations
+- [x] Implement the Arctic Shift historical acquisition adapter
+- [x] Implement the Binance public market-data adapter
+- [x] Implement dataset manifests and content/artifact hashes
+- [x] Implement UTC causal alignment around `Observation.available_at` and market `decision_time`
+- [x] Keep entity scope intentionally single-asset (`BTC`) so no premature alias subsystem is required
+- [x] Implement no-lookahead tests
+- [x] Freeze train/validation/untouched-test periods for the canonical E1 configuration
+- [x] Implement Bronze/Silver/Gold materializers with DuckDB/Parquet-compatible schemas
+- [x] Record exact event timestamps rather than retaining only aggregated counts
+- [x] Preserve source/platform/author/thread/community fields needed by later E3/Hawkes work when available
+- [x] Add an offline test suite so CI does not depend on external-source uptime
+- [x] Pass Python, Rust and Markdown CI on the Phase 1 implementation
+- [ ] Execute `phase1-smoke.toml` against live Arctic Shift + Binance from an authorized host
+- [ ] Materialize the canonical 2021-2025 dataset and preserve its final manifest
+- [ ] Inspect coverage/gaps/rate-limit behavior before declaring that dataset fit for E1
 
-**Gate:** do not add another crawler, browser or source merely because it is available. Add only what is necessary to complete the first reproducible dataset.
+Canonical command:
+
+```text
+uv run ninja-labs phase1 build --config domains/trading/configs/phase1-btc-reddit.toml
+```
+
+Bounded live smoke command:
+
+```text
+uv run ninja-labs phase1 build --config domains/trading/configs/phase1-smoke.toml
+```
+
+**Gate:** do not add another crawler, browser or source merely because it is available. Add only what is necessary to complete the first reproducible dataset. A successful unit test is not evidence that the live historical extract is complete; the emitted manifest and coverage review are required before E1 consumes it.
 
 ## Phase 2 — E1 Attention Replication / first information backtest
 
