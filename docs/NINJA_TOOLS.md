@@ -2,9 +2,25 @@
 
 ## Purpose
 
-Ninja Tools is the capability layer between Ninja research/agents and external acquisition, preservation, parsing, data, semantic, statistical and promotion-validation systems.
+Ninja Tools is Ninja's acquisition, observation and preservation arsenal.
 
-It is not a vendored collection of third-party projects. Ninja keeps those projects in their native implementations and owns the contracts, routing, provenance and agent-facing interface around them.
+Its question is:
+
+> What can we observe, reconstruct or preserve well enough to support a scientific experiment?
+
+Ninja Tools is intentionally distinct from Ninja Labs:
+
+```text
+WORLD
+  -> Ninja Tools
+  -> Observation
+  -> Ninja Labs
+  -> Evidence / Signal
+```
+
+Tools obtains information. Labs determines whether that information contains reproducible, useful structure.
+
+Ninja Tools is not a vendored collection of third-party projects. Mature projects remain in their native implementations. Ninja owns the capability contracts, routing, provenance, escalation policy and agent-facing interface around them.
 
 The canonical inventory is `tools/catalog.json`.
 
@@ -19,46 +35,71 @@ Claude Code / Hermes / future MCP clients
                  |
         typed capability adapters
                  |
-      +----------+-----------+----------------+
-      |          |           |                |
- discovery   acquisition  preservation    analysis
-      |          |           |                |
- Common       HTTP /       WARC/WACZ       DuckDB
- Crawl        crawlers      Browsertrix    Parquet
- SearXNG      browsers                     DVC lineage
- Last30Days                               Python research
+   +-------------+--------------+----------------+
+   |             |              |                |
+ discovery   historical     targeted         prospective
+             acquisition    acquisition      observation
+   |             |              |                |
+ SearXNG      Common Crawl    HTTP/browser    watchers
+ Last30Days   Arctic Shift    crawlers        source APIs
+ GDELT        archives/APIs   browsers        page changes
+ SurfSense                                      capture
+                 |
+                 +--------------------+
+                                      v
+                                preservation
+                                WARC/WACZ/hash
+                                      |
+                                      v
+                                 Observation
 ```
 
-The MCP server is intentionally a thin capability/control surface. Large payloads belong in files/object stores/Parquet, not copied through agent context unless the caller explicitly needs them.
+Large payloads belong in files/object stores/Parquet or replayable artifacts. MCP should normally return typed metadata and references rather than copying entire corpora into agent context.
 
-## Process model
+## Capability classes
 
-Memory pressure is controlled primarily through process lifetime and data movement:
+### 1. Discovery
 
-1. Rust owns the default resident Ninja control plane, contracts and orchestration.
-2. Python is a supported research plane for scientific/statistical/backtesting/ML work where it is the better tool.
-3. External tools run in their native runtime.
-4. Prefer ephemeral/batch execution for heavy extraction, semantic and statistical jobs when latency does not require residency.
-5. Prefer streaming, iterators, bounded queues and Parquet scans over whole-corpus resident objects.
-6. A service becomes long-lived only when its latency/throughput/library requirements justify the resident memory cost, regardless of language.
+Discovery answers:
 
-The rule is not `Python is banned`. The rule is `Rust is the default core; Python is used deliberately where the scientific ecosystem creates value`.
+> Where should Ninja look?
 
-## Capability ladder
+Candidate surfaces include:
 
-### Discovery
-
-Use multiple discovery surfaces because no single index sees the whole web:
-
-- Common Crawl index/corpus;
-- self-hosted SearXNG;
+- SearXNG;
+- Last30Days;
+- SurfSense;
+- GDELT discovery/query surfaces;
 - RSS/Atom/sitemaps;
-- source-specific search/archive APIs;
-- Last30Days for current reconnaissance.
+- Common Crawl index;
+- source-specific search APIs.
 
-Discovery results are leads. They become research evidence only after reproducible acquisition/preservation.
+Discovery output is a lead, not automatically research evidence.
 
-### Acquisition
+### 2. Historical acquisition
+
+Historical acquisition answers:
+
+> What information existed, or can be reconstructed, for a past experiment window?
+
+Prefer structured or archived sources before attempting expensive reconstruction.
+
+Candidate sources include:
+
+- Arctic Shift for historical Reddit data;
+- GDELT event/news history;
+- Common Crawl indexes and WARC records;
+- exchange/public market archives;
+- government/institutional archives;
+- source-specific historical APIs or bulk datasets.
+
+For backtesting, this capability class is generally more valuable than building a live crawler first.
+
+### 3. Targeted acquisition
+
+Targeted acquisition answers:
+
+> We know which source/object matters. How do we retrieve it reliably?
 
 Prefer the cheapest method that preserves the required information:
 
@@ -71,186 +112,194 @@ archive/feed/API
       -> authorized human/session handoff when interaction is required
 ```
 
-Candidate/native tools include curl_cffi, Crawlee or Scrapy, Playwright, Patchright, Camoufox and CloakBrowser as a benchmarked challenger.
+Candidate/native tools include:
+
+- `curl_cffi`;
+- Crawlee or Scrapy;
+- Playwright;
+- Patchright;
+- Camoufox;
+- CloakBrowser as a benchmarked challenger;
+- source-specific clients.
 
 Do not make any single browser engine a hard dependency of the scientific model.
 
-### Challenge handling
+### 4. Prospective observation
 
-Challenges are a first-class acquisition outcome. Adapters should record, where observable:
+Prospective observation answers:
+
+> From now on, what changed and when did Ninja actually see it?
+
+Candidate capabilities include:
+
+- changedetection-style sentinels;
+- source webhooks/APIs;
+- periodic collectors;
+- page/content hashes;
+- replayable browser capture where justified;
+- watchlists seeded by discovery systems.
+
+Prospective collection is especially important for reliable `first_seen_at` timestamps.
+
+### 5. Extraction required for observation
+
+Extraction converts acquired material into a typed observation without performing the scientific interpretation that belongs to Labs.
+
+Candidate tools include:
+
+- Trafilatura for main-content extraction;
+- Docling for complex documents/PDFs/tables;
+- source-specific parsers when structured source data exists;
+- deterministic field extraction;
+- semantic extraction only when deterministic parsing is insufficient.
+
+Raw acquisition and extracted output are separate artifacts with separate identities/hashes.
+
+### 6. Preservation
+
+For mutable/high-value evidence, preserve enough raw material to audit what Ninja actually observed.
+
+Preferred artifacts include:
+
+- content/raw-response hash;
+- retrieval metadata;
+- raw response/source payload where policy/storage permits;
+- WARC/WACZ capture where future replay matters;
+- extraction output separately from the raw evidence.
+
+Browsertrix/Webrecorder-style capture is a selective preservation capability, not the default crawler for every source.
+
+## Challenge handling
+
+Acquisition challenges are explicit outcomes, not hidden failures.
+
+Adapters should record, where observable:
 
 - challenge detected;
 - passive/JavaScript challenge;
 - interactive challenge;
 - retry/escalation path;
-- human/session handoff;
+- authorized session or human handoff when applicable;
 - final acquisition status;
-- latency and failure reason.
+- latency;
+- failure reason;
+- tool/engine identity.
 
-The project does not store credentials in Git, bypass paywalls/authentication, or expose a generic CAPTCHA-breaking primitive. Authorized sessions and human resolution may be preserved/reused according to the source's access model.
+Ninja Tools may compare acquisition techniques scientifically by coverage, success rate, latency, cost, maintenance burden and downstream information gain. Sophistication that does not improve usable evidence can be rejected later without deleting the broader capability from the catalog.
 
-### Preservation
+Credentials or secrets do not belong in Git. Access-control boundaries remain explicit in adapters and experiment manifests.
 
-For mutable/high-value web evidence, preserve enough raw material to audit what Ninja actually saw.
+## Observation boundary
 
-Preferred artifacts:
+The primary output of Tools is a typed Observation or a reference to raw material from which one can be deterministically reconstructed.
 
-- content/raw response hash (SHA-256 or stronger as adopted by the manifest schema);
-- retrieval metadata;
-- raw response or source payload where policy/storage permits;
-- WARC/WACZ capture for pages whose future replay matters;
-- extraction output separately from the raw evidence.
+Observation v1 is finalized in Phase 0. It must preserve enough temporal detail for later propagation work, including exact event timestamps when available.
 
-Browsertrix/Webrecorder-style capture is a preservation capability, not the default crawler for every source.
+Important temporal fields include:
 
-### Extraction and normalization
+```text
+published_at
+first_seen_at
+collected_at
+```
 
-Candidate tools:
+Present-day mutable fields such as current likes/views/ranking must never be silently backfilled as if they were historical point-in-time values.
 
-- Trafilatura for article/main-content extraction;
-- Docling for complex documents/PDFs/tables;
-- source-specific parsers when structured source data exists;
-- semantic models only after deterministic parsing/rules are insufficient.
+## Data handoff
 
-Raw acquisition and extracted text are separate artifacts with separate hashes/versions.
-
-### Analytical substrate
-
-Preferred initial data plane:
+Tools feeds the research data plane:
 
 ```text
 Bronze: raw/replayable acquisition artifacts
-Silver: normalized typed observations in Parquet
-Gold: experiment-ready features/panels in Parquet
-Query: DuckDB
-Lineage: Git + DVC
+Silver: normalized typed observations
+Gold: experiment-ready features/panels
 ```
 
-PostgreSQL or another resident database is introduced only when concurrent prospective collection requires it.
+Tools primarily owns Bronze acquisition provenance and the path into Silver observations. Gold analytical feature construction belongs to Ninja Labs.
 
-### Python research plane
+DuckDB, Polars, statistical libraries, Ax and backtesting systems are therefore Labs instruments even when they appear in a shared project-level tool inventory.
 
-Python is explicitly supported for workloads where its scientific ecosystem is an advantage, including:
+## Process model
 
-- NumPy/SciPy/statsmodels/scikit-learn style statistical work;
-- time-series and econometric validation;
-- feature prototyping and ablations;
-- notebooks and exploratory analysis;
-- ML/embedding/classifier evaluation;
-- purged CV, CPCV, bootstrap/placebo and multiple-testing workflows;
-- Freqtrade backtesting, walk-forward analysis and promotion adapters.
+1. Rust owns the default resident Ninja control/orchestration plane, contracts and agent-facing MCP surface.
+2. External acquisition tools run in their native runtime.
+3. Prefer ephemeral/batch execution for expensive extraction/capture when latency does not require residency.
+4. Prefer streaming, iterators, bounded queues and file/object references over whole-corpus resident objects.
+5. A service becomes long-lived only when latency/throughput requirements justify it.
 
-Python code used for headline evidence must be reproducible: pinned environment, frozen experiment configuration, dataset/artifact versions, no-lookahead tests, recorded code commit and preserved outputs.
-
-For large jobs, prefer Polars/DuckDB/Arrow/Parquet-style lazy or chunked processing rather than materializing whole datasets into resident DataFrames. A long-lived Python service is allowed only when there is an operational reason for residency; measure its memory footprint rather than rejecting it on language identity alone.
-
-Critical statistical tests should eventually have independent/reference implementations where practical; one third-party package should not be the sole arbiter of whether alpha exists.
-
-### Promotion validation
-
-Freqtrade belongs at the promotion boundary, after a feature/factor survives its research test. E1/E2-style information-value experiments must not be replaced by strategy backtests.
+Ninja does not rewrite Scrapy, Crawlee, Playwright, Camoufox, Browsertrix or similar systems merely to standardize implementation language.
 
 ## Agent integration
 
-### Claude Code
-
 The repository commits `.mcp.json` with a project-scoped `ninja-tooling` stdio server.
 
-On first use, build/start cost is paid by Cargo; subsequent release builds reuse Cargo artifacts.
-
-The current server exposes:
+The current server exposes only:
 
 - `ninja_tool_catalog` — canonical capability/tool inventory;
-- `ninja_tool_doctor` — local PATH availability for probeable CLI tools.
+- `ninja_tool_doctor` — locally discoverable CLI diagnostics.
 
-This is deliberately smaller than exposing every command from every browser/crawler package.
+This is intentionally smaller than exposing arbitrary commands from every external package.
 
-### Hermes
+Potential future Tools-level capabilities include:
 
-Hermes supports local stdio MCP servers. Two supported approaches are:
-
-1. import the Claude Code agent/configuration where that workflow is already used; or
-2. point Hermes directly at the same command:
-
-```yaml
-mcp_servers:
-  ninja-tooling:
-    command: cargo
-    args:
-      - run
-      - --quiet
-      - --release
-      - -p
-      - ninja-tooling
-      - --
-      - mcp
+```text
+tools.discover
+tools.acquire
+tools.capture
+tools.watch
+tools.archive
+tools.status
 ```
 
-Run the agent from the repository root so Cargo resolves the workspace.
-
-## CLI
-
-Without an agent:
-
-```bash
-cargo run -p ninja-tooling -- catalog
-cargo run -p ninja-tooling -- doctor
-cargo run --release -p ninja-tooling -- mcp
-```
-
-`doctor` is observational. A missing tool is not permission to install it silently.
+Names are conceptual until a real experiment requires the adapter.
 
 ## Adapter design rules
 
-A future adapter should expose a capability, not mirror an upstream package's entire command surface.
+A future adapter exposes a bounded capability rather than mirroring an upstream package's complete command surface.
 
-Good:
+Good examples:
 
 ```text
 acquire_article(url, capture_policy)
 search_reddit(query, time_window)
 capture_page(url, replay=true)
-query_gold(sql_or_named_query)
-```
-
-Bad:
-
-```text
-run_shell(command)
-run_any_browser_method(name, arbitrary_json)
+watch_resource(target, policy)
+retrieve_historical_events(query, interval)
 ```
 
 Each adapter should define:
 
 - typed input;
-- typed output/reference to large output;
+- typed output or reference to large output;
 - tool/version identity;
 - bounded timeout/resource policy;
 - provenance fields;
+- temporal semantics;
 - failure/challenge states;
-- deterministic configuration where the experiment depends on it.
+- deterministic configuration where an experiment depends on it.
 
-## Why MCP instead of agent-specific plugins
+## Why MCP
 
-Claude Code and Hermes both consume MCP. A single server therefore provides:
+Claude Code, Hermes and future MCP clients can consume one project capability surface.
 
-- one capability contract;
-- one permission surface;
-- one audit point;
-- one place to filter tools;
+This provides:
+
+- one contract vocabulary;
+- one permission/audit surface;
+- one tool catalog;
 - no duplicated integration logic per coding agent.
 
-The CLI and MCP should share the same Rust domain code so humans, CI and agents observe the same catalog and diagnostics.
+Phase 0 keeps one MCP server for the whole project. `tools.*`, future `labs.*` and `intel.*` are conceptual namespaces; separate daemons are introduced only after a measured deployment or permission need exists.
 
 ## Near-term implementation order
 
 1. Keep catalog + doctor stable and compile-tested.
-2. Select the first canonical dataset/source for E1.
-3. Add only the acquisition adapter needed for that source.
-4. Add observation/manifest contracts and causal alignment.
-5. Introduce DVC metadata when the dataset is actually created.
-6. Add WARC/WACZ preservation for mutable sources that need replay.
-7. Add browser/challenge adapters only for sources where HTTP/archive paths are insufficient.
-8. Build the Python research environment for E1 statistical validation and backtesting only when the first experiment requires it.
+2. Select the first canonical historical source for E1.
+3. Add only the acquisition adapter required by that source.
+4. Finalize Observation v1, manifests and causal alignment.
+5. Produce Bronze/Silver input for E1.
+6. Preserve event-level timestamps/source identity so E3/Hawkes remains possible later.
+7. Add browser/challenge adapters only when simpler historical/API/HTTP paths fail for an experiment.
+8. Add prospective watchers after historical validation creates a reason to collect point-in-time evidence going forward.
 
-Ninja Tools grows from demonstrated research needs, while the architecture remains capable of much broader web acquisition later.
+Ninja Tools can maintain a broad arsenal in its catalog. Implementation priority is determined by scientific need, not by the number of available tools.
