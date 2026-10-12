@@ -11,6 +11,7 @@ from ninja_labs.util import parse_utc
 
 BASE_URL = "https://arctic-shift.photon-reddit.com"
 POST_FIELDS = "id,author,created_utc,retrieved_on,subreddit,title,selftext,url"
+REQUEST_INTERVAL_SECONDS = 0.5
 
 
 class ArcticShiftError(RuntimeError):
@@ -33,16 +34,32 @@ def _response_detail(response: httpx.Response) -> str:
     return str(payload)[:1000]
 
 
+def _looks_like_timeout_or_busy(detail: str) -> bool:
+    text = detail.lower()
+    return "timed out" in text or "timeout" in text or "slow down" in text
+
+
 def _request_json(
     client: httpx.Client,
     path: str,
     params: dict[str, Any],
     *,
-    attempts: int = 3,
+    attempts: int = 2,
 ) -> Any:
-    delay = 1.0
+    delay = 2.0
     for attempt in range(attempts):
-        response = client.get(path, params=params)
+        # Arctic Shift asks normal users to stay around a couple requests per
+        # second. The adapter deliberately favors reproducibility over speed.
+        time.sleep(REQUEST_INTERVAL_SECONDS)
+        try:
+            response = client.get(path, params=params)
+        except httpx.TimeoutException as error:
+            if attempt + 1 == attempts:
+                raise ArcticShiftQueryTimeout(str(error)) from error
+            time.sleep(delay)
+            delay *= 2.0
+            continue
+
         detail = _response_detail(response)
 
         if response.status_code == 429 or response.status_code >= 500:
@@ -56,7 +73,7 @@ def _request_json(
             delay *= 2.0
             continue
 
-        if response.status_code == 422 and "timed out" in detail.lower():
+        if response.status_code == 422 and _looks_like_timeout_or_busy(detail):
             if attempt + 1 == attempts:
                 raise ArcticShiftQueryTimeout(detail)
             time.sleep(delay)
@@ -71,7 +88,7 @@ def _request_json(
         payload = response.json()
         if isinstance(payload, dict) and payload.get("error"):
             detail = str(payload["error"])
-            if "timed out" in detail.lower():
+            if _looks_like_timeout_or_busy(detail):
                 raise ArcticShiftQueryTimeout(detail)
             raise ArcticShiftError(detail)
         return payload
@@ -105,8 +122,9 @@ def _iter_subreddit_interval(
 
     Search results are capped by the API. A full page is therefore treated as
     evidence that the interval may be truncated and is recursively bisected.
-    Query timeouts are handled the same way. The overlapping API boundaries are
-    filtered client-side and IDs are deduplicated globally.
+    Query timeouts/busy responses are handled the same way after a bounded
+    retry. The overlapping API boundaries are filtered client-side and IDs are
+    deduplicated globally.
     """
 
     if start_epoch >= end_epoch:
