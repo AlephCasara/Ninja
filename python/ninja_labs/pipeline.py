@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from ninja_labs.adapters.arctic_shift import iter_posts
+from ninja_labs.adapters.arctic_shift_file import iter_posts_jsonl
 from ninja_labs.adapters.binance import iter_klines
 from ninja_labs.coverage import build_coverage_report
 from ninja_labs.manifest import artifact_record, write_manifest
@@ -15,7 +16,13 @@ from ninja_labs.phase1 import (
     write_market_dataset,
     write_reddit_dataset,
 )
-from ninja_labs.util import iso_utc, parse_utc, sha256_json, utc_now
+from ninja_labs.util import (
+    iso_utc,
+    parse_utc,
+    sha256_file,
+    sha256_json,
+    utc_now,
+)
 
 
 def load_config(path: Path) -> dict[str, Any]:
@@ -35,6 +42,79 @@ def _parse_splits(raw: dict[str, Any]) -> dict[str, tuple[Any, Any]]:
     }
     validate_splits(splits)
     return splits
+
+
+def _reddit_input(
+    reddit_cfg: dict[str, Any],
+    *,
+    start: Any,
+    end: Any,
+) -> tuple[Any, dict[str, Any]]:
+    mode = str(reddit_cfg.get("mode", "api"))
+    subreddits = list(reddit_cfg["subreddits"])
+    causal_clock = "retrieved_on when available; otherwise created_utc"
+
+    if mode == "api":
+        rows = iter_posts(
+            subreddits=subreddits,
+            after=start,
+            before=end,
+            page_limit=int(reddit_cfg.get("page_limit", 100)),
+            timeout_seconds=float(reddit_cfg.get("timeout_seconds", 60.0)),
+        )
+        source = {
+            "id": "arctic-shift-api",
+            "role": "historical-information",
+            "endpoint": "https://arctic-shift.photon-reddit.com/api/posts/search",
+            "query": {
+                "mode": "api",
+                "subreddits": subreddits,
+                "after": iso_utc(start),
+                "before": iso_utc(end),
+                "sort": "asc",
+            },
+            "causal_clock": causal_clock,
+        }
+        return rows, source
+
+    if mode == "jsonl":
+        files = [Path(value) for value in reddit_cfg.get("files", [])]
+        if not files:
+            raise ValueError("reddit.mode=jsonl requires reddit.files")
+        missing = [str(path) for path in files if not path.is_file()]
+        if missing:
+            raise FileNotFoundError(
+                "missing Arctic Shift JSONL input(s): " + ", ".join(missing)
+            )
+        rows = iter_posts_jsonl(
+            files=files,
+            after=start,
+            before=end,
+            subreddits=set(subreddits),
+        )
+        source = {
+            "id": "arctic-shift-download-tool-jsonl",
+            "role": "historical-information",
+            "endpoint": "local-jsonl",
+            "query": {
+                "mode": "jsonl",
+                "subreddits": subreddits,
+                "after": iso_utc(start),
+                "before": iso_utc(end),
+                "files": [
+                    {
+                        "path": str(path),
+                        "sha256": sha256_file(path),
+                        "bytes": path.stat().st_size,
+                    }
+                    for path in files
+                ],
+            },
+            "causal_clock": causal_clock,
+        }
+        return rows, source
+
+    raise ValueError(f"unsupported reddit.mode: {mode!r}; expected api or jsonl")
 
 
 def run_phase1(config_path: Path) -> Path:
@@ -67,13 +147,7 @@ def run_phase1(config_path: Path) -> Path:
     manifest_path = run_dir / "manifest.json"
 
     reddit_cfg = config["reddit"]
-    reddit_rows = iter_posts(
-        subreddits=list(reddit_cfg["subreddits"]),
-        after=start,
-        before=end,
-        page_limit=int(reddit_cfg.get("page_limit", 100)),
-        timeout_seconds=float(reddit_cfg.get("timeout_seconds", 60.0)),
-    )
+    reddit_rows, reddit_source = _reddit_input(reddit_cfg, start=start, end=end)
     observation_count = write_reddit_dataset(
         reddit_rows,
         bronze_path=bronze_reddit,
@@ -143,18 +217,7 @@ def run_phase1(config_path: Path) -> Path:
         "coverage": artifact_record(coverage_path),
     }
     sources = [
-        {
-            "id": "arctic-shift",
-            "role": "historical-information",
-            "endpoint": "https://arctic-shift.photon-reddit.com/api/posts/search",
-            "query": {
-                "subreddits": list(reddit_cfg["subreddits"]),
-                "after": iso_utc(start),
-                "before": iso_utc(end),
-                "sort": "asc",
-            },
-            "causal_clock": "retrieved_on when available; otherwise created_utc",
-        },
+        reddit_source,
         {
             "id": "binance-public-market-data",
             "role": "market-baseline",
