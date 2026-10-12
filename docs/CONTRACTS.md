@@ -1,0 +1,196 @@
+# Core Research Contracts
+
+## Status
+
+Phase 0 v1 contract freeze.
+
+The contracts are domain-neutral. Trading-specific targets, baselines and susceptibility variables belong in trading experiment configuration, not in the core schema.
+
+Machine-readable drafts live in:
+
+- `schemas/observation-v1.schema.json`
+- `schemas/experiment-spec-v1.schema.json`
+
+## Observation v1
+
+`Observation` is the boundary between Ninja Tools and Ninja Labs.
+
+It represents something acquired or reconstructed from an information source with enough provenance and temporal semantics to be used or rejected by a causal experiment.
+
+### Required identity
+
+```text
+schema_version
+observation_id
+source_id
+source_type
+platform
+collected_at
+content_hash
+provenance
+```
+
+### Temporal semantics
+
+The central rule is that source publication time and causal availability are not silently treated as equivalent.
+
+Observation v1 can record:
+
+```text
+published_at
+first_seen_at
+collected_at
+available_at
+available_at_basis
+```
+
+`available_at` is the timestamp at which the experiment permits the observation to become causally available. Its basis must be explicit:
+
+```text
+first_seen
+published
+archive_capture
+collected
+reconstructed
+```
+
+A historical source that only exposes publication time may use `available_at = published_at` only under an explicitly documented reconstruction policy. That observation has weaker epistemic status than a prospective first-seen record.
+
+No experiment may silently replace an unknown first-seen timestamp with a present-day collection timestamp and then treat the result as historical availability.
+
+### Event-level preservation
+
+Bronze/Silver must retain event-level timestamps when the source provides them.
+
+E1 may aggregate observations into hourly/daily attention features, but those Gold panels must be reproducible from event-level Silver data. This preserves the information needed by E3/Hawkes later.
+
+### Relationships
+
+Optional fields include:
+
+```text
+author_id
+thread_id
+parent_id
+entity_refs[]
+```
+
+These should be preserved when available because author/source breadth, thread structure, independent-source counts and propagation models may depend on them.
+
+### Content
+
+Observation v1 stores references and hashes rather than requiring large payloads inline:
+
+```text
+content_ref
+content_hash
+content_type
+```
+
+`content_ref` may point to a file, object, WARC/WACZ record, dataset row group or other replayable artifact.
+
+### Mutable metrics
+
+Likes, views, upvotes, ranking and similar values are snapshots, not timeless attributes.
+
+If recorded they must include an `as_of` timestamp. A current engagement value must never be treated as the value that existed at publication time unless the source genuinely provides historical snapshots.
+
+### Provenance
+
+Provenance records at least:
+
+```text
+collector_id
+collector_version
+retrieval_ref
+raw_ref?
+dataset_manifest_id?
+```
+
+Additional source/access metadata may be added without changing the causal meaning of the base contract.
+
+## ExperimentSpec v1
+
+`ExperimentSpec` is the boundary between a research hypothesis and an executable Ninja Labs experiment.
+
+Its purpose is to stop experimental degrees of freedom from silently changing after results are observed.
+
+### Required identity
+
+```text
+schema_version
+experiment_id
+hypothesis_id
+domain
+dataset_manifest_ids[]
+code_revision
+```
+
+### Scientific definition
+
+An experiment declares:
+
+```text
+targets[]
+baselines[]
+fixed_features[]
+search_space
+metrics
+splits
+robustness_checks[]
+stopping_rules
+```
+
+The actual representation may evolve, but those decisions must be explicit before final-test evaluation.
+
+### Chronological splits
+
+The contract distinguishes:
+
+```text
+train
+validation
+untouched_test
+```
+
+Optional purging/embargo metadata is recorded when labels or windows overlap.
+
+The untouched test window is read-once evidence for a frozen candidate. Repeated adaptive use converts it into training information and invalidates its role as the final test.
+
+### Adaptive search
+
+Adaptive optimization is optional.
+
+When enabled, the contract records:
+
+```text
+engine
+allowed_windows
+search_space
+trial_budget
+stopping_rule
+```
+
+For Ax, `allowed_windows` must exclude `untouched_test`.
+
+Ax proposes trials; Ninja Labs owns the hypothesis, target, baseline, metrics, constraints and final interpretation.
+
+### Reproducibility
+
+Each completed experiment record should be resolvable to:
+
+- exact code revision;
+- exact dataset manifest(s);
+- frozen experiment spec;
+- package/environment lock state;
+- trial history where adaptive search was used;
+- output metrics/artifacts;
+- final status: positive, negative or inconclusive.
+
+## Contract evolution
+
+Breaking semantic changes require a new schema version.
+
+Adding optional metadata that does not change causal or scientific meaning may remain within v1.
+
+The schemas are intentionally small. Domain objects are layered on top rather than expanding the core contract until it knows about every future trading or business concept.
