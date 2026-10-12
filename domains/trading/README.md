@@ -26,3 +26,33 @@ market + Ninja information features
 ```
 
 Only validated information effects may proceed to strategy backtests and Master Trader promotion.
+
+## Phase 1 canonical substrate
+
+The canonical historical input path is:
+
+```text
+Arctic Shift subreddit JSONL
++ Binance BTCUSDT 15m
+-> Observation v1
+-> dense attention panel
+-> causal aligned market panel
+-> E1 Attention Replication
+```
+
+Canonical config:
+
+```text
+domains/trading/configs/phase1-btc-reddit.toml
+```
+
+Expected external inputs:
+
+```text
+.ninja-inputs/arctic-shift/r_Bitcoin_posts.jsonl
+.ninja-inputs/arctic-shift/r_CryptoCurrency_posts.jsonl
+```
+
+These files are intentionally excluded from Git. Their SHA-256 values and byte sizes are written into the dataset manifest so a scientific result identifies the exact historical source corpus.
+
+The API-backed `phase1-smoke.toml` remains a bounded integration check and targeted-gap path, not the five-year canonical acquisition method.
