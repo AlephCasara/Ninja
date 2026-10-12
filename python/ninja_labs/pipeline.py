@@ -6,6 +6,7 @@ from typing import Any
 
 from ninja_labs.adapters.arctic_shift import iter_posts
 from ninja_labs.adapters.binance import iter_klines
+from ninja_labs.coverage import build_coverage_report
 from ninja_labs.manifest import artifact_record, write_manifest
 from ninja_labs.phase1 import (
     build_aligned_panel,
@@ -62,6 +63,7 @@ def run_phase1(config_path: Path) -> Path:
     silver_market = run_dir / "silver" / "market.parquet"
     gold_attention = run_dir / "gold" / "attention.parquet"
     gold_aligned = run_dir / "gold" / "aligned.parquet"
+    coverage_path = run_dir / "coverage.json"
     manifest_path = run_dir / "manifest.json"
 
     reddit_cfg = config["reddit"]
@@ -103,6 +105,18 @@ def run_phase1(config_path: Path) -> Path:
         output_path=gold_aligned,
         splits=splits,
     )
+    coverage = build_coverage_report(
+        observations_path=silver_observations,
+        market_path=silver_market,
+        attention_path=gold_attention,
+        aligned_path=gold_aligned,
+        market_interval=str(market_cfg["interval"]),
+        output_path=coverage_path,
+    )
+    if coverage["aligned"]["future_window_rows"] != 0:
+        raise ValueError("coverage audit found future feature windows")
+    if coverage["aligned"]["future_observation_rows"] != 0:
+        raise ValueError("coverage audit found future observations")
 
     normalized_config = {
         "dataset": {
@@ -126,6 +140,7 @@ def run_phase1(config_path: Path) -> Path:
         "silver_market": artifact_record(silver_market, rows=market_count),
         "gold_attention": artifact_record(gold_attention, rows=attention_count),
         "gold_aligned": artifact_record(gold_aligned, rows=aligned_count),
+        "coverage": artifact_record(coverage_path),
     }
     sources = [
         {
@@ -158,6 +173,7 @@ def run_phase1(config_path: Path) -> Path:
         "Observation.available_at is the only timestamp used to construct attention features.",
         "Event-level observations are preserved so later propagation/Hawkes work does not require reconstructed timestamps.",
         "The untouched_test split is labeled in the aligned panel but Phase 2 optimizers must not use it for adaptive search.",
+        "coverage.json records source/market/missingness diagnostics and must be reviewed before E1 consumes a canonical dataset.",
     ]
     write_manifest(
         manifest_path,
