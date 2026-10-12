@@ -1,0 +1,30 @@
+[dataset]
+id = "btc-reddit-phase1-smoke"
+start = "2025-01-01T00:00:00Z"
+end = "2025-01-08T00:00:00Z"
+output_root = ".ninja-data"
+
+[reddit]
+subreddits = ["Bitcoin"]
+page_limit = 100
+timeout_seconds = 60
+
+[market]
+symbol = "BTCUSDT"
+interval = "15m"
+timeout_seconds = 60
+
+[attention]
+interval = "15m"
+
+[splits.train]
+start = "2025-01-01T00:00:00Z"
+end = "2025-01-04T00:00:00Z"
+
+[splits.validation]
+start = "2025-01-04T00:00:00Z"
+end = "2025-01-06T00:00:00Z"
+
+[splits.untouched_test]
+start = "2025-01-06T00:00:00Z"
+end = "2025-01-08T00:00:00Z"
