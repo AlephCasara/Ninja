@@ -19,9 +19,9 @@ The immediate program objective is the first reproducible, falsifiable historica
 - [x] Keep one MCP surface initially; conceptual `tools.*`, `labs.*`, `intel.*` namespaces do not imply separate daemons
 - [x] Preserve Master Trader as the current execution/risk/capital authority
 - [ ] Align README terminology with the frozen architecture without deleting the existing mathematical/scientific material
-- [ ] Extend `tools/catalog.json` taxonomy to distinguish acquisition tools from Labs instruments
-- [ ] Define `Observation v1` and `ExperimentSpec v1` contracts
-- [ ] Add a minimal repository skeleton for Labs and domain-specific experiment configuration only where required by Phase 1/E1
+- [x] Extend `tools/catalog.json` taxonomy to distinguish acquisition tools from Labs instruments
+- [x] Define `Observation v1` and `ExperimentSpec v1` contracts
+- [x] Add a minimal repository skeleton for Labs and domain-specific experiment configuration only where required by Phase 1/E1
 
 **Phase 0 exit condition:** architecture documents, contracts and roadmap agree on `Tools -> Labs -> Ninja`, with no competing runtime model.
 
@@ -86,7 +86,7 @@ The exact CLI shape may change; reproducibility is the invariant.
 
 Ax enters after the fixed E1 pipeline is known to be scientifically and operationally correct.
 
-- [ ] Add Ax to the Labs instrument catalog
+- [x] Add Ax to the Labs instrument catalog
 - [ ] Define a bounded Ax adapter around Ninja-owned `ExperimentSpec` / `TrialSpec` contracts
 - [ ] Allow Ax to explore only preregistered train/validation spaces
 - [ ] Make untouched final test data inaccessible during adaptive optimization
