@@ -33,6 +33,8 @@ Claude Code / Hermes / future MCP clients
         ninja-tooling (Rust)
         CLI + MCP stdio server
                  |
+        deterministic routing
+                 |
         typed capability adapters
                  |
    +-------------+--------------+----------------+
@@ -42,8 +44,8 @@ Claude Code / Hermes / future MCP clients
    |             |              |                |
  SearXNG      Common Crawl    HTTP/browser    watchers
  Last30Days   Arctic Shift    crawlers        source APIs
- GDELT        archives/APIs   browsers        page changes
- SurfSense                                      capture
+ GDELT        archives/APIs   protocol obs.   page changes
+ SurfSense                   preservation      capture
                  |
                  +--------------------+
                                       v
@@ -101,30 +103,49 @@ Targeted acquisition answers:
 
 > We know which source/object matters. How do we retrieve it reliably?
 
-Prefer the cheapest method that preserves the required information:
+Prefer the cheapest method that preserves the required information. The default escalation order is conceptual rather than a guarantee that every source will traverse every step:
 
 ```text
 archive/feed/API
       -> ordinary HTTP
       -> browser-like HTTP
-      -> normal browser
-      -> hardened/alternate browser
-      -> authorized human/session handoff when interaction is required
+      -> Crawl4AI / crawler
+      -> normal deterministic browser
+      -> authorized authenticated browser session
+      -> semantic browser fallback
+      -> alternate browser engine
+      -> authorized human/session handoff
 ```
 
 Candidate/native tools include:
 
-- `curl_cffi`;
-- Crawlee or Scrapy;
-- Playwright;
-- Patchright;
-- Camoufox;
-- CloakBrowser as a benchmarked challenger;
-- source-specific clients.
+- `curl_cffi` for cheap browser-like HTTP;
+- Crawl4AI for agent-oriented crawling/extraction;
+- Crawlee or Scrapy for frontier/concurrency/retry-heavy crawls;
+- Playwright for ordinary deterministic browser automation;
+- Browser Control as the preferred path for an existing Chromium browser and authorized authenticated sessions;
+- Stagehand as a semantic fallback when deterministic DOM interaction is materially fragile;
+- Patchright, Camoufox and CloakBrowser as measured challengers rather than automatic defaults;
+- source-specific clients whenever a structured interface exists.
 
-Do not make any single browser engine a hard dependency of the scientific model.
+Do not make any single crawler or browser engine a hard dependency of the scientific model. Tool promotion is based on measured acquisition success, latency, maintenance cost and downstream information gain.
 
-### 4. Prospective observation
+### 4. Protocol observation and interface reconstruction
+
+Protocol observation answers:
+
+> What structured interface did an authorized browser/application actually use, and can a repeated browser action be replaced by a narrower reproducible adapter?
+
+Preferred tools include:
+
+- mitmproxy for authorized HTTP(S)/WebSocket observation, replay and debugging;
+- mitmproxy2swagger for producing candidate OpenAPI descriptions from captured flows.
+
+Protocol observation is an interoperability/debugging capability, not an authorization bypass. Captured traffic can contain credentials, session identifiers or private payloads, so adapters must scope captures deliberately, sanitize secrets before durable storage and record capture provenance.
+
+A generated OpenAPI description is a hypothesis about an interface until controlled validation confirms the relevant methods, fields and state transitions.
+
+### 5. Prospective observation
 
 Prospective observation answers:
 
@@ -141,7 +162,7 @@ Candidate capabilities include:
 
 Prospective collection is especially important for reliable `first_seen_at` timestamps.
 
-### 5. Extraction required for observation
+### 6. Extraction required for observation
 
 Extraction converts acquired material into a typed observation without performing the scientific interpretation that belongs to Labs.
 
@@ -149,13 +170,14 @@ Candidate tools include:
 
 - Trafilatura for main-content extraction;
 - Docling for complex documents/PDFs/tables;
+- Crawl4AI when acquisition and bounded extraction are naturally coupled;
 - source-specific parsers when structured source data exists;
 - deterministic field extraction;
 - semantic extraction only when deterministic parsing is insufficient.
 
 Raw acquisition and extracted output are separate artifacts with separate identities/hashes.
 
-### 6. Preservation
+### 7. Preservation
 
 For mutable/high-value evidence, preserve enough raw material to audit what Ninja actually observed.
 
@@ -167,7 +189,46 @@ Preferred artifacts include:
 - WARC/WACZ capture where future replay matters;
 - extraction output separately from the raw evidence.
 
-Browsertrix/Webrecorder-style capture is a selective preservation capability, not the default crawler for every source.
+Browsertrix Crawler is the preferred selective replay-preservation candidate for browser-derived evidence. It is a sidecar capability, not the default crawler for every source.
+
+## Deterministic routing
+
+`ninja-tooling` exposes a deterministic route planner. It recommends tools; it does not execute arbitrary commands or silently install software.
+
+CLI:
+
+```bash
+cargo run -p ninja-tooling -- route authenticated-browser
+cargo run -p ninja-tooling -- route dynamic-web --preserve
+cargo run -p ninja-tooling -- route dynamic-web --inspect-protocol --preserve
+```
+
+MCP:
+
+```text
+ninja_tool_route({
+  "profile": "authenticated-browser",
+  "preserve": true,
+  "inspect_protocol": false
+})
+```
+
+Supported profiles:
+
+```text
+discovery
+historical
+static-web
+high-throughput-web
+dynamic-web
+authenticated-browser
+semantic-browser
+protocol-observation
+replay-capture
+complex-document
+```
+
+Routing is intentionally explicit and falsifiable. A profile maps to ordered primary tools, fallbacks and optional sidecars. Experiments can later compare that policy against alternatives without changing scientific semantics.
 
 ## Challenge handling
 
@@ -184,6 +245,8 @@ Adapters should record, where observable:
 - latency;
 - failure reason;
 - tool/engine identity.
+
+A challenge never silently changes Ninja's authorization boundary. Authentication, CAPTCHA, paywall or anti-abuse controls are not permission to bypass them. If the required information is unavailable through an authorized route, the acquisition may fail and that failure is part of the observation record.
 
 Ninja Tools may compare acquisition techniques scientifically by coverage, success rate, latency, cost, maintenance burden and downstream information gain. Sophistication that does not improve usable evidence can be rejected later without deleting the broader capability from the catalog.
 
@@ -221,24 +284,26 @@ DuckDB, Polars, statistical libraries, Ax and backtesting systems are therefore 
 
 ## Process model
 
-1. Rust owns the default resident Ninja control/orchestration plane, contracts and agent-facing MCP surface.
+1. Rust owns the default resident Ninja control/orchestration plane, contracts, deterministic routing and agent-facing MCP surface.
 2. External acquisition tools run in their native runtime.
 3. Prefer ephemeral/batch execution for expensive extraction/capture when latency does not require residency.
 4. Prefer streaming, iterators, bounded queues and file/object references over whole-corpus resident objects.
 5. A service becomes long-lived only when latency/throughput requirements justify it.
+6. Protocol captures and authenticated-browser state are sensitive artifacts and receive explicit retention/sanitization policy.
 
-Ninja does not rewrite Scrapy, Crawlee, Playwright, Camoufox, Browsertrix or similar systems merely to standardize implementation language.
+Ninja does not rewrite Scrapy, Crawlee, Playwright, Crawl4AI, Stagehand, Browser Control, mitmproxy, Camoufox, Browsertrix or similar systems merely to standardize implementation language.
 
 ## Agent integration
 
 The repository commits `.mcp.json` with a project-scoped `ninja-tooling` stdio server.
 
-The current server exposes only:
+The current server exposes:
 
 - `ninja_tool_catalog` — canonical capability/tool inventory;
-- `ninja_tool_doctor` — locally discoverable CLI diagnostics.
+- `ninja_tool_doctor` — locally discoverable CLI diagnostics;
+- `ninja_tool_route` — deterministic acquisition routing by workload profile.
 
-This is intentionally smaller than exposing arbitrary commands from every external package.
+This remains intentionally smaller than exposing arbitrary commands from every external package.
 
 Potential future Tools-level capabilities include:
 
@@ -263,6 +328,7 @@ Good examples:
 acquire_article(url, capture_policy)
 search_reddit(query, time_window)
 capture_page(url, replay=true)
+inspect_authorized_flow(target, capture_policy)
 watch_resource(target, policy)
 retrieve_historical_events(query, interval)
 ```
@@ -276,6 +342,7 @@ Each adapter should define:
 - provenance fields;
 - temporal semantics;
 - failure/challenge states;
+- authorization/sensitivity boundary where relevant;
 - deterministic configuration where an experiment depends on it.
 
 ## Why MCP
@@ -287,19 +354,21 @@ This provides:
 - one contract vocabulary;
 - one permission/audit surface;
 - one tool catalog;
+- one deterministic routing policy;
 - no duplicated integration logic per coding agent.
 
 Phase 0 keeps one MCP server for the whole project. `tools.*`, future `labs.*` and `intel.*` are conceptual namespaces; separate daemons are introduced only after a measured deployment or permission need exists.
 
 ## Near-term implementation order
 
-1. Keep catalog + doctor stable and compile-tested.
+1. Keep catalog, doctor and deterministic routing stable and compile-tested.
 2. Select the first canonical historical source for E1.
 3. Add only the acquisition adapter required by that source.
 4. Finalize Observation v1, manifests and causal alignment.
 5. Produce Bronze/Silver input for E1.
 6. Preserve event-level timestamps/source identity so E3/Hawkes remains possible later.
-7. Add browser/challenge adapters only when simpler historical/API/HTTP paths fail for an experiment.
-8. Add prospective watchers after historical validation creates a reason to collect point-in-time evidence going forward.
+7. Promote Browser Control/Crawl4AI/protocol-observation/preservation adapters only when an actual experiment or business-domain acquisition requires them.
+8. Benchmark Stagehand and alternate browser engines only where the preferred deterministic route measurably underperforms.
+9. Add prospective watchers after historical validation creates a reason to collect point-in-time evidence going forward.
 
-Ninja Tools can maintain a broad arsenal in its catalog. Implementation priority is determined by scientific need, not by the number of available tools.
+Ninja Tools can maintain a broad arsenal in its catalog. Implementation priority is determined by scientific or domain need, not by the number of available tools.
