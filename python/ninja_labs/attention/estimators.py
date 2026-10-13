@@ -7,6 +7,25 @@ from collections.abc import Sequence
 from typing import Literal
 
 
+def _robust_scale(
+    reference: Sequence[float],
+    *,
+    zero_mad_policy: Literal["poisson", "epsilon"],
+    epsilon: float,
+) -> tuple[float, float]:
+    center = float(statistics.median(reference))
+    mad = float(statistics.median(abs(value - center) for value in reference))
+    if mad > 0:
+        scale = 1.4826 * mad
+    elif zero_mad_policy == "poisson":
+        scale = math.sqrt(max(center, 1.0))
+    elif zero_mad_policy == "epsilon":
+        scale = epsilon
+    else:  # pragma: no cover
+        raise ValueError(f"unsupported zero_mad_policy: {zero_mad_policy}")
+    return center, max(scale, epsilon)
+
+
 def robust_attention_surprise(
     counts: Sequence[float],
     *,
@@ -16,11 +35,8 @@ def robust_attention_surprise(
 ) -> list[float | None]:
     """Causal robust attention surprise using only trailing observations.
 
-    The current count is never included in its reference window. When the
-    trailing MAD is zero, the caller must choose an explicit fallback policy.
-    `poisson` uses sqrt(max(median, 1)) as a conservative scale; `epsilon`
-    implements the literal epsilon-stabilized formula and is expected to be
-    extremely sensitive after long all-zero periods.
+    This estimator is intentionally retained as a simple baseline. It does not
+    by itself guarantee removal of periodic intraday/day-of-week structure.
     """
 
     xs = [float(value) for value in counts]
@@ -34,17 +50,51 @@ def robust_attention_surprise(
     result: list[float | None] = [None] * len(xs)
     for index in range(lookback, len(xs)):
         reference = xs[index - lookback : index]
-        center = float(statistics.median(reference))
-        mad = float(statistics.median(abs(value - center) for value in reference))
-        if mad > 0:
-            scale = 1.4826 * mad
-        elif zero_mad_policy == "poisson":
-            scale = math.sqrt(max(center, 1.0))
-        elif zero_mad_policy == "epsilon":
-            scale = epsilon
-        else:  # pragma: no cover - protected by Literal/type checking at development time
-            raise ValueError(f"unsupported zero_mad_policy: {zero_mad_policy}")
-        result[index] = (xs[index] - center) / max(scale, epsilon)
+        center, scale = _robust_scale(
+            reference,
+            zero_mad_policy=zero_mad_policy,
+            epsilon=epsilon,
+        )
+        result[index] = (xs[index] - center) / scale
+    return result
+
+
+def seasonal_robust_attention_surprise(
+    counts: Sequence[float],
+    *,
+    period: int,
+    cycles: int,
+    zero_mad_policy: Literal["poisson", "epsilon"] = "poisson",
+    epsilon: float = 1e-9,
+) -> list[float | None]:
+    """Compare each bin only with the same phase in previous cycles.
+
+    For 15-minute data, examples are `period=96` for daily phase or
+    `period=672` for weekly phase. The current observation never participates in
+    its own reference set. This estimator exists because a generic rolling MAD
+    can retain strong deterministic seasonality even when it appears normalized.
+    """
+
+    xs = [float(value) for value in counts]
+    if period <= 1:
+        raise ValueError("period must be > 1")
+    if cycles < 3:
+        raise ValueError("cycles must be >= 3")
+    if epsilon <= 0:
+        raise ValueError("epsilon must be positive")
+    if any(not math.isfinite(value) or value < 0 for value in xs):
+        raise ValueError("counts must be finite and non-negative")
+
+    warmup = period * cycles
+    result: list[float | None] = [None] * len(xs)
+    for index in range(warmup, len(xs)):
+        reference = [xs[index - cycle * period] for cycle in range(1, cycles + 1)]
+        center, scale = _robust_scale(
+            reference,
+            zero_mad_policy=zero_mad_policy,
+            epsilon=epsilon,
+        )
+        result[index] = (xs[index] - center) / scale
     return result
 
 
