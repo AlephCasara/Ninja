@@ -23,6 +23,14 @@ jobs:
       - name: Resolve environment
         run: uv sync --all-groups
 
+      - name: Emit generated lock once
+        shell: bash
+        run: |
+          echo "NINJA_UV_LOCK_BASE64_BEGIN"
+          base64 -w0 uv.lock
+          echo
+          echo "NINJA_UV_LOCK_BASE64_END"
+
       - name: Test
         run: uv run pytest
 
