@@ -17,6 +17,20 @@ minimum_relative_loss_improvement = 0.005
 allowed_splits = ["train", "validation"]
 forbidden_splits = ["untouched_test"]
 
+[data_quality]
+# These are structural/acquisition gates, frozen before the canonical corpus is
+# inspected for predictive outcomes. They catch catastrophic missingness rather
+# than optimizing a threshold against market performance.
+min_archive_capture_fraction = 0.95
+max_source_timestamp_fraction = 0.05
+required_years = [2021, 2022, 2023, 2024, 2025]
+min_observations_per_year = 1000
+required_communities = ["Bitcoin", "CryptoCurrency"]
+min_observations_per_community = 1000
+min_market_span_coverage_fraction = 0.9999
+min_aligned_split_coverage_fraction = 0.999
+min_nonzero_attention_fraction = 0.05
+
 [confirmatory]
 # Frozen before real train/validation outcomes. Four hours is the primary
 # horizon because it is long enough for public-attention transmission while
