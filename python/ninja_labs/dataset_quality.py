@@ -42,12 +42,7 @@ def evaluate_e1_dataset_quality(
     config_path: Path,
     output_path: Path,
 ) -> dict[str, Any]:
-    """Reject structurally incomplete E1 datasets before preregistration.
-
-    This gate intentionally checks acquisition/temporal completeness rather than
-    predictive usefulness. Retrieval-lag statistics are reported as diagnostics
-    and are not optimized against market outcomes.
-    """
+    """Reject structurally incomplete E1 datasets before preregistration."""
 
     manifest = _read_json(manifest_path)
     config = _read_toml(config_path)
@@ -200,6 +195,7 @@ def evaluate_e1_dataset_quality(
         "code_commit": git_commit(),
         "dataset_manifest_id": manifest.get("manifest_id"),
         "dataset_manifest_sha256": sha256_file(manifest_path),
+        "experiment_config_sha256": sha256_file(config_path),
         "coverage_sha256": sha256_file(coverage_path),
         "policy": policy,
         "checks": checks,
