@@ -1,6 +1,6 @@
 # E1 — Attention Replication
 
-**Status:** preregistered design; estimator-specific controlled-world validation passed; canonical corpus materialization and empirical E1 execution pending.
+**Status:** preregistered design; deterministic and multi-seed estimator validation passed; canonical corpus materialization and empirical E1 execution pending.
 
 ## Question
 
@@ -33,12 +33,17 @@ known synthetic behavior
 → autocorrelation-aware null/permutation controls
 → sensitivity to window/seasonality choices
 → false-positive calibration
+→ multi-seed Monte Carlo using the exact production parameterization
 → only then historical E1 data
 ```
 
 Raw count is the simplest reference and must remain available as a baseline. A more elaborate normalization is rejected if it cannot outperform or robustly complement the simpler representation.
 
-Controlled-world testing already found one useful failure: the simple rolling robust AZ retained strong deterministic periodic structure, while same-phase seasonal normalization removed almost all of it in the synthetic seasonal world. Therefore rolling AZ is baseline/diagnostic only; the causal same-week-phase seasonal estimator is the normalized-attention candidate for E1 v1.
+Controlled-world testing found one useful failure: the simple rolling robust AZ retained strong deterministic periodic structure, while same-phase seasonal normalization removed almost all of it. Therefore rolling AZ is baseline/diagnostic only; the causal same-week-phase seasonal estimator is the normalized-attention candidate for E1 v1.
+
+The exact production configuration (`period=672`, `cycles=8`) also passed a 64-world randomized Monte Carlo gate. The gate covered 167,936 post-warmup bins and 512 injected bursts. Aggregate burst recall was 97.85%, non-burst false-positive rate 3.98%, p95 residual daily nuisance correlation 0.0396, and p95 residual weekly nuisance correlation 0.0349. These are estimator-mechanics results only, not market evidence.
+
+The preregistration seal requires both the deterministic controlled-world artifact and a passing Monte Carlo artifact with at least 64 worlds whose period/cycles exactly match the production E1 configuration.
 
 ## Baseline
 
@@ -99,7 +104,7 @@ The full comparison family is reported. Benjamini-Hochberg correction is applied
 
 E1 uses two distinct locks:
 
-1. **Preregistration seal** — created after canonical-dataset coverage validation and estimator validation, but before train/validation outcomes are inspected. It binds the exact dataset manifest, E1 config, estimator-validation artifact, primary comparison and code revision. It does not open the physical `untouched_test` artifact.
+1. **Preregistration seal** — created after canonical-dataset coverage validation and both estimator-validation gates, but before train/validation outcomes are inspected. It binds the exact dataset manifest, E1 config, deterministic estimator-validation artifact, >=64-world Monte Carlo artifact, primary comparison and code revision. It does not open the physical `untouched_test` artifact.
 2. **Final-test seal** — created only after train/validation analysis and candidate selection are complete. It freezes the selected code/features/parameters before a single authorized evaluation of 2025.
 
 A changed config or changed dataset manifest invalidates the preregistration seal and requires a new experiment version rather than silent mutation.

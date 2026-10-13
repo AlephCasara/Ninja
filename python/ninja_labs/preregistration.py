@@ -32,18 +32,20 @@ def create_e1_preregistration_seal(
     manifest_path: Path,
     config_path: Path,
     estimator_validation_path: Path,
+    monte_carlo_validation_path: Path,
     output_path: Path,
 ) -> dict[str, Any]:
-    """Seal E1 before train/validation without opening the untouched-test data.
+    """Seal E1 before train/validation without opening untouched-test data.
 
-    The seal binds the exact dataset manifest, analysis configuration, estimator
-    validation result and current code revision. It reads coverage metadata but
-    never opens the physical untouched-test Parquet artifact.
+    The seal binds the exact dataset manifest, analysis configuration, both E1
+    estimator-validation gates and current code revision. Coverage metadata is
+    read, but the physical untouched-test Parquet is never opened here.
     """
 
     manifest = _read_json(manifest_path)
     config = _read_toml(config_path)
     estimator = _read_json(estimator_validation_path)
+    monte_carlo = _read_json(monte_carlo_validation_path)
 
     if config.get("experiment", {}).get("stage") != "train_validation":
         raise ValueError("E1 preregistration requires experiment.stage=train_validation")
@@ -82,6 +84,18 @@ def create_e1_preregistration_seal(
     if estimator.get("passed") is not True or estimator.get("status") != "VALIDATED_FOR_E1":
         raise ValueError("E1 estimator suite has not passed its controlled-world gate")
 
+    if monte_carlo.get("kind") != "e1-attention-monte-carlo-validation":
+        raise ValueError("unexpected Monte Carlo validation artifact kind")
+    if monte_carlo.get("passed") is not True or monte_carlo.get("status") != "VALIDATED_FOR_E1":
+        raise ValueError("E1 estimator suite has not passed its Monte Carlo gate")
+    mc_config = monte_carlo.get("configuration", {})
+    if int(mc_config.get("period", -1)) != int(config["attention"]["seasonal_period"]):
+        raise ValueError("Monte Carlo period does not match E1 production configuration")
+    if int(mc_config.get("cycles", -1)) != int(config["attention"]["seasonal_cycles"]):
+        raise ValueError("Monte Carlo cycles do not match E1 production configuration")
+    if int(mc_config.get("worlds", 0)) < 64:
+        raise ValueError("E1 preregistration requires at least 64 Monte Carlo worlds")
+
     artifacts = manifest.get("artifacts", {})
     required_artifacts = {
         "gold_train",
@@ -111,8 +125,8 @@ def create_e1_preregistration_seal(
         if int(rows_by_split.get(split, 0)) <= 0:
             raise ValueError(f"coverage audit has no rows for split {split}")
 
-    # Important: use only the manifest metadata for the untouched artifact.
-    # Do not call sha256_file() or otherwise open the physical test file here.
+    # Important: use only manifest metadata for the untouched artifact. Never
+    # call sha256_file() or otherwise open the physical test file here.
     untouched_record = artifacts["gold_untouched_test"]
     untouched_metadata = {
         "sha256_from_dataset_manifest": untouched_record.get("sha256"),
@@ -134,6 +148,9 @@ def create_e1_preregistration_seal(
         "experiment_config_sha256": sha256_file(config_path),
         "estimator_validation_sha256": sha256_file(estimator_validation_path),
         "estimator_validation_result_sha256": estimator.get("result_sha256"),
+        "monte_carlo_validation_sha256": sha256_file(monte_carlo_validation_path),
+        "monte_carlo_validation_result_sha256": monte_carlo.get("result_sha256"),
+        "monte_carlo_worlds": int(mc_config["worlds"]),
         "coverage_sha256": sha256_file(coverage_path),
         "confirmatory": {
             "primary_target": str(confirmatory["primary_target"]),
@@ -161,7 +178,8 @@ def create_e1_preregistration_seal(
         "untouched_test": untouched_metadata,
         "scientific_boundary": (
             "This seal is created before train/validation outcomes are observed. "
-            "It authorizes development on train+validation only and does not authorize opening the untouched test artifact."
+            "It requires both controlled-world and >=64-world Monte Carlo estimator gates, "
+            "authorizes train+validation only, and does not authorize opening the untouched test artifact."
         ),
     }
     payload["seal_sha256"] = sha256_json(payload)
@@ -188,6 +206,8 @@ def verify_e1_preregistration_seal(
         raise ValueError("dataset manifest changed after preregistration")
     if seal.get("experiment_config_sha256") != sha256_file(config_path):
         raise ValueError("experiment config changed after preregistration")
+    if int(seal.get("monte_carlo_worlds", 0)) < 64:
+        raise ValueError("preregistration seal lacks the required Monte Carlo gate")
     expected = dict(seal)
     stored_hash = expected.pop("seal_sha256", None)
     if stored_hash != sha256_json(expected):

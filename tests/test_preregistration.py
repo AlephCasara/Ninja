@@ -11,7 +11,7 @@ from ninja_labs.preregistration import (
 from ninja_labs.util import sha256_file
 
 
-def _write_fixture(tmp_path):
+def _write_fixture(tmp_path, *, monte_carlo_worlds: int = 64, monte_carlo_passed: bool = True):
     coverage = tmp_path / "coverage.json"
     coverage.write_text(
         json.dumps(
@@ -84,6 +84,10 @@ primary_loss = "mse"
 minimum_relative_loss_improvement = 0.005
 alpha = 0.05
 
+[attention]
+seasonal_period = 672
+seasonal_cycles = 8
+
 [targets]
 horizons_bins = [1, 4, 16, 96]
 
@@ -110,22 +114,42 @@ market_plus_seasonal_attention = ["seasonal_attention_surprise", "attention_acce
         ),
         encoding="utf-8",
     )
-    return manifest, config, estimator, untouched
+
+    monte_carlo = tmp_path / "monte-carlo.json"
+    monte_carlo.write_text(
+        json.dumps(
+            {
+                "kind": "e1-attention-monte-carlo-validation",
+                "passed": monte_carlo_passed,
+                "status": "VALIDATED_FOR_E1" if monte_carlo_passed else "FAILED_MONTE_CARLO_GATE",
+                "result_sha256": "monte-carlo-result",
+                "configuration": {
+                    "period": 672,
+                    "cycles": 8,
+                    "worlds": monte_carlo_worlds,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    return manifest, config, estimator, monte_carlo, untouched
 
 
 def test_preregistration_seal_does_not_open_untouched_test(tmp_path):
-    manifest, config, estimator, untouched = _write_fixture(tmp_path)
+    manifest, config, estimator, monte_carlo, untouched = _write_fixture(tmp_path)
     seal_path = tmp_path / "seal.json"
 
     seal = create_e1_preregistration_seal(
         manifest_path=manifest,
         config_path=config,
         estimator_validation_path=estimator,
+        monte_carlo_validation_path=monte_carlo,
         output_path=seal_path,
     )
 
     assert seal["status"] == "SEALED_FOR_TRAIN_VALIDATION"
     assert seal["confirmatory"]["primary_horizon_bins"] == 16
+    assert seal["monte_carlo_worlds"] == 64
     assert seal["untouched_test"]["opened_by_preregistration"] is False
     assert seal["untouched_test"]["sha256_from_dataset_manifest"] == "sealed-test-sha-from-manifest"
     assert not untouched.exists()
@@ -137,13 +161,42 @@ def test_preregistration_seal_does_not_open_untouched_test(tmp_path):
     assert verified["seal_sha256"] == seal["seal_sha256"]
 
 
+def test_preregistration_rejects_too_few_monte_carlo_worlds(tmp_path):
+    manifest, config, estimator, monte_carlo, _ = _write_fixture(
+        tmp_path, monte_carlo_worlds=16
+    )
+    with pytest.raises(ValueError, match="at least 64 Monte Carlo worlds"):
+        create_e1_preregistration_seal(
+            manifest_path=manifest,
+            config_path=config,
+            estimator_validation_path=estimator,
+            monte_carlo_validation_path=monte_carlo,
+            output_path=tmp_path / "seal.json",
+        )
+
+
+def test_preregistration_rejects_failed_monte_carlo_gate(tmp_path):
+    manifest, config, estimator, monte_carlo, _ = _write_fixture(
+        tmp_path, monte_carlo_passed=False
+    )
+    with pytest.raises(ValueError, match="Monte Carlo gate"):
+        create_e1_preregistration_seal(
+            manifest_path=manifest,
+            config_path=config,
+            estimator_validation_path=estimator,
+            monte_carlo_validation_path=monte_carlo,
+            output_path=tmp_path / "seal.json",
+        )
+
+
 def test_preregistration_seal_detects_posthoc_config_change(tmp_path):
-    manifest, config, estimator, _ = _write_fixture(tmp_path)
+    manifest, config, estimator, monte_carlo, _ = _write_fixture(tmp_path)
     seal_path = tmp_path / "seal.json"
     create_e1_preregistration_seal(
         manifest_path=manifest,
         config_path=config,
         estimator_validation_path=estimator,
+        monte_carlo_validation_path=monte_carlo,
         output_path=seal_path,
     )
     config.write_text(config.read_text(encoding="utf-8") + "# posthoc mutation\n", encoding="utf-8")
