@@ -4,12 +4,17 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: write
+
 jobs:
   python:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event_name == 'push' && github.ref_name || github.event.pull_request.head.sha }}
 
       - name: Install uv
         uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
@@ -23,13 +28,18 @@ jobs:
       - name: Resolve environment
         run: uv sync --all-groups
 
-      - name: Emit generated lock once
+      - name: Commit generated lock once
+        if: github.event_name == 'push' && github.ref_name == 'feat/e1-reproducibility-gate'
         shell: bash
         run: |
-          echo "NINJA_UV_LOCK_BASE64_BEGIN"
-          base64 -w0 uv.lock
-          echo
-          echo "NINJA_UV_LOCK_BASE64_END"
+          if git ls-files --error-unmatch uv.lock >/dev/null 2>&1; then
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add uv.lock
+          git commit -m 'build: lock Python scientific environment'
+          git push origin HEAD:feat/e1-reproducibility-gate
 
       - name: Test
         run: uv run pytest
