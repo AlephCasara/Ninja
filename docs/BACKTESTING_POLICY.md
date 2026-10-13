@@ -463,6 +463,22 @@ Information can be economically useful by improving more than long/short directi
 - capital allocation;
 - tail-opportunity selection.
 
+### Financial objective map
+
+Every mature research line should eventually state which economic objective it could serve. A single information pattern may serve more than one objective.
+
+| Objective family | Economic question | Example outcome |
+|---|---|---|
+| **Directional alpha** | does the information improve long/short or relative-value decisions? | forward return, rank return, hit rate conditioned on state |
+| **Volatility / risk alpha** | does it identify future instability, jumps or adverse excursions early enough to change exposure? | realized volatility, jump risk, MAE, stop-hit probability |
+| **Event-driven alpha** | do identifiable information events create repeatable response distributions? | event-window return, volatility, liquidity and response path |
+| **Tail-opportunity alpha** | does the pre-move state enrich for rare asymmetric winners without selecting winners ex post? | time-to-2x/5x/10x/50x/100x, extreme forward return, tail precision |
+| **Avoidance alpha** | can Ninja identify situations where not trading preserves capital or avoids catastrophic loss? | avoided loss, drawdown reduction, ruin/delisting risk |
+| **Timing / execution alpha** | does information improve when or how a position is entered/exited? | slippage-adjusted entry quality, exit quality, holding period |
+| **Allocation alpha** | does information improve which assets/strategies receive scarce capital? | portfolio growth, opportunity cost, capacity-adjusted return |
+
+Scientific intermediate targets are allowed even when they are not themselves P&L. They remain useful only if there is a plausible path from the discovered information to at least one economic objective above. Research without such a path should be labelled explanatory/basic research rather than silently consuming the alpha-discovery budget.
+
 ---
 
 ## 15. Scope negative results precisely
