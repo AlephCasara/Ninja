@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from ninja_labs.adapters.arctic_shift_stream import download_subreddit_posts_jsonl
+from ninja_labs.e1 import run_e1_train_validation
 from ninja_labs.pipeline import run_phase1
 from ninja_labs.util import parse_utc
 from ninja_labs.validation.e1_attention import (
@@ -51,6 +52,16 @@ def build_parser() -> argparse.ArgumentParser:
     )
     e1.add_argument("--seed", type=int, default=20261013)
     e1.add_argument("--output", type=Path)
+
+    experiment = subparsers.add_parser("experiment", help="Run preregistered experiments")
+    experiment_sub = experiment.add_subparsers(dest="experiment_command", required=True)
+    e1_tv = experiment_sub.add_parser(
+        "e1-train-validation",
+        help="Evaluate E1 on train+validation without opening untouched_test",
+    )
+    e1_tv.add_argument("--manifest", type=Path, required=True)
+    e1_tv.add_argument("--config", type=Path, required=True)
+    e1_tv.add_argument("--output", type=Path, required=True)
     return parser
 
 
@@ -91,6 +102,15 @@ def main(argv: list[str] | None = None) -> int:
             payload = run_e1_estimator_validation(seed=args.seed)
             print(json.dumps(payload, indent=2, sort_keys=True))
         return 0 if payload["passed"] else 1
+    if args.command == "experiment" and args.experiment_command == "e1-train-validation":
+        payload = run_e1_train_validation(
+            manifest_path=args.manifest,
+            config_path=args.config,
+            output_path=args.output,
+        )
+        print(args.output)
+        print(json.dumps(payload["status_counts"], sort_keys=True))
+        return 0
     raise AssertionError("unreachable command")
 
 
