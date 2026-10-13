@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AlephCasara/Ninja/schemas/observation-v1.schema.json",
+  "title": "Ninja Observation v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "observation_id",
+    "source_id",
+    "source_type",
+    "platform",
+    "collected_at",
+    "available_at",
+    "available_at_basis",
+    "content_hash",
+    "provenance"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "observation_id": {"type": "string", "minLength": 1},
+    "source_id": {"type": "string", "minLength": 1},
+    "source_type": {"type": "string", "minLength": 1},
+    "platform": {"type": "string", "minLength": 1},
+    "published_at": {"type": ["string", "null"], "format": "date-time"},
+    "first_seen_at": {"type": ["string", "null"], "format": "date-time"},
+    "collected_at": {"type": "string", "format": "date-time"},
+    "available_at": {"type": "string", "format": "date-time"},
+    "available_at_basis": {
+      "type": "string",
+      "enum": ["first_seen", "published", "archive_capture", "collected", "reconstructed"]
+    },
+    "temporal_quality": {
+      "type": "string",
+      "enum": ["prospective", "source_timestamp", "archive_capture", "reconstructed", "unknown"]
+    },
+    "author_id": {"type": ["string", "null"]},
+    "thread_id": {"type": ["string", "null"]},
+    "parent_id": {"type": ["string", "null"]},
+    "entity_refs": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
+    "content_ref": {"type": ["string", "null"]},
+    "content_hash": {"type": "string", "minLength": 1},
+    "content_type": {"type": ["string", "null"]},
+    "engagement_snapshot": {
+      "type": ["object", "null"],
+      "required": ["as_of", "values"],
+      "properties": {
+        "as_of": {"type": "string", "format": "date-time"},
+        "values": {"type": "object", "additionalProperties": true}
+      },
+      "additionalProperties": true
+    },
+    "structured_fields": {"type": "object", "additionalProperties": true},
+    "provenance": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["collector_id", "collector_version", "retrieval_ref"],
+      "properties": {
+        "collector_id": {"type": "string", "minLength": 1},
+        "collector_version": {"type": "string", "minLength": 1},
+        "retrieval_ref": {"type": "string", "minLength": 1},
+        "raw_ref": {"type": ["string", "null"]},
+        "dataset_manifest_id": {"type": ["string", "null"]}
+      }
+    }
+  }
+}

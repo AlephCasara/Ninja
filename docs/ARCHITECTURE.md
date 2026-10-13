@@ -1,38 +1,200 @@
 # Architecture
 
-## Scope
+## Status
 
-Ninja owns research, validation and candidate implementation of alternative-information strategies. Master Trader owns production execution.
+Phase 0 architecture freeze.
 
-A promoted Ninja runs as deterministic Python inside the Master Trader fleet. No mandatory `NinjaState` service or generic policy engine is required.
+Ninja is one repository with three conceptual layers:
 
-## Runtime determinism
-
-For implementation (k):
-
-```math
-a_{k,t}
-=
-\pi_k(
-M_t,
-F_{k,t};
-\theta_k
-)
+```text
+WORLD
+  -> Ninja Tools
+  -> Observation
+  -> Ninja Labs
+  -> Evidence / Signal
+  -> Ninja
+  -> domain executor
 ```
 
-where:
+The layers are responsibility boundaries, not mandatory services. Phase 0 keeps one repository, one Rust workspace, one Python research environment and one MCP surface.
 
-- $M_t$ is market state;
-- $F_{k,t}$ is the subset of Ninja-derived inputs used by the implementation;
-- $\theta_k$ is the frozen parameter set;
-- $\pi_k$ is the Python strategy or module;
-- $a_{k,t}$ is the resulting action.
+The guiding rule is:
 
-A runtime build must reproduce the same action for the same serialized inputs, code version and parameters.
+> Ninja is built outward from falsifiable experiments, not inward from capabilities. A capability is implemented when an experiment requires it.
+
+## Layer 1 — Ninja Tools
+
+Ninja Tools acquires, observes, extracts and preserves information.
+
+Its question is:
+
+> What can we observe?
+
+Responsibilities include:
+
+- discovery;
+- historical-source access;
+- targeted acquisition;
+- prospective monitoring;
+- browser/crawler escalation;
+- extraction required to create observations;
+- replay/preservation;
+- acquisition provenance and challenge/failure reporting.
+
+Ninja Tools owns capability adapters and routing around mature external software. It does not reimplement crawlers, browsers, archives or search systems merely to unify implementation language.
+
+Canonical capability families are documented in `docs/NINJA_TOOLS.md` and `tools/catalog.json`.
+
+## Layer 2 — Ninja Labs
+
+Ninja Labs turns observations into scientific evidence.
+
+Its question is:
+
+> What can we demonstrate from the observations?
+
+Responsibilities include:
+
+- attention measurement;
+- divergence and polarization;
+- narrative structure and novelty;
+- propagation and Hawkes processes;
+- Transfer Entropy and directed-information diagnostics;
+- event morphology;
+- statistical estimation;
+- ablation and robustness testing;
+- chronological validation;
+- experimental optimization through bounded tools such as Ax;
+- information backtests;
+- strategy/backtest promotion validation after an information effect survives.
+
+Ninja Labs owns experimental rules. External scientific libraries are instruments, not epistemic authorities.
+
+Ax, for example, may propose trials inside a preregistered train/validation search space. It must not gain access to an untouched final test window during optimization.
+
+See `docs/NINJA_LABS.md`.
+
+## Layer 3 — Ninja
+
+Ninja consumes validated evidence and produces intelligence suitable for a domain decision system.
+
+Its question is:
+
+> What can we conclude from validated evidence?
+
+Ninja may produce versioned objects such as:
+
+- assessments;
+- validated signals;
+- opportunity or threat candidates;
+- confidence/uncertainty summaries;
+- historical-analogue distributions;
+- deterministic candidate factors for promotion.
+
+Ninja is not required to execute the final action.
+
+For the current trading domain:
+
+```text
+Ninja
+  -> validated market intelligence
+  -> Master Trader
+  -> execution / risk / capital authority
+```
+
+Research code, LLMs and experimental processes have no order authority.
+
+## Core contracts
+
+Implementation may place shared contracts in a `ninja-core` crate/package, but `core` is not a fourth product layer.
+
+The minimum conceptual chain is:
+
+```text
+Observation -> Evidence -> Signal -> Assessment
+```
+
+### Observation
+
+A causal, provenance-bearing record of something observed in an information source.
+
+Observation v1 must be able to preserve at least:
+
+```text
+observation_id
+source
+source_type
+platform
+published_at
+first_seen_at
+collected_at
+author_id?
+thread_id?
+parent_id?
+entity_refs[]
+content_ref
+content_hash
+engagement_snapshot?
+structured_fields
+provenance
+```
+
+Exact event timestamps must survive Bronze/Silver storage. Aggregated counts are derived Gold artifacts, not replacements for event-level history. This is required so later propagation/Hawkes experiments do not depend on reconstructing discarded timing information.
+
+### Evidence
+
+A result tied to an explicit hypothesis, dataset version, experiment configuration, code revision, metrics and validation procedure.
+
+### Signal
+
+An operational application of evidence that has survived its required validation gates.
+
+### Assessment
+
+A contextual Ninja conclusion. A domain executor may accept, reject or combine it with other constraints.
+
+## Domain model
+
+Ninja remains one repository. Trading and future business work are domain layers, not forks.
+
+Shared science may include:
+
+- attention;
+- novelty;
+- divergence;
+- propagation;
+- Hawkes estimation;
+- event morphology;
+- validation machinery.
+
+Domain-specific science must remain isolated where meaning changes.
+
+### Trading
+
+Owns trading-specific:
+
+- market targets;
+- market baselines;
+- asset/entity mapping;
+- market susceptibility;
+- execution-economics promotion criteria;
+- Master Trader integration.
+
+### Business
+
+A future business domain may own:
+
+- commercial targets;
+- commercial baselines;
+- commercial susceptibility;
+- business opportunity definitions;
+- Business Master integration.
+
+Evidence from one domain does not validate a hypothesis in another domain.
 
 ## Research domains
 
-Ninja organizes research into six domains:
+The six analytical domains remain:
 
 1. Attention
 2. Divergence
@@ -41,161 +203,101 @@ Ninja organizes research into six domains:
 5. Event Morphology
 6. Susceptibility
 
-These are analytical categories, not required services. One candidate implementation may combine several domains.
+These are analytical categories, not services.
 
-## Runtime artifact types
+## Data plane
 
-Validated research may be promoted as:
+The research data convention remains:
 
-### Standalone strategy
+```text
+Bronze: raw/replayable acquisition artifacts
+Silver: normalized typed observations
+Gold: experiment-ready features and panels
+Query: DuckDB
+Lineage: Git + DVC where justified
+```
 
-A Freqtrade strategy with its own entry, exit and risk logic.
+Large payloads should not be copied through MCP context when a file/object/Parquet reference is sufficient.
 
-### Strategy overlay
+RAG or semantic knowledge systems may consume the same source material, but they do not replace the causal analytical store required for statistical work.
 
-Deterministic logic used by an existing Master Trader strategy.
+## MCP boundary
 
-### Risk or regime module
+Phase 0 keeps one MCP server.
 
-Deterministic selection among predefined risk behaviors.
+Conceptual namespaces may evolve toward:
 
-Use the smallest runtime artifact that preserves the validated effect.
+```text
+tools.*  acquisition / observation capabilities
+labs.*   scientific / experiment capabilities
+intel.*  validated intelligence capabilities
+```
+
+These namespaces do not justify separate daemons yet. Split MCPs only when deployment, resource, permission or security boundaries provide a measured reason.
+
+## Trading runtime determinism
+
+For a promoted implementation k:
+
+```math
+a_{k,t}=\pi_k(M_t,F_{k,t};\theta_k)
+```
+
+where:
+
+- `M_t` is market state;
+- `F_{k,t}` is the validated Ninja-derived input subset;
+- `theta_k` is the frozen parameter set;
+- `pi_k` is the deterministic promoted strategy/module;
+- `a_{k,t}` is the action produced inside the execution host.
+
+A runtime build must reproduce the same action for the same serialized inputs, code version and frozen parameters.
 
 ## Promotion path
 
 ```text
 hypothesis
-→ historical dataset
-→ registered experiment
-→ chronological OOS validation
-→ frozen Python implementation
-→ Master Trader backtest / walk-forward
-→ dry-run / shadow
-→ live approval
+-> historical dataset
+-> registered experiment
+-> chronological OOS validation
+-> frozen implementation
+-> Master Trader backtest / walk-forward
+-> dry-run / shadow
+-> live approval
 ```
 
-Research code has no order authority.
-
-## Live information inputs
-
-A promoted Ninja may require current public-information data. Inputs can come from Last30Days, dedicated crawlers, public web/news collectors or source-specific adapters.
-
-The runtime strategy should consume timestamped typed values, following the same causal-data discipline used by existing external funding and OI inputs:
-
-- record observation time;
-- detect staleness;
-- do not backfill current observations into historical candles;
-- define missing-data behavior explicitly.
-
-The collector may use probabilistic extraction. Trade decisions remain deterministic.
-
-## Research data layers
-
-Bronze / Silver / Gold are research-storage conventions, not runtime requirements.
-
-### Bronze
-
-Raw or near-raw observations with provenance.
-
-### Silver
-
-Normalized observations, entities, event extraction and semantic representations.
-
-### Gold
-
-Features and time-series panels used by experiments.
-
-## Research notation
-
-For analysis:
-
-```math
-N_{a,t}
-=
-[
-ATT,
-DIV,
-NAR,
-TRN,
-EVT,
-CTX
-]_{a,t}
-```
-
-A runtime implementation consumes only the required subset:
-
-```math
-F_{k,t}
-\subseteq
-N_{a,t}
-```
-
-The complete vector does not need to be serialized in production.
-
-## Master Trader runtime
-
-Master Trader already provides:
-
-- the bot registry;
-- per-bot runtime configuration;
-- live/dry-run execution;
-- monitoring;
-- portfolio risk controls;
-- capital-account semantics;
-- validation and health tooling.
-
-Ninja should reuse those mechanisms.
+The immediate objective is not a trading strategy. It is the first falsifiable information backtest:
 
 ```text
-Master Trader
-├── existing bots
-│   ├── FundingFadeV1
-│   ├── KeltnerBounceV1
-│   ├── OITrendPullbackV1
-│   └── ...
-│
-└── Ninja family
-    ├── <validated Ninja 1>
-    ├── <validated Ninja 2>
-    └── <validated Ninja 3>
+market-only
+vs
+market + Ninja information feature
 ```
 
-## Family switch
-
-Target behavior:
-
-```text
-NINJA_ENABLED=false
-  → Ninja-family bots and Ninja-only feeds are not started
-
-NINJA_ENABLED=true
-  → individually enabled Ninja bots may run
-```
-
-Per-bot runtime configuration remains authoritative for active/dry-run/live behavior.
-
-The implementation can use a registry field, Compose profile or startup filter. That choice belongs in the Master Trader PR.
+Only after an information effect survives should it be translated into strategy logic.
 
 ## Failure isolation
 
-1. `NINJA_ENABLED=false` preserves the existing fleet.
-2. A failed Ninja feed does not stop unrelated bots.
-3. Missing or stale input follows the affected Ninja's declared behavior.
+1. Research failures must not affect production execution.
+2. Missing/stale Ninja feeds affect only consumers that declare those inputs.
+3. `NINJA_ENABLED=false` must preserve existing Master Trader semantics after promotion begins.
 4. Existing Master Trader risk controls remain authoritative.
-5. LLMs and research processes have no direct order authority.
+5. Experimental agents, LLMs and Labs processes receive no direct order authority.
 
 ## Repository boundary
 
-Current ownership:
+Current ownership remains:
 
 ```text
 Ninja repository
-  research
-  data manifests
+  Tools
+  Labs
+  hypotheses
+  datasets/manifests
   experiments
   candidate implementations
   validation evidence
-        ↓ promotion
+        -> promotion
 Master Trader repository/runtime
   promoted Ninja code
   runtime configs
@@ -204,4 +306,4 @@ Master Trader repository/runtime
   execution
 ```
 
-A future monorepo is compatible with this design. The relevant boundary is experimental research versus promoted runtime code.
+The important invariant is experimental research versus promoted runtime authority, not the number of Git repositories.

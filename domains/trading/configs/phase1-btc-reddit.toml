@@ -1,0 +1,37 @@
+# Canonical E1 historical substrate.
+# Download Arctic Shift subreddit post JSONL files into .ninja-inputs/arctic-shift/
+# before running this config. Source files are hashed in the emitted manifest.
+
+[dataset]
+id = "btc-reddit-e1-v1"
+start = "2021-01-01T00:00:00Z"
+end = "2026-01-01T00:00:00Z"
+output_root = ".ninja-data"
+
+[reddit]
+mode = "jsonl"
+subreddits = ["Bitcoin", "CryptoCurrency"]
+files = [
+  ".ninja-inputs/arctic-shift/r_Bitcoin_posts.jsonl",
+  ".ninja-inputs/arctic-shift/r_CryptoCurrency_posts.jsonl",
+]
+
+[market]
+symbol = "BTCUSDT"
+interval = "15m"
+timeout_seconds = 60
+
+[attention]
+interval = "15m"
+
+[splits.train]
+start = "2021-01-01T00:00:00Z"
+end = "2024-01-01T00:00:00Z"
+
+[splits.validation]
+start = "2024-01-01T00:00:00Z"
+end = "2025-01-01T00:00:00Z"
+
+[splits.untouched_test]
+start = "2025-01-01T00:00:00Z"
+end = "2026-01-01T00:00:00Z"

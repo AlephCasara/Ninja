@@ -1,0 +1,9 @@
+/target/
+.venv/
+.ninja-data/
+.ninja-inputs/
+.pytest_cache/
+**/__pycache__/
+*.pyc
+*.profraw
+.DS_Store

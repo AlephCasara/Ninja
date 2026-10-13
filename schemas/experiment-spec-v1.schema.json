@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AlephCasara/Ninja/schemas/experiment-spec-v1.schema.json",
+  "title": "Ninja ExperimentSpec v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "experiment_id",
+    "hypothesis_id",
+    "domain",
+    "dataset_manifest_ids",
+    "code_revision",
+    "targets",
+    "baselines",
+    "fixed_features",
+    "search_space",
+    "metrics",
+    "splits",
+    "robustness_checks",
+    "stopping_rules"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "experiment_id": {"type": "string", "minLength": 1},
+    "hypothesis_id": {"type": "string", "minLength": 1},
+    "domain": {"type": "string", "minLength": 1},
+    "description": {"type": ["string", "null"]},
+    "dataset_manifest_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "code_revision": {"type": "string", "minLength": 1},
+    "targets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "baselines": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "fixed_features": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    },
+    "search_space": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["primary"],
+      "properties": {
+        "primary": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "secondary": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "splits": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["train", "validation", "untouched_test"],
+      "properties": {
+        "train": {"$ref": "#/$defs/timeWindow"},
+        "validation": {"$ref": "#/$defs/timeWindow"},
+        "untouched_test": {"$ref": "#/$defs/timeWindow"},
+        "purge": {"type": ["string", "null"]},
+        "embargo": {"type": ["string", "null"]}
+      }
+    },
+    "robustness_checks": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    },
+    "stopping_rules": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "random_seeds": {
+      "type": "array",
+      "items": {"type": "integer"},
+      "uniqueItems": true
+    },
+    "adaptive_search": {
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "required": ["engine", "allowed_windows", "trial_budget"],
+      "properties": {
+        "engine": {"type": "string", "minLength": 1},
+        "allowed_windows": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["train", "validation"]
+          },
+          "uniqueItems": true
+        },
+        "trial_budget": {"type": "integer", "minimum": 1},
+        "stopping_rule": {"type": ["string", "null"]}
+      }
+    }
+  },
+  "$defs": {
+    "timeWindow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end"],
+      "properties": {
+        "start": {"type": "string", "format": "date-time"},
+        "end": {"type": "string", "format": "date-time"}
+      }
+    }
+  }
+}

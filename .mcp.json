@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "ninja-tooling": {
+      "type": "stdio",
+      "command": "cargo",
+      "args": [
+        "run",
+        "--quiet",
+        "--release",
+        "-p",
+        "ninja-tooling",
+        "--",
+        "mcp"
+      ]
+    }
+  }
+}
