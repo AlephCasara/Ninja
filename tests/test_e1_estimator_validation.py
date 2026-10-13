@@ -11,4 +11,7 @@ def test_e1_estimator_validation_suite_passes_controlled_worlds():
     assert payload["checks"]["negative_binomial"]["passed"] is True
     assert payload["checks"]["attention_acceleration"]["passed"] is True
     assert payload["checks"]["author_structure"]["passed"] is True
-    assert payload["checks"]["seasonality_sensitivity"]["passed"] is True
+    seasonality = payload["checks"]["seasonality_control"]
+    assert seasonality["passed"] is True
+    assert abs(seasonality["rolling_az_phase_correlation"]) > 0.4
+    assert abs(seasonality["seasonal_az_phase_correlation"]) < 0.15
