@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AlephCasara/Ninja/schemas/e1-robustness-v1.schema.json",
+  "title": "Ninja E1 Robustness v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "kind",
+    "status",
+    "passed",
+    "dataset_manifest_sha256",
+    "experiment_config_sha256",
+    "preregistration_seal_sha256",
+    "train_validation_result_sha256",
+    "untouched_test_opened",
+    "checks",
+    "result_sha256"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "ninja-e1-robustness"},
+    "status": {"enum": ["PASSED", "FAILED"]},
+    "passed": {"type": "boolean"},
+    "untouched_test_opened": {"const": false},
+    "checks": {"type": "object"},
+    "result_sha256": {"type": "string", "minLength": 64}
+  }
+}
