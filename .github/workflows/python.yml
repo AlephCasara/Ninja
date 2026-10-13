@@ -31,3 +31,9 @@ jobs:
         run: |
           uv run ninja-labs validation selftest --output /tmp/ninja-validation-selftest.json
           cat /tmp/ninja-validation-selftest.json
+
+      - name: E1 estimator validation
+        shell: bash
+        run: |
+          uv run ninja-labs validation e1-attention --output /tmp/ninja-e1-estimator-validation.json
+          cat /tmp/ninja-e1-estimator-validation.json
