@@ -80,6 +80,19 @@
       "notes": "Use before paying browser-process cost when possible."
     },
     {
+      "id": "crawl4ai",
+      "surface": "tools",
+      "category": "targeted-acquisition",
+      "kind": "cli-library",
+      "role": "Agent-oriented crawling, extraction and structured web acquisition when plain HTTP is insufficient but a fully interactive browser session is not yet required.",
+      "adapter_status": "preferred",
+      "probe_binary": "crwl",
+      "upstream": "unclecode/crawl4ai",
+      "selection_role": "preferred-agent-web-acquisition",
+      "safety_boundary": "Use only for public or otherwise authorized sources. Access challenges remain explicit outcomes and do not authorize bypassing authentication, CAPTCHA or anti-abuse controls.",
+      "notes": "Prefer the nixpkgs package when available. Keep raw acquisition separate from semantic extraction and preserve source/provenance metadata."
+    },
+    {
       "id": "crawlee",
       "surface": "tools",
       "category": "targeted-acquisition",
@@ -107,6 +120,31 @@
       "adapter_status": "planned",
       "probe_binary": "playwright",
       "notes": "Browser acquisition is escalation, not the default for every source."
+    },
+    {
+      "id": "browser-control",
+      "surface": "tools",
+      "category": "browser-acquisition",
+      "kind": "cli-mcp",
+      "role": "Primary control path for an existing Chromium-family browser and authorized authenticated sessions without introducing another planner or agent runtime.",
+      "adapter_status": "preferred",
+      "probe_binary": "browser-control",
+      "upstream": "anomalyco/browser-control",
+      "selection_role": "preferred-authenticated-browser",
+      "safety_boundary": "Use a dedicated agent browser profile and only sessions the operator is authorized to control. Human verification checkpoints remain human/session handoffs.",
+      "notes": "Prefer deterministic Playwright-compatible execution first. Keep the relay loopback-only and preserve task/action receipts where practical."
+    },
+    {
+      "id": "stagehand",
+      "surface": "tools",
+      "category": "browser-acquisition",
+      "kind": "sdk",
+      "role": "Semantic browser fallback for fragile or ambiguous DOM interactions using observe/act/extract style primitives.",
+      "adapter_status": "challenger",
+      "upstream": "browserbase/stagehand",
+      "selection_role": "semantic-browser-fallback",
+      "safety_boundary": "Use only on public or otherwise authorized browser targets; semantic automation does not change the authorization boundary.",
+      "notes": "Do not run as a competing orchestrator. Promote only if measured success or maintenance cost beats deterministic Browser Control/Playwright for the target workload."
     },
     {
       "id": "patchright",
@@ -138,13 +176,42 @@
       "notes": "Benchmark information gain, success rate, latency and maintenance burden before promotion to a default path."
     },
     {
+      "id": "mitmproxy",
+      "surface": "tools",
+      "category": "protocol-observation",
+      "kind": "cli-proxy",
+      "role": "Authorized HTTP(S)/WebSocket protocol observation, replay and debugging for sources and applications the operator is permitted to inspect.",
+      "adapter_status": "preferred",
+      "probe_binary": "mitmproxy",
+      "upstream": "mitmproxy/mitmproxy",
+      "selection_role": "authorized-protocol-observer",
+      "safety_boundary": "Do not use to bypass authentication, intercept third-party traffic without authorization, extract credentials, or defeat access controls.",
+      "notes": "Treat captured flows as sensitive evidence. Record scope, target identity, capture time and artifact hashes; sanitize secrets before durable storage."
+    },
+    {
+      "id": "mitmproxy2swagger",
+      "surface": "tools",
+      "category": "protocol-reconstruction",
+      "kind": "cli-library",
+      "role": "Generate candidate OpenAPI descriptions from authorized mitmproxy captures so repeated browser operations can be evaluated for promotion to structured adapters.",
+      "adapter_status": "candidate",
+      "probe_binary": "mitmproxy2swagger",
+      "upstream": "alufers/mitmproxy2swagger",
+      "selection_role": "authorized-api-contract-reconstruction",
+      "safety_boundary": "Only reconstruct interfaces from traffic the operator is authorized to observe; generated specifications are hypotheses until validated against documented or controlled behavior.",
+      "notes": "Use as a reverse-engineering aid for interoperability and automation, not as an authority on undocumented semantics."
+    },
+    {
       "id": "browsertrix-crawler",
       "surface": "tools",
       "category": "preservation",
       "kind": "container-cli",
       "role": "High-fidelity browser crawling and WARC/WACZ capture for replayable web evidence.",
-      "adapter_status": "planned",
-      "notes": "Use selectively for evidence that may change or disappear; do not archive the entire web by default."
+      "adapter_status": "candidate",
+      "upstream": "webrecorder/browsertrix-crawler",
+      "selection_role": "selective-replay-preservation",
+      "safety_boundary": "Preserve only material Ninja is authorized to acquire and retain; replay artifacts may contain sensitive page state and require explicit storage policy.",
+      "notes": "Use selectively for mutable/high-value evidence that may change or disappear; do not archive the entire web by default."
     },
     {
       "id": "trafilatura",
