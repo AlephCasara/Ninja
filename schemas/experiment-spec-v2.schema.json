@@ -1,0 +1,478 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AlephCasara/Ninja/schemas/experiment-spec-v2.schema.json",
+  "title": "Ninja ExperimentSpec v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "experiment_id",
+    "domain",
+    "scientific_question",
+    "phase",
+    "replay_type",
+    "scope",
+    "evidence_boundary",
+    "data",
+    "representations",
+    "outcomes",
+    "design",
+    "interpretation",
+    "reproducibility"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 2
+    },
+    "experiment_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "hypothesis_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "domain": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scientific_question": {
+      "type": "string",
+      "minLength": 1
+    },
+    "phase": {
+      "type": "string",
+      "enum": [
+        "discovery",
+        "replication",
+        "generalization",
+        "economic",
+        "prospective"
+      ]
+    },
+    "replay_type": {
+      "type": "string",
+      "enum": [
+        "state",
+        "event",
+        "propagation",
+        "strategy_overlay"
+      ]
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "program",
+        "in_scope",
+        "out_of_scope"
+      ],
+      "properties": {
+        "program": {
+          "type": "string",
+          "minLength": 1
+        },
+        "in_scope": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "out_of_scope": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "evidence_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outcome_access",
+        "candidate_frozen",
+        "inspected_outcome_boundaries"
+      ],
+      "properties": {
+        "outcome_access": {
+          "type": "string",
+          "enum": [
+            "outcome_blind_discovery",
+            "label_aware_discovery",
+            "frozen_evaluation",
+            "prospective_only"
+          ]
+        },
+        "candidate_frozen": {
+          "type": "boolean"
+        },
+        "inspected_outcome_boundaries": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "evaluation_boundary": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dataset_manifest_ids",
+        "information_sources",
+        "market_sources",
+        "availability_rule",
+        "population",
+        "universe_rule"
+      ],
+      "properties": {
+        "dataset_manifest_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "information_sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "market_sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "availability_rule": {
+          "type": "string",
+          "minLength": 1
+        },
+        "population": {
+          "type": "string",
+          "minLength": 1
+        },
+        "universe_rule": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "representations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observation",
+        "communication_state",
+        "market_state"
+      ],
+      "properties": {
+        "observation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "communication_state": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "market_state": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "semantic_interpretation": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "extractor",
+                "version",
+                "knowledge_policy",
+                "schema"
+              ],
+              "properties": {
+                "extractor": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "version": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "knowledge_policy": {
+                  "type": "string",
+                  "enum": [
+                    "document_only",
+                    "historical_context",
+                    "prospective"
+                  ]
+                },
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "outcomes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "targets",
+        "horizons"
+      ],
+      "properties": {
+        "targets": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "horizons": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "design": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baselines",
+        "controls",
+        "methods",
+        "assumptions",
+        "search_space",
+        "sample_units",
+        "leakage_checks"
+      ],
+      "properties": {
+        "baselines": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "controls": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "methods": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "search_space": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "sample_units": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "leakage_checks": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "partitions": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "stopping_rules": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "interpretation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "negative_result_scope",
+        "economic_relevance"
+      ],
+      "properties": {
+        "negative_result_scope": {
+          "type": "string",
+          "minLength": 1
+        },
+        "economic_relevance": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "reproducibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code_revision",
+        "environment_lock"
+      ],
+      "properties": {
+        "code_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "environment_lock": {
+          "type": "string",
+          "minLength": 1
+        },
+        "random_seeds": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "uniqueItems": true
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "phase": {
+            "const": "discovery"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "evidence_boundary": {
+            "properties": {
+              "outcome_access": {
+                "enum": [
+                  "outcome_blind_discovery",
+                  "label_aware_discovery"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "phase": {
+            "enum": [
+              "replication",
+              "generalization",
+              "economic"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "evidence_boundary": {
+            "required": [
+              "evaluation_boundary"
+            ],
+            "properties": {
+              "candidate_frozen": {
+                "const": true
+              },
+              "outcome_access": {
+                "const": "frozen_evaluation"
+              },
+              "evaluation_boundary": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "phase": {
+            "const": "prospective"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "evidence_boundary": {
+            "properties": {
+              "candidate_frozen": {
+                "const": true
+              },
+              "outcome_access": {
+                "const": "prospective_only"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

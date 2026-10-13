@@ -36,6 +36,6 @@ market + all validated E2 components
 
 ## Requirement
 
-Any E2 factor must outperform the corresponding simpler attention-only model on untouched chronological data.
+A frozen E2 candidate must demonstrate incremental value over the corresponding simpler attention-only baseline on replication evidence not used to invent that candidate.
 
-If it does not, complexity is rejected.
+A negative result rejects only that scoped representation, population, target and horizon. It does not reject semantic or narrative structure as a research family.

@@ -50,9 +50,11 @@ market + attention + propagation
 
 ## Failure criteria
 
-Propagation is rejected as a production factor if:
+A scoped propagation candidate should not be promoted as a production factor if:
 
 - results are unstable to binning/estimator choices;
 - direction reverses under conditional controls;
 - apparent social→market flow is explained by market→social response;
 - incremental OOS value is negligible.
+
+A failure of one source set, estimator or propagation representation does not by itself reject propagation as an information family.

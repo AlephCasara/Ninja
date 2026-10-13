@@ -596,6 +596,8 @@ No research model or LLM receives direct capital authority. Prospective evidence
 
 ## 18. Backtest experiment contract
 
+New sessions use `schemas/experiment-spec-v2.schema.json`; operational lifecycle and handoff rules are defined in `docs/BACKTESTING_SESSION.md`.
+
 Before a replication or promotion claim, record at least:
 
 ```text
@@ -617,7 +619,7 @@ method and assumptions
 search history relevant to candidate selection
 sample-size units
 leakage checks
-replication dataset boundary
+evaluation / replication boundary
 economic interpretation
 what a negative result would and would not reject
 code revision
@@ -673,8 +675,9 @@ Before changing Ninja experiments, backtesting, scientific validation or promoti
 
 1. `README.md`
 2. `docs/BACKTESTING_POLICY.md`
-3. `docs/MATHEMATICAL_FRAMEWORK.md`
-4. `docs/COMPLEXITY_AND_INFORMATION_DYNAMICS.md`
-5. the relevant experiment specification
+3. `docs/BACKTESTING_SESSION.md`
+4. `docs/MATHEMATICAL_FRAMEWORK.md`
+5. `docs/COMPLEXITY_AND_INFORMATION_DYNAMICS.md`
+6. the relevant experiment specification
 
 The purpose of this rule is continuity: future sessions may change tools and implementations, but they must not silently change what Ninja is trying to discover.
