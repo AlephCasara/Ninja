@@ -14,6 +14,7 @@ from ninja_labs.attention.estimators import (
     estimate_nb_moments,
     negative_binomial_residual,
     robust_attention_surprise,
+    seasonal_robust_attention_surprise,
 )
 from ninja_labs.util import git_commit, sha256_json, utc_now
 from ninja_labs.validation.core import pearson_r
@@ -24,8 +25,6 @@ def _poisson(lam: float, rng: random.Random) -> int:
         raise ValueError("lam must be non-negative")
     if lam == 0:
         return 0
-    # Synthetic E1 worlds deliberately keep means modest, where Knuth is exact
-    # and fast enough while avoiding another scientific dependency in the gate.
     if lam > 30:
         raise ValueError("synthetic Poisson helper supports lam <= 30")
     threshold = math.exp(-lam)
@@ -37,17 +36,8 @@ def _poisson(lam: float, rng: random.Random) -> int:
     return count - 1
 
 
-def generate_nb_counts(
-    n: int,
-    *,
-    mu: float,
-    phi: float,
-    seed: int,
-) -> list[int]:
-    """Generate NB counts through the Gamma-Poisson mixture.
-
-    Parameterization: Var(N) = mu + mu^2 / phi.
-    """
+def generate_nb_counts(n: int, *, mu: float, phi: float, seed: int) -> list[int]:
+    """Generate NB counts through the Gamma-Poisson mixture."""
 
     if n <= 0 or mu <= 0 or phi <= 0:
         raise ValueError("n, mu and phi must be positive")
@@ -56,8 +46,6 @@ def generate_nb_counts(
     result: list[int] = []
     for _ in range(n):
         lam = rng.gammavariate(phi, scale)
-        # Chosen validation worlds keep P(lambda > 30) negligible. Fail rather
-        # than silently approximate if a future suite violates that assumption.
         result.append(_poisson(lam, rng))
     return result
 
@@ -97,8 +85,6 @@ def _mean(values: Sequence[float]) -> float:
 def run_e1_estimator_validation(*, seed: int = 20261013) -> dict[str, Any]:
     checks: dict[str, dict[str, Any]] = {}
 
-    # Robust attention surprise: stationary center + injected bursts + explicit
-    # all-zero reference behavior.
     burst_indices = (240, 480, 720)
     counts = generate_seasonal_counts(
         900,
@@ -136,9 +122,6 @@ def run_e1_estimator_validation(*, seed: int = 20261013) -> dict[str, Any]:
         "policy": "poisson",
     }
 
-    # NB world: validate both moment recovery and true-parameter standardized
-    # residual behavior. This is estimator validation, not a claim that NB is
-    # the best empirical attention model.
     true_mu = 6.0
     true_phi = 8.0
     nb_counts = generate_nb_counts(12_000, mu=true_mu, phi=true_phi, seed=seed + 1)
@@ -164,11 +147,9 @@ def run_e1_estimator_validation(*, seed: int = 20261013) -> dict[str, Any]:
         "residual_variance": residual_variance,
     }
 
-    # Acceleration has an exact deterministic truth table.
     constant = attention_acceleration([5.0] * 10)
     ramp = attention_acceleration([float(index) for index in range(10)])
-    impulse_input = [0.0, 0.0, 0.0, 10.0, 0.0, 0.0]
-    impulse = attention_acceleration(impulse_input)
+    impulse = attention_acceleration([0.0, 0.0, 0.0, 10.0, 0.0, 0.0])
     checks["attention_acceleration"] = {
         "passed": (
             all(value == 0.0 for value in constant[2:])
@@ -180,7 +161,6 @@ def run_e1_estimator_validation(*, seed: int = 20261013) -> dict[str, Any]:
         "impulse_output": impulse,
     }
 
-    # Author structure: same N, very different independent breadth.
     concentrated = author_structure(["a"] * 100)
     diffuse = author_structure([f"u{index}" for index in range(100)])
     balanced = author_structure([f"u{index % 10}" for index in range(100)])
@@ -199,28 +179,44 @@ def run_e1_estimator_validation(*, seed: int = 20261013) -> dict[str, Any]:
         "diffuse": diffuse,
     }
 
-    # Nuisance seasonality: a trailing robust estimator is not assumed to
-    # perfectly remove deterministic intraday seasonality. We quantify how much
-    # it remains so E1 cannot later call this diagnostic "surprise" blindly.
+    # This check intentionally demonstrates a failure mode of the simple rolling
+    # AZ, then requires the seasonal estimator to remove that nuisance.
+    period = 96
+    cycles = 14
     seasonal = generate_seasonal_counts(
         4_000,
         base=4.0,
         amplitude=8.0,
-        period=96,
+        period=period,
         seed=seed + 2,
     )
-    seasonal_az = robust_attention_surprise(seasonal, lookback=96, zero_mad_policy="poisson")
-    valid_az = _finite(seasonal_az)
-    phase = [math.sin(2.0 * math.pi * index / 96) for index in range(96, len(seasonal))]
-    seasonality_r = pearson_r(valid_az, phase)
-    checks["seasonality_sensitivity"] = {
-        # Diagnostic passes if the suite runs and exposes a finite estimate. A
-        # low threshold is deliberately not imposed here: if residual seasonal
-        # dependence is material, empirical E1 must add/compare an explicit
-        # seasonal baseline rather than hide it.
-        "passed": math.isfinite(seasonality_r),
-        "residual_phase_correlation": seasonality_r,
-        "interpretation": "diagnostic_only",
+    rolling_az = robust_attention_surprise(seasonal, lookback=period, zero_mad_policy="poisson")
+    rolling_values = _finite(rolling_az)
+    rolling_phase = [
+        math.sin(2.0 * math.pi * index / period)
+        for index in range(period, len(seasonal))
+    ]
+    rolling_r = pearson_r(rolling_values, rolling_phase)
+
+    seasonal_az = seasonal_robust_attention_surprise(
+        seasonal,
+        period=period,
+        cycles=cycles,
+        zero_mad_policy="poisson",
+    )
+    seasonal_values = _finite(seasonal_az)
+    seasonal_phase = [
+        math.sin(2.0 * math.pi * index / period)
+        for index in range(period * cycles, len(seasonal))
+    ]
+    seasonal_r = pearson_r(seasonal_values, seasonal_phase)
+    checks["seasonality_control"] = {
+        "passed": abs(rolling_r) > 0.4 and abs(seasonal_r) < 0.15,
+        "period": period,
+        "cycles": cycles,
+        "rolling_az_phase_correlation": rolling_r,
+        "seasonal_az_phase_correlation": seasonal_r,
+        "finding": "simple rolling AZ retains strong periodic nuisance and is baseline-only",
     }
 
     passed = all(check["passed"] for check in checks.values())
