@@ -4,7 +4,9 @@ import argparse
 import json
 from pathlib import Path
 
+from ninja_labs.adapters.arctic_shift_stream import download_subreddit_posts_jsonl
 from ninja_labs.pipeline import run_phase1
+from ninja_labs.util import parse_utc
 from ninja_labs.validation.e1_attention import (
     run_e1_estimator_validation,
     write_e1_estimator_validation,
@@ -21,6 +23,17 @@ def build_parser() -> argparse.ArgumentParser:
 
     build = phase1_sub.add_parser("build", help="Build Bronze/Silver/Gold substrate")
     build.add_argument("--config", type=Path, required=True)
+
+    acquire = phase1_sub.add_parser(
+        "acquire-reddit", help="Stream canonical Arctic Shift subreddit post JSONL"
+    )
+    acquire.add_argument("--subreddit", action="append", required=True)
+    acquire.add_argument("--after", required=True, help="UTC/ISO timestamp or date")
+    acquire.add_argument("--before", required=True, help="exclusive UTC/ISO timestamp or date")
+    acquire.add_argument(
+        "--out-dir", type=Path, default=Path(".ninja-inputs/arctic-shift")
+    )
+    acquire.add_argument("--no-resume", action="store_true")
 
     validation = subparsers.add_parser(
         "validation", help="Scientific anti-confirmation and estimator validation"
@@ -46,6 +59,21 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "phase1" and args.phase1_command == "build":
         manifest = run_phase1(args.config)
         print(manifest)
+        return 0
+    if args.command == "phase1" and args.phase1_command == "acquire-reddit":
+        after = parse_utc(args.after)
+        before = parse_utc(args.before)
+        reports = []
+        for subreddit in args.subreddit:
+            report = download_subreddit_posts_jsonl(
+                subreddit=subreddit,
+                after=after,
+                before=before,
+                output_path=args.out_dir / f"r_{subreddit}_posts.jsonl",
+                resume=not args.no_resume,
+            )
+            reports.append(report)
+        print(json.dumps(reports, indent=2, sort_keys=True))
         return 0
     if args.command == "validation" and args.validation_command == "selftest":
         if args.output:
