@@ -16,13 +16,30 @@ Do not create one "bot" per hypothesis. Hypotheses frequently require features f
 | E4 Event Morphology | test structural event analogs | Event Morphology, Narrative, Susceptibility |
 | E5 Strategy Overlay | test incremental value in Master Trader | validated prior experiments |
 
+## Mandatory validation sequence
+
+Before a feature family is allowed to produce a headline empirical claim, its estimator must first survive the Phase 1.5 controls defined in `docs/SCIENTIFIC_VALIDATION_PROTOCOL.md`:
+
+```text
+implementation
+→ synthetic recovery
+→ null calibration
+→ negative controls
+→ sensitivity checks
+→ chronological OOS experiment
+→ generalization stress
+```
+
+The generic harness self-test proves only that the laboratory controls themselves work. Hawkes, Transfer Entropy, attention surprise, change points, morphology distances and other estimators each require their own recovery/null suite.
+
 ## Promotion sequence
 
 ```text
 feature prototype
-→ experiment
-→ replication
-→ validation
+→ estimator validation
+→ preregistered experiment
+→ chronological OOS validation
+→ generalization stress
 → frozen feature version
 → prospective shadow
 → deterministic runtime candidate
@@ -42,7 +59,23 @@ artifacts/
   figures/
 ```
 
+A headline `results.json` must satisfy the metadata/gate represented by `schemas/validation-result-v1.schema.json` and `ninja_labs.validation.headline.assess_headline_eligibility`.
+
 Large source datasets do not belong in Git.
+
+## Result states
+
+Completed experiments retain failures as first-class knowledge assets:
+
+```text
+SUPPORTED
+WEAK
+INCONCLUSIVE
+REJECTED
+INVALID
+```
+
+`REJECTED` means a valid experiment failed its criterion. `INVALID` means the experiment could not answer the question because of leakage, estimator, data-quality or protocol failure.
 
 ## First four experiments
 
