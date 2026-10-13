@@ -66,7 +66,7 @@ uv run ninja-labs phase1 build --config domains/trading/configs/phase1-btc-reddi
 
 **Gate:** a successful smoke proves the pipeline, not completeness of the five-year corpus.
 
-## Phase 1.5 — scientific validation harness — implementation in progress
+## Phase 1.5 — scientific validation harness — generic harness complete
 
 Purpose:
 
@@ -88,7 +88,7 @@ Generic controls:
 - [x] `validation-result-v1` contract
 - [x] anti-confirmation protocol documentation
 - [x] deterministic `ninja-labs validation selftest` command
-- [ ] pass Python/Rust/Markdown CI on the completed harness
+- [x] pass Python/Rust/Markdown CI on the completed harness
 
 Every estimator used later must then receive its **own** validation suite:
 
