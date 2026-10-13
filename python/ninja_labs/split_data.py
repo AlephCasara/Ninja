@@ -8,6 +8,12 @@ import duckdb
 ALLOWED_SPLITS = ("train", "validation", "untouched_test")
 
 
+def _sql_string(value: str) -> str:
+    """Return a DuckDB SQL string literal for an internally generated path."""
+
+    return "'" + value.replace("'", "''") + "'"
+
+
 def materialize_split_panels(
     *,
     aligned_path: Path,
@@ -17,9 +23,9 @@ def materialize_split_panels(
 
     output_dir.mkdir(parents=True, exist_ok=True)
     con = duckdb.connect()
+    input_sql = _sql_string(str(aligned_path))
     con.execute(
-        "CREATE TEMP VIEW aligned_source AS SELECT * FROM read_parquet(?)",
-        [str(aligned_path)],
+        f"CREATE TEMP VIEW aligned_source AS SELECT * FROM read_parquet({input_sql})"
     )
     present = {
         str(row[0]): int(row[1])
@@ -35,13 +41,10 @@ def materialize_split_panels(
     result: dict[str, tuple[Path, int]] = {}
     for split in ALLOWED_SPLITS:
         path = output_dir / f"aligned_{split}.parquet"
-        # Split is a controlled enum, not user input. Only the output path is
-        # parameterized here; DuckDB otherwise ambiguously binds two placeholders
-        # inside COPY(read_parquet(...)) statements.
+        output_sql = _sql_string(str(path))
         con.execute(
             f"COPY (SELECT * FROM aligned_source WHERE split = '{split}' ORDER BY decision_time) "
-            "TO ? (FORMAT PARQUET, COMPRESSION ZSTD)",
-            [str(path)],
+            f"TO {output_sql} (FORMAT PARQUET, COMPRESSION ZSTD)"
         )
         result[split] = (path, present.get(split, 0))
     con.close()
