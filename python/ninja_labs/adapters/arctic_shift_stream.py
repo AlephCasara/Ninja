@@ -15,8 +15,6 @@ from ninja_labs.util import parse_utc, sha256_file
 def _last_jsonl_record(path: Path) -> dict[str, Any] | None:
     if not path.exists() or path.stat().st_size == 0:
         return None
-    # JSONL records are small enough that a bounded reverse scan is adequate;
-    # avoid reading a multi-year corpus into memory merely to resume it.
     with path.open("rb") as handle:
         handle.seek(0, 2)
         position = handle.tell()
@@ -42,14 +40,7 @@ def download_subreddit_posts_jsonl(
     request_interval_seconds: float = 0.5,
     timeout_seconds: float = 90.0,
 ) -> dict[str, Any]:
-    """Stream one subreddit using the same cursor strategy as Arctic Shift UI.
-
-    The upstream download tool uses `limit=auto`, ascending chronological sort,
-    and advances the `after` cursor using the final record's `created_utc`.
-    Ninja mirrors that protocol, adds bounded retry/backoff, optional resume, and
-    a final SHA-256 record. The half-open requested interval remains
-    `[after, before)`.
-    """
+    """Stream one subreddit using the same cursor strategy as Arctic Shift UI."""
 
     start_ms = int(after.timestamp() * 1000)
     end_ms = int(before.timestamp() * 1000)
@@ -62,11 +53,16 @@ def download_subreddit_posts_jsonl(
     mode = "a" if resume and output_path.exists() else "w"
     current_ms = start_ms
     existing_rows = 0
+    previous_id: str | None = None
+    previous_created_ms: int | None = None
     if mode == "a":
         last = _last_jsonl_record(output_path)
         if last is not None and last.get("created_utc") is not None:
-            current_ms = max(start_ms, int(parse_utc(last["created_utc"]).timestamp() * 1000))
-            existing_rows = sum(1 for _ in output_path.open("r", encoding="utf-8"))
+            previous_id = str(last.get("id") or "") or None
+            previous_created_ms = int(parse_utc(last["created_utc"]).timestamp() * 1000)
+            current_ms = max(start_ms, previous_created_ms)
+            with output_path.open("r", encoding="utf-8") as existing:
+                existing_rows = sum(1 for _ in existing)
 
     headers = {
         "User-Agent": "AlephCasara-Ninja/0.1 research contact via GitHub",
@@ -75,8 +71,6 @@ def download_subreddit_posts_jsonl(
     downloaded_rows = 0
     requests = 0
     retries = 0
-    previous_id: str | None = None
-    previous_created_ms: int | None = None
 
     with httpx.Client(
         base_url=BASE_URL,
@@ -131,13 +125,17 @@ def download_subreddit_posts_jsonl(
                 if not (start_ms <= created_ms < end_ms):
                     continue
                 row_id = str(row.get("id") or "")
-                # Resume/page-boundary duplicate guard. The upstream API is
-                # chronologically sorted; duplicates outside the immediate
-                # boundary are retained as evidence rather than silently
-                # globally deduplicated.
                 if row_id and row_id == previous_id and created_ms == previous_created_ms:
                     continue
-                handle.write(json.dumps(row, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n")
+                handle.write(
+                    json.dumps(
+                        row,
+                        ensure_ascii=False,
+                        sort_keys=True,
+                        separators=(",", ":"),
+                    )
+                    + "\n"
+                )
                 previous_id = row_id or None
                 previous_created_ms = created_ms
                 max_created_ms = max(max_created_ms, created_ms)
@@ -149,8 +147,6 @@ def download_subreddit_posts_jsonl(
                 current_ms += 1000
             else:
                 current_ms = max_created_ms
-            # Match upstream safeguard: if the next request would use exactly
-            # the same cursor, advance one second to prevent an infinite loop.
             if wrote_this_page == 0:
                 current_ms += 1000
 
