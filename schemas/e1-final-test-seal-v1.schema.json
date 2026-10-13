@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AlephCasara/Ninja/schemas/e1-final-test-seal-v1.schema.json",
+  "title": "Ninja E1 Final Test Seal v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "kind",
+    "status",
+    "dataset_manifest_sha256",
+    "experiment_config_sha256",
+    "preregistration_seal_sha256",
+    "train_validation_result_sha256",
+    "robustness_result_sha256",
+    "frozen_primary",
+    "untouched_test",
+    "seal_sha256"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "ninja-e1-final-test-seal"},
+    "status": {"const": "SEALED"},
+    "frozen_primary": {"type": "object"},
+    "untouched_test": {
+      "type": "object",
+      "required": ["opened_by_seal_creation"],
+      "properties": {"opened_by_seal_creation": {"const": false}}
+    },
+    "seal_sha256": {"type": "string", "minLength": 64}
+  }
+}
