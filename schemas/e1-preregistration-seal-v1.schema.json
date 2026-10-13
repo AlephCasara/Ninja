@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AlephCasara/Ninja/schemas/e1-preregistration-seal-v1.schema.json",
+  "title": "Ninja E1 Preregistration Seal v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "kind",
+    "status",
+    "experiment_id",
+    "hypothesis_id",
+    "dataset_manifest_sha256",
+    "experiment_config_sha256",
+    "estimator_validation_sha256",
+    "confirmatory",
+    "untouched_test",
+    "seal_sha256"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "ninja-e1-preregistration-seal"},
+    "status": {"const": "SEALED_FOR_TRAIN_VALIDATION"},
+    "experiment_id": {"type": "string", "minLength": 1},
+    "hypothesis_id": {"const": "N1"},
+    "dataset_manifest_sha256": {"type": "string", "minLength": 64},
+    "experiment_config_sha256": {"type": "string", "minLength": 64},
+    "estimator_validation_sha256": {"type": "string", "minLength": 64},
+    "confirmatory": {
+      "type": "object",
+      "required": [
+        "primary_target",
+        "primary_horizon_bins",
+        "primary_candidate",
+        "primary_loss",
+        "minimum_relative_loss_improvement",
+        "alpha"
+      ]
+    },
+    "untouched_test": {
+      "type": "object",
+      "required": ["opened_by_preregistration"],
+      "properties": {
+        "opened_by_preregistration": {"const": false}
+      }
+    },
+    "seal_sha256": {"type": "string", "minLength": 64}
+  }
+}
