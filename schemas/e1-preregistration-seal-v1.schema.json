@@ -13,6 +13,8 @@
     "dataset_manifest_sha256",
     "experiment_config_sha256",
     "estimator_validation_sha256",
+    "monte_carlo_validation_sha256",
+    "monte_carlo_worlds",
     "confirmatory",
     "untouched_test",
     "seal_sha256"
@@ -26,6 +28,8 @@
     "dataset_manifest_sha256": {"type": "string", "minLength": 64},
     "experiment_config_sha256": {"type": "string", "minLength": 64},
     "estimator_validation_sha256": {"type": "string", "minLength": 64},
+    "monte_carlo_validation_sha256": {"type": "string", "minLength": 64},
+    "monte_carlo_worlds": {"type": "integer", "minimum": 64},
     "confirmatory": {
       "type": "object",
       "required": [
