@@ -7,103 +7,114 @@ The immediate program objective is the first reproducible, falsifiable historica
 ## Phase 0 — architecture freeze — substantially complete
 
 - [x] Define Ninja as a research/validation project
-- [x] Define six research domains
-- [x] Record scientific foundation
-- [x] Create hypothesis registry
-- [x] Define validation ladder
+- [x] Define six research domains and hypothesis registry
+- [x] Define Ninja Tools, Ninja Labs and Ninja intelligence boundaries
 - [x] Establish Rust core/tooling + Python research boundary
-- [x] Define Ninja Tools as the acquisition/observation/preservation layer
-- [x] Define Ninja Labs as the scientific analysis/experimentation/validation layer
-- [x] Define Ninja as the intelligence/assessment layer
-- [x] Keep one Ninja repository; treat trading and future business work as domain layers, not forks
-- [x] Keep one MCP surface initially; conceptual `tools.*`, `labs.*`, `intel.*` namespaces do not imply separate daemons
-- [x] Preserve Master Trader as the current execution/risk/capital authority
-- [ ] Align the large README terminology with the frozen architecture without deleting the existing mathematical/scientific material
-- [x] Extend `tools/catalog.json` taxonomy to distinguish acquisition tools from Labs instruments
-- [x] Define `Observation v1` and `ExperimentSpec v1` contracts
-- [x] Add a minimal repository skeleton for Labs and domain-specific experiment configuration only where required by Phase 1/E1
+- [x] Keep one repository; trading/business are domain layers, not forks
+- [x] Keep one MCP surface initially
+- [x] Preserve Master Trader as execution/risk/capital authority
+- [x] Define `Observation v1` and `ExperimentSpec v1`
+- [x] Extend tool taxonomy to distinguish acquisition from Labs instruments
+- [ ] Align the large README terminology with the frozen architecture without deleting the scientific material
 
-**Phase 0 exit condition:** architecture documents, contracts and roadmap agree on `Tools -> Labs -> Ninja`, with no competing runtime model. The remaining README wording is documentation debt, not a blocker for the Phase 1 vertical slice.
+**Gate:** architecture and contracts agree on `Tools -> Labs -> Ninja`; documentation debt does not block experiments.
 
 ## Phase 1 — historical validation substrate — live-validated implementation; canonical materialization pending
 
-Priority vertical slice:
-
 ```text
-Arctic Shift / historical Reddit
+Arctic Shift Reddit
         -> Bronze
         -> Observation v1 / Silver
-        -> attention Gold panel
+        -> attention Gold
 
 Binance BTCUSDT 15m
         -> market Silver
 
-attention Gold + market Silver
-        -> causally aligned Gold panel
+attention + market
+        -> causally aligned Gold
         -> coverage + manifest
 ```
 
-Canonical initial sources are Arctic Shift Reddit posts from `r/Bitcoin` and `r/CryptoCurrency`, plus Binance public `BTCUSDT` 15-minute spot klines. Source-quality decisions and limitations are recorded in `docs/PHASE1_DATA_SOURCES.md`.
+Completed:
 
-- [x] Select the first canonical historical information corpus
-- [x] Select matching market-data source/universe
-- [x] Complete the source-quality review and record temporal limitations
-- [x] Implement a bounded/paced Arctic Shift API adapter for smoke tests and targeted gaps
-- [x] Implement streaming Arctic Shift subreddit-JSONL ingestion for the canonical historical corpus
-- [x] Implement the Binance public market-data adapter
-- [x] Implement dataset manifests and content/artifact hashes
-- [x] Hash external JSONL source files in the manifest
-- [x] Implement UTC causal alignment around `Observation.available_at` and market `decision_time`
-- [x] Keep entity scope intentionally single-asset (`BTC`) so no premature alias subsystem is required
-- [x] Implement no-lookahead tests
-- [x] Freeze train/validation/untouched-test periods for the canonical E1 configuration
-- [x] Implement Bronze/Silver/Gold materializers with DuckDB/Parquet-compatible schemas
-- [x] Record exact event timestamps rather than retaining only aggregated counts
-- [x] Preserve source/platform/author/thread/community fields needed by later E3/Hawkes work when available
-- [x] Implement `coverage.json` for source temporal quality, market gaps, attention missingness and split counts
-- [x] Add an offline test suite so CI does not depend on external-source uptime
-- [x] Pass Python, Rust and Markdown CI on the Phase 1 implementation
-- [x] Execute `phase1-smoke.toml` end-to-end against live Arctic Shift + Binance
-- [x] Verify the smoke has zero market gaps and zero future-window/future-observation violations
-- [x] Make external-source smoke manual-only after validation so CI does not repeatedly load a free upstream service
-- [ ] Download the canonical subreddit JSONL inputs for `r/Bitcoin` and `r/CryptoCurrency`
-- [ ] Materialize the canonical 2021-2025 dataset and preserve its final manifest
-- [ ] Inspect canonical coverage/gaps/temporal-quality results before admitting the dataset to E1
-- [ ] Commit a resolver-generated `uv.lock` before the first headline E1 result
+- [x] Arctic Shift API adapter for bounded smoke/gap work
+- [x] streaming subreddit-JSONL ingestion for the canonical corpus
+- [x] Binance public market adapter
+- [x] content/artifact hashes and manifests
+- [x] causal `available_at` and market `decision_time`
+- [x] no-lookahead tests
+- [x] frozen chronological train/validation/untouched-test periods
+- [x] Bronze/Silver/Gold materializers
+- [x] exact event timestamps preserved for later E3/Hawkes
+- [x] coverage audit for temporal quality, market gaps, missingness and split counts
+- [x] offline CI tests
+- [x] live smoke against Arctic Shift + Binance
+- [x] smoke showed zero market gaps and zero future-window/future-observation violations
 
-Live smoke evidence:
+Pending canonical-data gate:
 
-```text
-2025-01-01 <= t < 2025-01-08
-r/Bitcoin
-BTCUSDT 15m
+- [ ] download `r/Bitcoin` and `r/CryptoCurrency` subreddit JSONL inputs
+- [ ] materialize the canonical 2021-2025 dataset
+- [ ] inspect final coverage/gaps/temporal-quality report
+- [ ] commit a resolver-generated `uv.lock` before the first headline E1 result
 
-Reddit observations       1,901
-unique authors            1,487
-archive-capture rows      1,901
-market candles              672
-market gaps                   0
-attention windows            672
-non-zero windows             612
-zero windows                  60
-max posts / 15m               23
-future-window violations       0
-future-observation violations  0
-```
-
-Canonical command after the two subreddit JSONL files are placed under `.ninja-inputs/arctic-shift/`:
+Canonical command:
 
 ```text
 uv run ninja-labs phase1 build --config domains/trading/configs/phase1-btc-reddit.toml
 ```
 
-Bounded live smoke command:
+**Gate:** a successful smoke proves the pipeline, not completeness of the five-year corpus.
+
+## Phase 1.5 — scientific validation harness — implementation in progress
+
+Purpose:
+
+> verify that Ninja's laboratory can recover known truths and reject constructed false relationships before real hypotheses are allowed to generate headline claims.
+
+Generic controls:
+
+- [x] deterministic synthetic AR(1) generator
+- [x] deterministic known lagged-effect generator
+- [x] estimator-recovery self-test
+- [x] block permutation preserving local dependence
+- [x] moving-block bootstrap primitive
+- [x] block shuffle, circular shift and time-reversal primitives
+- [x] time-series effective sample size diagnostic
+- [x] Benjamini-Hochberg FDR correction
+- [x] chronological label purging
+- [x] boundary embargo
+- [x] headline-result eligibility gate
+- [x] `validation-result-v1` contract
+- [x] anti-confirmation protocol documentation
+- [x] deterministic `ninja-labs validation selftest` command
+- [ ] pass Python/Rust/Markdown CI on the completed harness
+
+Every estimator used later must then receive its **own** validation suite:
 
 ```text
-uv run ninja-labs phase1 build --config domains/trading/configs/phase1-smoke.toml
+synthetic recovery
++ null calibration
++ negative controls
++ sensitivity analysis
++ empirical chronological OOS
++ generalization stress
 ```
 
-**Gate:** do not add another crawler, browser or source merely because it is available. A successful smoke proves the pipeline, not the completeness of the five-year corpus. E1 may consume the canonical dataset only after its final manifest and coverage audit are reviewed.
+This applies independently to:
+
+- attention surprise estimators;
+- negative-binomial residuals;
+- acceleration/breadth/concentration measures;
+- change-point detectors;
+- stance/disagreement estimators;
+- narrative/novelty estimators;
+- Hawkes implementations;
+- Transfer Entropy estimators;
+- event-morphology distances;
+- susceptibility/interactions.
+
+**Gate:** passing the generic self-test does not validate N1-N10. A method that cannot recover a constructed truth or behaves badly under null worlds may not interpret market data.
 
 ## Phase 2 — E1 Attention Replication / first information backtest
 
@@ -111,160 +122,164 @@ Question:
 
 > Does abnormal public attention add stable chronological out-of-sample information beyond conventional market data?
 
-- [ ] Build the preregistered attention feature set
-- [ ] Reproduce simple attention statistics
-- [ ] Evaluate market-only baseline
-- [ ] Evaluate market + raw count
-- [ ] Evaluate market + normalized attention
-- [ ] Evaluate market + attention structure
-- [ ] Test future realized volatility
-- [ ] Test volume surprise
-- [ ] Test jumps
-- [ ] Test MAE
-- [ ] Run robustness/ablation checks required by E1
-- [ ] Publish a positive, negative or inconclusive result with immutable experiment metadata
+Before touching the untouched test, freeze feature definitions, horizons, primary metrics, hypothesis family, rejection criteria and minimum meaningful effect.
 
-Target reproducible interface:
+Required sequence:
+
+- [ ] validate raw-count and attention estimators on synthetic/null suites
+- [ ] build preregistered attention features
+- [ ] evaluate market-only baseline
+- [ ] evaluate market + raw count
+- [ ] evaluate market + normalized attention
+- [ ] evaluate market + attention structure
+- [ ] test future realized volatility
+- [ ] test volume surprise
+- [ ] test jumps
+- [ ] test MAE
+- [ ] enforce horizon-dependent purging/embargo
+- [ ] report raw N, windows/events/clusters where applicable, and effective N
+- [ ] apply registered multiple-testing correction
+- [ ] run block bootstrap/permutation controls
+- [ ] run regime/event/source ablations where applicable
+- [ ] publish `SUPPORTED`, `WEAK`, `INCONCLUSIVE`, `REJECTED` or `INVALID`
+
+Target interface:
 
 ```text
 uv run ninja-labs experiment run <E1 config>
 ```
 
-The exact CLI shape may change; reproducibility is the invariant.
+**Gate:** E1 is the first empirical gate. No sophisticated later model is rescued simply because it is mathematically interesting.
 
-**Gate:** no propagation or morphology result is promoted ahead of a failed basic attention gate merely because the later mathematics is more interesting.
+## Phase 2.5 — E1 generalization
+
+A surviving E1 factor must be attacked for transportability:
+
+- [ ] leave-one-regime-out
+- [ ] drop-best-event
+- [ ] leave-one-event-out where event episodes are identifiable
+- [ ] source/community ablation
+- [ ] alternative periods
+- [ ] later, asset-transfer tests
+- [ ] prospective shadow comparison when justified
+
+**Gate:** one dominant episode or regime is not a general Ninja factor.
 
 ## Phase 3 — Ninja Labs experiment optimization / Ax
 
-Ax enters after the fixed E1 pipeline is known to be scientifically and operationally correct.
+Ax enters only after the fixed E1 pipeline is scientifically and operationally correct.
 
-- [x] Add Ax to the Labs instrument catalog
-- [ ] Define a bounded Ax adapter around Ninja-owned `ExperimentSpec` / `TrialSpec` contracts
-- [ ] Allow Ax to explore only preregistered train/validation spaces
-- [ ] Make untouched final test data inaccessible during adaptive optimization
-- [ ] Compare Ax against fixed/random/grid baselines on trial count, compute cost and final OOS result
-- [ ] Record every adaptive trial and stopping condition
+- [x] Ax exists in the Labs instrument catalog
+- [ ] define a bounded adapter around Ninja-owned experiment/trial contracts
+- [ ] allow adaptive search only over preregistered train/validation spaces
+- [ ] make final untouched test unavailable to Ax
+- [ ] compare Ax against fixed/random/grid baselines
+- [ ] record every adaptive trial and stopping condition
 
-Candidate search dimensions include feature windows, normalization variants, regularization, minimum support and prediction horizons.
+**Gate:** Ax is an experimental instrument, not an epistemic authority.
 
-**Gate:** Ax is an experimental instrument, not an epistemic authority. Adaptive search must never become repeated tuning on the final test window.
+## Phase 4 — second stream / E2 information structure
 
-## Phase 4 — second stream / cross-platform information structure
+- [ ] select a second reliable timestamped information stream
+- [ ] run source/platform ablation
+- [ ] estimate common attention and platform residuals
+- [ ] validate stance/disagreement estimators synthetically before claims
+- [ ] validate narrative/novelty/change-point estimators synthetically before claims
+- [ ] run E2 incremental tests against attention-only baselines
+- [ ] build cross-source entity/narrative alignment required for propagation
 
-- [ ] Select the second reliable timestamped information stream
-- [ ] Prefer structured historical datasets/APIs before live recrawling
-- [ ] Run platform/source ablation
-- [ ] Estimate common attention
-- [ ] Preserve platform/source residuals
-- [ ] Run E2 disagreement/narrative tests
-- [ ] Build cross-source entity/narrative alignment required for propagation work
+GDELT/news remains a strong candidate subject to temporal-quality review.
 
-GDELT/news is a strong candidate for this phase, subject to source-quality and temporal-coverage checks against the chosen E1 period.
+## Phase 5 — E3 propagation / Hawkes / directed information
 
-## Phase 5 — E3 propagation / Hawkes
+### E3.0 — estimator validation
 
-The Phase 1 schema must make this possible without reconstructing discarded event timing.
+Before historical interpretation:
+
+- [ ] simulate known Hawkes processes and recover known excitation structure
+- [ ] calibrate Hawkes null/false-positive behavior
+- [ ] include time-reversal/surrogate diagnostics where appropriate
+- [ ] simulate known directed dependencies for Transfer Entropy
+- [ ] verify TE direction recovery and surrogate bias correction
 
 ### E3.1 — nonparametric timing
 
-- [ ] Estimate first activation per source/process
-- [ ] Estimate activation order
-- [ ] Estimate cross-source latency
-- [ ] Run event-aligned lead/lag diagnostics
+- [ ] first activation per process
+- [ ] activation order
+- [ ] cross-source latency
+- [ ] event-aligned lead/lag diagnostics
 
-### E3.2 — baseline Hawkes model
+### E3.2 — baseline Hawkes
 
-- [ ] Benchmark candidate/reference Hawkes implementations
-- [ ] Start with the smallest defensible multivariate model, preferably an exponential-kernel baseline
-- [ ] Estimate baseline intensity and self/cross excitation
-- [ ] Derive integrated excitation / branching matrix
-- [ ] Check stability via spectral radius where model assumptions support it
-- [ ] Run residual/time-rescaling/goodness-of-fit diagnostics
+- [ ] benchmark candidate/reference implementations
+- [ ] start with the smallest defensible multivariate model
+- [ ] estimate baseline intensity and self/cross excitation
+- [ ] derive integrated excitation / branching matrix
+- [ ] check spectral-radius stability when assumptions permit
+- [ ] run residual/time-rescaling/goodness-of-fit diagnostics
 
-### E3.3 — incremental-information test
+### E3.3 — incremental information
 
 Compare:
 
 ```text
 market + attention
 vs
-market + attention + propagation/Hawkes features
+market + attention + propagation
 ```
 
-- [ ] Run chronological OOS comparison
-- [ ] Test sensitivity to estimator/binning/event-definition choices
-- [ ] Check whether apparent social->market effects are better explained by market->social response
-- [ ] Add Transfer Entropy / surrogate-corrected directed-information diagnostics where justified
+- [ ] chronological OOS comparison
+- [ ] sensitivity to event definition/binning/estimator
+- [ ] test market->social reverse explanation
+- [ ] add surrogate-corrected directed-information diagnostics
 
-### E3.4 — richer models only after survival
-
-Possible later work:
-
-- marked Hawkes;
-- semantic marks/modulation;
-- time-varying coupling;
-- exposure/adoption models;
-- other nonlinear point-process variants.
-
-**Gate:** sophistication is not evidence. Richer propagation models must beat attention-only and simpler propagation baselines OOS.
+**Gate:** richer propagation models must beat attention-only and simpler propagation baselines OOS.
 
 ## Phase 6 — E4 Event Morphology
 
-- [ ] Freeze event ontology v0
-- [ ] Create reviewed event gold set
-- [ ] Benchmark rules / compact classifier / local LLM extraction
-- [ ] Test event-response similarity
-- [ ] Test historical analogue distributions
-- [ ] Compare morphology against simpler event/category baselines
+- [ ] freeze event ontology v0 before outcome inspection
+- [ ] create a reviewed event gold set blinded to future price response
+- [ ] validate morphology-distance behavior on synthetic/controlled examples
+- [ ] benchmark rules / compact classifier / local LLM extraction
+- [ ] test event-response similarity on held-out event episodes
+- [ ] test historical analogue distributions
+- [ ] compare morphology against simpler category/matched-control baselines
+
+**Gate:** messages are not independent events; morphology inference must use event-level/effective sample size.
 
 ## Phase 7 — prospective collection
 
-After the historical substrate is useful enough to justify live observation:
-
-- [ ] Design live point-in-time acquisition
-- [ ] Integrate Last30Days as reconnaissance/discovery where useful
-- [ ] Add changedetection-style sentinels where ongoing page change history has value
-- [ ] Add dedicated source adapters only where justified
-- [ ] Store `published_at`, `first_seen_at` and `collected_at`
-- [ ] Preserve replayable evidence selectively
-- [ ] Compare historical reconstruction quality against prospective capture
+- [ ] design point-in-time acquisition
+- [ ] integrate Last30Days for reconnaissance where useful
+- [ ] add changedetection-style sentinels when page-change history matters
+- [ ] store `published_at`, `first_seen_at`, `collected_at`
+- [ ] preserve replayable evidence selectively
+- [ ] compare historical reconstruction quality against prospective capture
 
 ## Phase 8 — first promoted Ninja implementation
 
-Only after a factor or factor combination survives historical information validation:
+Only factors surviving validation may be promoted:
 
-- [ ] choose the smallest useful runtime artifact: standalone strategy, overlay or risk/regime module
-- [ ] freeze Python implementation and parameters
-- [ ] add it to the Master Trader fleet as a Ninja-family component
-- [ ] add `NINJA_ENABLED` family-level control
-- [ ] prove `NINJA_ENABLED=false` preserves current fleet semantics
-- [ ] run the promoted Ninja in dry-run / shadow
+- [ ] choose the smallest useful artifact: strategy, overlay or risk/regime module
+- [ ] freeze implementation and parameters
+- [ ] integrate with Master Trader without changing baseline semantics
+- [ ] run dry/shadow
 - [ ] collect prospective outcomes
 
 ## Phase 9 — live approval
 
-Only if the implementation survives:
+Require:
 
 ```text
 historical OOS
-+ robustness checks
++ robustness/generalization
 + strategy backtest / walk-forward
-+ prospective dry-run/shadow
++ prospective dry/shadow
 + execution economics
 ```
 
-then compare:
-
-```text
-baseline strategy/fleet
-vs
-baseline + promoted Ninja implementation
-```
-
-Human approval remains required before live capital is enabled.
+then compare the original strategy/fleet against the same strategy/fleet plus the frozen Ninja component. Human approval remains required before live capital.
 
 ## Future domain — business
 
-Business remains a domain placeholder during the trading validation program.
-
-Shared methods may later be reused, but business-specific targets, baselines, susceptibility and evidence must be validated independently. Trading evidence never automatically validates a business hypothesis.
+Business remains a domain placeholder during trading validation. Shared methods may later be reused, but business targets, baselines, susceptibility and evidence require independent validation. Trading evidence never automatically validates a business hypothesis.
