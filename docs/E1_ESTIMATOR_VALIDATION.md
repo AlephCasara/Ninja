@@ -1,5 +1,8 @@
 # E1 estimator validation
 
+> **Policy status:** transitional/legacy for E1 scientific authority. `docs/BACKTESTING_POLICY.md` supersedes any universal synthetic/Monte-Carlo prerequisite or claim that E1 gates qualitatively different Ninja research. These documents remain implementation history until the corresponding code is surgically aligned.
+
+
 E1 may not interpret historical market data until each candidate estimator has demonstrated that it measures the intended object in controlled worlds and does not manufacture excessive signal under null worlds.
 
 ## Scientific rule

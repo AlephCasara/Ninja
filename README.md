@@ -1493,7 +1493,7 @@ Detailed specifications:
 - [E3 — Propagation](experiments/E3_PROPAGATION.md)
 - [E4 — Event Morphology](experiments/E4_EVENT_MORPHOLOGY.md)
 
-E1 is a gate: if a basic attention effect cannot be reproduced under the registered protocol, propagation and morphology work should not be treated as higher-priority evidence.
+E1 is the simplest activity/attention baseline replication. A negative E1 result is evidence about that scoped representation, not a veto on semantic, propagation or morphology hypotheses that test qualitatively different information structure.
 
 ---
 
@@ -2107,6 +2107,7 @@ Detailed specifications are split into the following documents.
 | Document | Purpose |
 |---|---|
 | [Mathematical framework](docs/MATHEMATICAL_FRAMEWORK.md) | complete equations, estimators, nulls and validation logic |
+| [Backtesting policy](docs/BACKTESTING_POLICY.md) | scientific authority for discovery, replay, replication, controls and economic promotion |
 | [Complexity and information dynamics](docs/COMPLEXITY_AND_INFORMATION_DYNAMICS.md) | complexity science, network theory, criticality, ABM, multifractals |
 | [Scientific foundation](docs/SCIENTIFIC_FOUNDATION.md) | literature and evidence map |
 | [Architecture](docs/ARCHITECTURE.md) | logical/runtime architecture and data layers |
