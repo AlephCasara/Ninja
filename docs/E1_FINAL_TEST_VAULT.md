@@ -1,5 +1,8 @@
 # E1 Robustness and Final-Test Vault
 
+> **Policy status:** transitional/legacy for E1 scientific authority. `docs/BACKTESTING_POLICY.md` supersedes any universal synthetic/Monte-Carlo prerequisite or claim that E1 gates qualitatively different Ninja research. These documents remain implementation history until the corresponding code is surgically aligned.
+
+
 E1 treats the 2025 split as a scarce scientific resource rather than another tuning window.
 
 ## Release sequence

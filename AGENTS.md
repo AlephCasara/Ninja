@@ -6,6 +6,8 @@ Ninja is a research and information-acquisition project that promotes only valid
 
 Before changing code or experiments, read:
 
+- `README.md`
+- `docs/BACKTESTING_POLICY.md` for any experiment, backtest, validation or promotion work
 - `docs/ADR-002-CORE-LANGUAGE-AND-TOOLING.md`
 - `docs/NINJA_TOOLS.md`
 - `CONTRIBUTING.md`
@@ -55,6 +57,7 @@ The MCP surface is intentionally narrow. Do not add a generic shell-execution to
 - Dataset/artifact lineage belongs in DVC once the first canonical dataset is selected.
 - Every acquired observation must preserve timestamps and provenance required by the no-lookahead policy.
 - Raw/high-value web evidence should be hashable and replayable where practical (for example WARC/WACZ capture for mutable sources).
+- Preserve qualitative content and point-in-time engagement/network state when they are part of the scientific question; do not collapse rich observations to counts merely for implementation convenience.
 
 ## Research safety rails
 
@@ -63,3 +66,6 @@ The MCP surface is intentionally narrow. Do not add a generic shell-execution to
 - Do not treat current mutable engagement fields as historical point-in-time data.
 - Do not silently install tools, store credentials in the repo, or bypass authentication/paywalls.
 - Interactive access challenges require an authorized/session-aware path or human handoff rather than an untracked workaround.
+- Statistical, ML or simulation methods are instruments, not project-level scientific authority. Do not introduce a mandatory methodological gate because it is conventional, familiar or easy to implement.
+- Synthetic/Monte Carlo tests may establish software/mathematical properties when justified, but are not default empirical gates for Ninja information hypotheses.
+- A negative result rejects only the scoped hypothesis actually tested; one activity/attention representation must not veto semantic, morphology, propagation or other independent research families.

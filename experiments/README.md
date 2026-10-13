@@ -16,34 +16,39 @@ Do not create one "bot" per hypothesis. Hypotheses frequently require features f
 | E4 Event Morphology | test structural event analogs | Event Morphology, Narrative, Susceptibility |
 | E5 Strategy Overlay | test incremental value in Master Trader | validated prior experiments |
 
-## Mandatory validation sequence
+## Scientific validation policy
 
-Before a feature family is allowed to produce a headline empirical claim, its estimator must first survive the Phase 1.5 controls defined in `docs/SCIENTIFIC_VALIDATION_PROTOCOL.md`:
+All experiments follow [`docs/BACKTESTING_POLICY.md`](../docs/BACKTESTING_POLICY.md).
+
+There is no universal synthetic-recovery or Monte-Carlo prerequisite for empirical Ninja hypotheses. Validation must match the scientific object and the claim. Synthetic data may be used for software/mathematical correctness when justified, but it is not a substitute for evidence from real historical or prospective information systems.
+
+The common research progression is:
 
 ```text
-implementation
-→ synthetic recovery
-→ null calibration
-→ negative controls
-→ sensitivity checks
-→ chronological OOS experiment
-→ generalization stress
+discovery on real point-in-time evidence
+→ scoped candidate hypothesis
+→ replication on evidence not used to invent the candidate
+→ generalization / robustness appropriate to the phenomenon
+→ economic translation
+→ prospective shadow
 ```
 
-The generic harness self-test proves only that the laboratory controls themselves work. Hawkes, Transfer Entropy, attention surprise, change points, morphology distances and other estimators each require their own recovery/null suite.
+Specific feature families may require additional controls: Hawkes, Transfer Entropy, semantic extraction, network measures, change points and morphology each have different assumptions and therefore do not share one mandatory null/calibration recipe.
 
 ## Promotion sequence
 
 ```text
-feature prototype
-→ estimator validation
-→ preregistered experiment
-→ chronological OOS validation
-→ generalization stress
-→ frozen feature version
+real-data discovery
+→ candidate representation / relationship
+→ scoped replication hypothesis
+→ chronological or event-held-out replication
+→ generalization stress appropriate to the claim
+→ economic translation / strategy overlay
 → prospective shadow
 → deterministic runtime candidate
 ```
+
+Preregistration is used when appropriate to separate a confirmatory/replication claim from prior exploration; it is not a ban on exploratory science.
 
 ## Required artifacts per completed experiment
 
@@ -84,4 +89,4 @@ INVALID
 - [E3 Propagation](E3_PROPAGATION.md)
 - [E4 Event Morphology](E4_EVENT_MORPHOLOGY.md)
 
-E1 is the gate for expensive research. If basic attention cannot be reproduced honestly, Ninja should not jump directly into sophisticated cascade models.
+E1 is the simplest activity/attention baseline experiment. Its result is informative but does not gate qualitatively different hypotheses in E2–E4; semantic structure, propagation and morphology may contain information even when simple activity counts do not.

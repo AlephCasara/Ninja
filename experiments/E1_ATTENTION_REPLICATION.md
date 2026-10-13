@@ -1,151 +1,173 @@
-# E1 — Attention Replication
+# E1 — Simple Activity / Attention Replication
 
-**Status:** preregistered design; deterministic and multi-seed estimator validation passed; canonical corpus materialization and empirical E1 execution pending.
+**Status:** baseline experiment design; canonical corpus materialization and empirical execution pending.
 
-## Question
+**Authority:** this experiment follows [`docs/BACKTESTING_POLICY.md`](../docs/BACKTESTING_POLICY.md).
 
-Does abnormal public attention provide incremental information about future market state after conditioning on conventional market data?
+## Purpose
+
+E1 is the simplest real-data baseline in the Ninja research program.
+
+It asks:
+
+> do simple observable activity/attention representations from one information source add reproducible information about future market state beyond conventional market data?
+
+E1 is deliberately narrow. It does **not** test the full Ninja theory, semantic content, event morphology, propagation structure or the combined `Information Shock × Transmission × Susceptibility` hypothesis.
+
+A negative E1 result therefore rejects only the scoped activity/attention representation that was tested. It does not veto E2–E4 or other qualitatively different information hypotheses.
 
 ## Scope
 
-Start with the best timestamped historical source that can be reconstructed reproducibly.
+Start with a timestamped historical source that can be reconstructed reproducibly and aligned point-in-time to market data.
 
-Do not require cross-platform data for the first pass.
+Cross-platform data is not required for the first E1 pass.
 
-## Candidate features
+The information source must preserve raw/replayable evidence needed by later semantic experiments even if E1 itself uses only simple activity features.
 
-- message count;
+## Candidate observable families
+
+Initial simple representations may include:
+
+- message/post count;
 - unique-author count;
-- attention surprise;
-- attention acceleration;
-- author concentration;
-- author entropy.
+- comment/reply count when point-in-time history exists;
+- views/likes/reposts/shares when point-in-time snapshots exist;
+- engagement velocity/acceleration when reconstructable;
+- activity surprise relative to a causal historical baseline;
+- activity acceleration;
+- author/source concentration;
+- author/source breadth or entropy.
 
-## Phase 1.5 estimator gate
+No normalization method is privileged merely because it is statistically familiar. Raw counts remain an explicit baseline against more elaborate transforms.
 
-Before any candidate attention estimator is allowed to influence the headline E1 comparison, it must pass an estimator-specific validation suite under `docs/SCIENTIFIC_VALIDATION_PROTOCOL.md`.
+Final/current mutable engagement fields may not be backfilled into earlier replay times.
 
-At minimum:
+## Market baseline
 
-```text
-known synthetic behavior
-→ estimator recovery
-→ autocorrelation-aware null/permutation controls
-→ sensitivity to window/seasonality choices
-→ false-positive calibration
-→ multi-seed Monte Carlo using the exact production parameterization
-→ only then historical E1 data
-```
+Candidate market-only information includes variables available at decision time, such as:
 
-Raw count is the simplest reference and must remain available as a baseline. A more elaborate normalization is rejected if it cannot outperform or robustly complement the simpler representation.
-
-Controlled-world testing found one useful failure: the simple rolling robust AZ retained strong deterministic periodic structure, while same-phase seasonal normalization removed almost all of it. Therefore rolling AZ is baseline/diagnostic only; the causal same-week-phase seasonal estimator is the normalized-attention candidate for E1 v1.
-
-The exact production configuration (`period=672`, `cycles=8`) also passed a 64-world randomized Monte Carlo gate. The gate covered 167,936 post-warmup bins and 512 injected bursts. Aggregate burst recall was 97.85%, non-burst false-positive rate 3.98%, p95 residual daily nuisance correlation 0.0396, and p95 residual weekly nuisance correlation 0.0349. These are estimator-mechanics results only, not market evidence.
-
-The preregistration seal requires both the deterministic controlled-world artifact and a passing Monte Carlo artifact with at least 64 worlds whose period/cycles exactly match the production E1 configuration.
-
-## Baseline
-
-Market-only features:
-
-- lagged return;
+- lagged returns;
 - realized volatility;
 - volume;
-- calendar phase;
-- broad market/BTC regime where available without changing the frozen E1 v1 specification.
+- liquidity where available;
+- broad-market/BTC regime;
+- funding/open interest where available and historically reliable.
 
-Funding/OI are not added post hoc to E1 v1 merely because validation results are disappointing. They require a new preregistered experiment version if promoted into the baseline.
+The exact baseline used in a replication claim must be recorded before the replication outcome is inspected.
 
-## Preregistered primary comparison
+## Response families
 
-The confirmatory E1 v1 test is frozen before any real train/validation outcome is inspected:
+E1 may investigate future market-state variables including:
+
+1. realized volatility;
+2. volume surprise;
+3. jump probability;
+4. maximum adverse excursion;
+5. maximum favorable excursion;
+6. liquidity deterioration where reliable data exist;
+7. stop-hit / barrier outcomes where operationally meaningful.
+
+Directional return remains secondary for the initial activity-baseline study, but it is not prohibited from exploratory analysis.
+
+## Horizons
+
+Initial exploratory horizons may include:
 
 ```text
-target:       future realized volatility
-horizon:      4 hours (16 × 15-minute bins)
-baseline:     market-only
-candidate:    market + seasonal attention surprise + attention acceleration
-primary loss: mean squared error
-minimum useful relative loss improvement: 0.5%
-alpha:        0.05
+15m
+1h
+4h
+24h
 ```
 
-The 4-hour horizon was chosen a priori as a compromise: 15 minutes is highly sensitive to archive/timestamp precision, while 24 hours creates heavy label overlap and weakens effective sample size. Four hours is long enough for public-information transmission to be plausible while retaining substantially more independent episodes than the 24-hour target.
+Additional horizons require scientific rationale rather than post-hoc selection solely because they produce a favorable result.
 
-This primary comparison may not be replaced by a more favorable secondary result after train/validation is observed.
+Label overlap, temporal dependence and point-in-time precision must be handled appropriately for each horizon.
 
-## Secondary targets and horizons
+## Discovery versus replication
 
-Secondary target families remain:
+E1 may begin with exploratory analysis on a designated discovery interval.
 
-1. future realized volatility;
-2. future volume surprise;
-3. jump probability;
-4. maximum adverse excursion.
+Discovery may compare alternative defensible activity representations and horizons. The search history is retained.
 
-Secondary horizons are 15m, 1h and 24h. Directional return is not a confirmatory E1 v1 target.
+A headline replication claim requires a candidate to be frozen before evaluation on the replication evidence:
 
-Every horizon must use label-aware purging. Boundary embargo must be explicit rather than assumed.
+```text
+source/population
+observable representation
+market baseline
+target
+horizon
+comparison metric
+point-in-time rules
+negative-result scope
+```
+
+The replication period must not be used to invent or tune the candidate while still being described as untouched replication evidence.
 
 ## Required comparisons
 
+At minimum, retain interpretable comparisons such as:
+
 ```text
 market-only
-market + raw count
-market + seasonal normalized attention
-market + attention structure
-market + all validated attention features
+market + raw activity
+market + normalized activity
+market + activity structure/breadth
 ```
 
-The full comparison family is reported. Benjamini-Hochberg correction is applied to the registered E1 candidate-comparison family. A secondary/exploratory comparison cannot be relabeled as the primary test because its corrected result is stronger.
+More complex models may be explored, but they must be compared against simpler representations so apparent value is not merely model complexity.
 
-## Two seals
+## Statistics and controls
 
-E1 uses two distinct locks:
+E1 uses statistical methods appropriate to the observed real time series and the claim under study.
 
-1. **Preregistration seal** — created after canonical-dataset coverage validation and both estimator-validation gates, but before train/validation outcomes are inspected. It binds the exact dataset manifest, E1 config, deterministic estimator-validation artifact, >=64-world Monte Carlo artifact, primary comparison and code revision. It does not open the physical `untouched_test` artifact.
-2. **Final-test seal** — created only after train/validation analysis and candidate selection are complete. It freezes the selected code/features/parameters before a single authorized evaluation of 2025.
+Possible tools include:
 
-A changed config or changed dataset manifest invalidates the preregistration seal and requires a new experiment version rather than silent mutation.
+- dependence-aware confidence intervals/bootstrap where justified;
+- chronological replication;
+- effective sample-size diagnostics;
+- event/regime/community ablations;
+- matched or temporal controls;
+- multiple-testing correction for a defined family of formal simultaneous claims.
 
-## Anti-confirmation requirements
+There is **no universal Monte Carlo, synthetic-world or synthetic-backtester prerequisite** for E1 empirical study.
 
-Before opening the final untouched test:
-
-- freeze the primary target/metric and minimum meaningful effect;
-- register primary, secondary and exploratory hypotheses;
-- register the multiple-testing family and correction method;
-- record all attempted variants/trials, including failures;
-- report raw N and effective/clustered N where applicable;
-- run dependence-aware bootstrap/permutation controls;
-- verify the result is not dominated by one event/regime/community;
-- freeze code, features and parameters before final-test access.
-
-Random train/test splitting is not a headline validation method for this time-series experiment.
+Synthetic examples may be used to verify software/mathematical implementation properties when appropriate, but passing them is not empirical evidence and is not an authority over whether the real information relationship may be investigated.
 
 ## Success
 
-A result is not successful because a coefficient has `p < 0.05`.
+E1 evidence is interesting when simple information activity adds stable, reproducible out-of-sample information beyond the recorded market baseline by a practically meaningful amount.
 
-The primary E1 v1 result is `SUPPORTED` only if the preregistered 4-hour seasonal-attention comparison achieves at least the minimum meaningful loss improvement, its dependence-aware confidence interval excludes zero in the beneficial direction, and the registered multiple-testing interpretation is satisfied.
+Statistical significance alone is not success.
 
-General E1 success additionally requires useful, stable incremental chronological OOS performance and survival of robustness/negative controls.
+Economic relevance is considered after information value is established; E1 itself does not need to produce a complete trading strategy.
 
-## Failure
+## Negative / inconclusive results
 
-E1 fails if the effect:
+A valid negative result should be reported precisely, for example:
 
-- disappears chronologically OOS;
-- exists only through mutable/lookahead-contaminated fields;
-- is below the minimum meaningful effect;
-- is dominated by one event/regime/community;
-- fails estimator recovery or null calibration;
-- appears under negative controls at an unacceptable rate;
-- cannot be reconstructed reliably enough for live use.
+```text
+source: r/Bitcoin
+representation: message count + specified normalization
+target: BTC realized volatility
+horizon: 4h
+period: specified discovery/replication windows
+result: no incremental replicated information under this design
+```
 
-If data or protocol defects prevent E1 from answering the question, classify the experiment as `INVALID`, not `REJECTED`.
+Do not generalize that result to `Reddit`, `social information`, `semantic content`, `propagation`, `event morphology` or `Ninja` as a whole.
 
-## Decision
+If the study is too low-precision or data quality is insufficient to distinguish a useful effect from no effect, report the result as inconclusive rather than treating non-significance as proof of absence.
 
-E1 is the gating empirical experiment for the rest of Ninja's more expensive modeling. Positive, negative and inconclusive outcomes are all valid deliveries when the experiment itself passes the scientific-validation gate.
+## Relationship to later experiments
+
+E1 establishes a cheap and interpretable baseline.
+
+Later experiments ask different questions:
+
+- **E2** — does semantic/narrative/divergence structure add information beyond market state and simple activity?
+- **E3** — does propagation/network/directed-information structure add information beyond simpler representations?
+- **E4** — do event morphology and context-aware analogs carry reproducible response structure?
+
+Those hypotheses may succeed even if E1 simple activity does not.
