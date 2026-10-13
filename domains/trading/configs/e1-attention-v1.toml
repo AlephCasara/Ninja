@@ -1,0 +1,64 @@
+# E1 pre-freeze configuration. This file may be changed only before any
+# untouched_test evaluation. Every final-test run must record its exact SHA-256.
+
+[experiment]
+id = "E1-attention-btc-reddit-v1"
+hypothesis = "N1"
+stage = "train_validation"
+base_interval = "15m"
+random_seed = 20261013
+minimum_relative_loss_improvement = 0.005
+
+[data]
+# Supplied at runtime because the canonical manifest ID is created when the
+# 2021-2025 corpus is materialized.
+allowed_splits = ["train", "validation"]
+forbidden_splits = ["untouched_test"]
+
+[attention]
+# Simple rolling AZ is retained as a diagnostic baseline only; synthetic tests
+# show it retains strong deterministic daily seasonality.
+rolling_az_lookback = 96
+seasonal_period = 672        # same 15-minute slot of the week
+seasonal_cycles = 8          # eight prior weeks, causal only
+zero_mad_policy = "poisson"
+
+[targets]
+horizons_bins = [1, 4, 16, 96]  # 15m, 1h, 4h, 24h
+jump_sigma = 3.0
+
+[market_features]
+rv_windows_bins = [4, 16, 96]
+volume_reference_bins = 96
+include_calendar_phase = true
+
+[models]
+regression = "ridge"
+ridge_alpha = 1.0
+classification = "logistic_regression"
+logistic_c = 1.0
+max_iter = 2000
+
+[validation]
+bootstrap_block_size = 96
+bootstrap_resamples = 499
+fdr_alpha = 0.05
+embargo_bins = 96
+
+[feature_groups]
+market_only = []
+market_plus_raw_count = ["message_count"]
+market_plus_seasonal_attention = ["seasonal_attention_surprise", "attention_acceleration"]
+market_plus_attention_structure = ["message_count", "unique_author_count", "author_breadth", "author_hhi", "author_entropy_normalized"]
+market_plus_all_validated = ["message_count", "seasonal_attention_surprise", "attention_acceleration", "unique_author_count", "author_breadth", "author_hhi", "author_entropy_normalized"]
+
+[reporting]
+result_states = ["SUPPORTED", "WEAK", "INCONCLUSIVE", "REJECTED", "INVALID"]
+report_raw_n = true
+report_effective_n = true
+report_all_trials = true
+
+[final_test]
+locked = true
+split = "untouched_test"
+require_frozen_spec_hash = true

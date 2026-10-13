@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AlephCasara/Ninja/schemas/e1-freeze-v1.schema.json",
+  "title": "Ninja E1 Freeze v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "kind",
+    "experiment_id",
+    "dataset_manifest_id",
+    "dataset_manifest_sha256",
+    "experiment_config_sha256",
+    "train_validation_result_sha256",
+    "code_commit",
+    "comparison_family",
+    "untouched_test_artifact",
+    "untouched_test_opened",
+    "freeze_sha256"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "ninja-e1-freeze"},
+    "experiment_id": {"type": "string", "minLength": 1},
+    "dataset_manifest_id": {"type": "string", "minLength": 1},
+    "dataset_manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "experiment_config_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "train_validation_result_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "code_commit": {"type": "string", "minLength": 1},
+    "comparison_family": {"type": "array", "minItems": 1},
+    "untouched_test_artifact": {"type": "object"},
+    "untouched_test_opened": {"const": false},
+    "freeze_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}
