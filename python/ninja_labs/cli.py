@@ -13,6 +13,10 @@ from ninja_labs.validation.e1_attention import (
     run_e1_estimator_validation,
     write_e1_estimator_validation,
 )
+from ninja_labs.validation.e1_monte_carlo import (
+    run_e1_monte_carlo_validation,
+    write_e1_monte_carlo_validation,
+)
 from ninja_labs.validation.harness import run_validation_selftest, write_validation_selftest
 
 
@@ -53,6 +57,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     e1.add_argument("--seed", type=int, default=20261013)
     e1.add_argument("--output", type=Path)
+
+    e1_mc = validation_sub.add_parser(
+        "e1-monte-carlo",
+        help="Stress E1 seasonal attention normalization across randomized worlds",
+    )
+    e1_mc.add_argument("--seed", type=int, default=20261013)
+    e1_mc.add_argument("--worlds", type=int, default=64)
+    e1_mc.add_argument("--output", type=Path)
 
     experiment = subparsers.add_parser("experiment", help="Run preregistered experiments")
     experiment_sub = experiment.add_subparsers(dest="experiment_command", required=True)
@@ -112,6 +124,18 @@ def main(argv: list[str] | None = None) -> int:
             print(args.output)
         else:
             payload = run_e1_estimator_validation(seed=args.seed)
+            print(json.dumps(payload, indent=2, sort_keys=True))
+        return 0 if payload["passed"] else 1
+    if args.command == "validation" and args.validation_command == "e1-monte-carlo":
+        if args.output:
+            payload = write_e1_monte_carlo_validation(
+                args.output, seed=args.seed, worlds=args.worlds
+            )
+            print(args.output)
+        else:
+            payload = run_e1_monte_carlo_validation(
+                seed=args.seed, worlds=args.worlds
+            )
             print(json.dumps(payload, indent=2, sort_keys=True))
         return 0 if payload["passed"] else 1
     if args.command == "experiment" and args.experiment_command == "e1-preregister":
