@@ -11,6 +11,10 @@ controlled-world estimator gate
         ↓
 64-world Monte Carlo estimator gate
         ↓
+full E1 backtester signal/null gate
+        ↓
+clean-code evidence check
+        ↓
 preregistration seal
         ↓
 2021–2023 train / 2024 validation

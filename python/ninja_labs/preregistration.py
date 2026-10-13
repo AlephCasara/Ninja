@@ -33,6 +33,7 @@ def create_e1_preregistration_seal(
     config_path: Path,
     estimator_validation_path: Path,
     monte_carlo_validation_path: Path,
+    backtester_validation_path: Path,
     dataset_quality_path: Path,
     output_path: Path,
 ) -> dict[str, Any]:
@@ -42,7 +43,22 @@ def create_e1_preregistration_seal(
     config = _read_toml(config_path)
     estimator = _read_json(estimator_validation_path)
     monte_carlo = _read_json(monte_carlo_validation_path)
+    backtester = _read_json(backtester_validation_path)
     dataset_quality = _read_json(dataset_quality_path)
+
+    manifest_commit = manifest.get("code_commit")
+    if not manifest_commit or manifest.get("code_dirty") is not False:
+        raise ValueError("canonical dataset manifest was not produced from a clean Git state")
+    for label, artifact in (
+        ("estimator validation", estimator),
+        ("Monte Carlo validation", monte_carlo),
+        ("backtester validation", backtester),
+        ("dataset quality", dataset_quality),
+    ):
+        if artifact.get("code_dirty") is not False:
+            raise ValueError(f"{label} artifact was produced from a dirty Git state")
+        if artifact.get("code_commit") != manifest_commit:
+            raise ValueError(f"{label} artifact was produced from a different code commit")
 
     if config.get("experiment", {}).get("stage") != "train_validation":
         raise ValueError("E1 preregistration requires experiment.stage=train_validation")
@@ -92,6 +108,18 @@ def create_e1_preregistration_seal(
         raise ValueError("Monte Carlo cycles do not match E1 production configuration")
     if int(mc_config.get("worlds", 0)) < 64:
         raise ValueError("E1 preregistration requires at least 64 Monte Carlo worlds")
+
+    if backtester.get("kind") != "e1-backtester-end-to-end-validation":
+        raise ValueError("unexpected E1 backtester validation artifact kind")
+    if backtester.get("passed") is not True or backtester.get("status") != "VALIDATED_FOR_E1":
+        raise ValueError("E1 backtester has not passed its end-to-end synthetic gate")
+    backtester_config = backtester.get("configuration", {})
+    if int(backtester_config.get("null_worlds", 0)) < 12:
+        raise ValueError("E1 preregistration requires at least 12 backtester null worlds")
+    if int(backtester_config.get("horizon", -1)) != int(confirmatory["primary_horizon_bins"]):
+        raise ValueError("backtester validation horizon does not match the confirmatory horizon")
+    if abs(float(backtester_config.get("minimum_gain", -1.0)) - confirmatory_minimum) > 1e-12:
+        raise ValueError("backtester validation minimum effect does not match E1")
 
     manifest_sha = sha256_file(manifest_path)
     config_sha = sha256_file(config_path)
@@ -159,6 +187,9 @@ def create_e1_preregistration_seal(
         "monte_carlo_validation_sha256": sha256_file(monte_carlo_validation_path),
         "monte_carlo_validation_result_sha256": monte_carlo.get("result_sha256"),
         "monte_carlo_worlds": int(mc_config["worlds"]),
+        "backtester_validation_sha256": sha256_file(backtester_validation_path),
+        "backtester_validation_result_sha256": backtester.get("result_sha256"),
+        "backtester_null_worlds": int(backtester_config["null_worlds"]),
         "dataset_quality_sha256": sha256_file(dataset_quality_path),
         "dataset_quality_result_sha256": dataset_quality.get("result_sha256"),
         "coverage_sha256": sha256_file(coverage_path),
@@ -189,8 +220,8 @@ def create_e1_preregistration_seal(
         "untouched_test": untouched_metadata,
         "scientific_boundary": (
             "This seal is created before train/validation outcomes are observed. "
-            "It requires an accepted canonical-dataset quality gate plus deterministic and >=64-world Monte Carlo estimator gates, "
-            "authorizes train+validation only, and does not authorize opening the untouched test artifact."
+            "It requires an accepted canonical-dataset quality gate, deterministic and >=64-world Monte Carlo estimator gates, "
+            "plus a full backtester synthetic signal/null gate; it authorizes train+validation only and does not authorize opening the untouched test artifact."
         ),
     }
     payload["seal_sha256"] = sha256_json(payload)
@@ -219,6 +250,10 @@ def verify_e1_preregistration_seal(
         raise ValueError("experiment config changed after preregistration")
     if int(seal.get("monte_carlo_worlds", 0)) < 64:
         raise ValueError("preregistration seal lacks the required Monte Carlo gate")
+    if int(seal.get("backtester_null_worlds", 0)) < 12:
+        raise ValueError("preregistration seal lacks the required backtester gate")
+    if not seal.get("backtester_validation_result_sha256"):
+        raise ValueError("preregistration seal lacks backtester validation evidence")
     if seal.get("data_quality", {}).get("gate_status") != "ACCEPTED":
         raise ValueError("preregistration seal lacks an accepted dataset quality gate")
     expected = dict(seal)

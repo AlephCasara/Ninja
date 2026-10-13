@@ -12,7 +12,7 @@ from ninja_labs.attention.estimators import (
     robust_attention_surprise,
     seasonal_robust_attention_surprise,
 )
-from ninja_labs.util import git_commit, sha256_json, utc_now
+from ninja_labs.util import git_commit, git_is_dirty, sha256_json, utc_now
 from ninja_labs.validation.core import pearson_r
 
 
@@ -192,6 +192,7 @@ def run_e1_monte_carlo_validation(
         "status": "VALIDATED_FOR_E1" if passed else "FAILED_MONTE_CARLO_GATE",
         "created_at": utc_now().isoformat().replace("+00:00", "Z"),
         "code_commit": git_commit(),
+        "code_dirty": git_is_dirty(),
         "seed": seed,
         "configuration": {
             "period": period,
