@@ -322,7 +322,7 @@ Synthetic/simulation methods remain legitimate in narrower roles when explicitly
 
 Passing such a simulation proves only the stated property. It is not empirical market evidence and it must not substitute for historical or prospective replication.
 
-Existing E1 Monte Carlo and synthetic-backtester prerequisites introduced on 2026-10-13 are considered legacy/non-authoritative scientific gates until removed from code and experiment documents.
+E1 Monte Carlo and synthetic-backtester prerequisites introduced on 2026-10-13 were removed from the executable scientific path. They must not be reintroduced as project-wide empirical gates.
 
 ---
 

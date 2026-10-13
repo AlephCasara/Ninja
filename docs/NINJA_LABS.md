@@ -193,7 +193,7 @@ No Hawkes library is canonical during Phase 0.
 
 When E3 begins, Ninja Labs should benchmark candidate/reference implementations on:
 
-- correctness on synthetic data with known parameters;
+- software correctness on deterministic/unit fixtures;
 - multivariate support;
 - likelihood/estimation behavior;
 - numerical stability;
@@ -202,7 +202,7 @@ When E3 begins, Ninja Labs should benchmark candidate/reference implementations 
 - maintenance state;
 - performance on the actual Ninja event volume.
 
-For critical headline evidence, an independent/reference implementation or synthetic recovery test should be used where practical so one package is not the sole arbiter of whether a propagation effect exists.
+For critical headline evidence, implementation checks or an independent/reference implementation may be useful for software correctness. Empirical evidence must still come from the real point-in-time information system and mechanism-appropriate validation.
 
 ## Python research plane
 

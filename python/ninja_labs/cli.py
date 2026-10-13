@@ -12,19 +12,6 @@ from ninja_labs.pipeline import run_phase1
 from ninja_labs.preregistration import create_e1_preregistration_seal
 from ninja_labs.sealed_e1 import run_sealed_e1_train_validation
 from ninja_labs.util import git_is_dirty, parse_utc
-from ninja_labs.validation.e1_backtester import (
-    run_e1_backtester_validation,
-    write_e1_backtester_validation,
-)
-from ninja_labs.validation.e1_attention import (
-    run_e1_estimator_validation,
-    write_e1_estimator_validation,
-)
-from ninja_labs.validation.e1_monte_carlo import (
-    run_e1_monte_carlo_validation,
-    write_e1_monte_carlo_validation,
-)
-from ninja_labs.validation.harness import run_validation_selftest, write_validation_selftest
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -44,22 +31,8 @@ def build_parser() -> argparse.ArgumentParser:
     acquire.add_argument("--out-dir", type=Path, default=Path(".ninja-inputs/arctic-shift"))
     acquire.add_argument("--no-resume", action="store_true")
 
-    validation = subparsers.add_parser("validation", help="Scientific validation gates")
+    validation = subparsers.add_parser("validation", help="Dataset and experiment checks")
     validation_sub = validation.add_subparsers(dest="validation_command", required=True)
-    selftest = validation_sub.add_parser("selftest")
-    selftest.add_argument("--seed", type=int, default=1729)
-    selftest.add_argument("--output", type=Path)
-    e1 = validation_sub.add_parser("e1-attention")
-    e1.add_argument("--seed", type=int, default=20261013)
-    e1.add_argument("--output", type=Path)
-    e1_mc = validation_sub.add_parser("e1-monte-carlo")
-    e1_mc.add_argument("--seed", type=int, default=20261013)
-    e1_mc.add_argument("--worlds", type=int, default=64)
-    e1_mc.add_argument("--output", type=Path)
-    e1_bt = validation_sub.add_parser("e1-backtester")
-    e1_bt.add_argument("--seed", type=int, default=314159)
-    e1_bt.add_argument("--null-worlds", type=int, default=12)
-    e1_bt.add_argument("--output", type=Path)
     dataset_gate = validation_sub.add_parser("e1-dataset")
     dataset_gate.add_argument("--manifest", type=Path, required=True)
     dataset_gate.add_argument("--config", type=Path, required=True)
@@ -70,9 +43,6 @@ def build_parser() -> argparse.ArgumentParser:
     prereg = experiment_sub.add_parser("e1-preregister")
     prereg.add_argument("--manifest", type=Path, required=True)
     prereg.add_argument("--config", type=Path, required=True)
-    prereg.add_argument("--estimator-validation", type=Path, required=True)
-    prereg.add_argument("--monte-carlo-validation", type=Path, required=True)
-    prereg.add_argument("--backtester-validation", type=Path, required=True)
     prereg.add_argument("--dataset-quality", type=Path, required=True)
     prereg.add_argument("--output", type=Path, required=True)
 
@@ -128,30 +98,6 @@ def main(argv: list[str] | None = None) -> int:
             )
         print(json.dumps(reports, indent=2, sort_keys=True))
         return 0
-    if args.command == "validation" and args.validation_command == "selftest":
-        payload = write_validation_selftest(args.output, seed=args.seed) if args.output else run_validation_selftest(seed=args.seed)
-        if not args.output:
-            print(json.dumps(payload, indent=2, sort_keys=True))
-        return 0 if payload["passed"] else 1
-    if args.command == "validation" and args.validation_command == "e1-attention":
-        payload = write_e1_estimator_validation(args.output, seed=args.seed) if args.output else run_e1_estimator_validation(seed=args.seed)
-        if not args.output:
-            print(json.dumps(payload, indent=2, sort_keys=True))
-        return 0 if payload["passed"] else 1
-    if args.command == "validation" and args.validation_command == "e1-monte-carlo":
-        payload = write_e1_monte_carlo_validation(args.output, seed=args.seed, worlds=args.worlds) if args.output else run_e1_monte_carlo_validation(seed=args.seed, worlds=args.worlds)
-        if not args.output:
-            print(json.dumps(payload, indent=2, sort_keys=True))
-        return 0 if payload["passed"] else 1
-    if args.command == "validation" and args.validation_command == "e1-backtester":
-        payload = write_e1_backtester_validation(
-            args.output, seed=args.seed, null_worlds=args.null_worlds
-        ) if args.output else run_e1_backtester_validation(
-            seed=args.seed, null_worlds=args.null_worlds
-        )
-        if not args.output:
-            print(json.dumps(payload, indent=2, sort_keys=True))
-        return 0 if payload["passed"] else 1
     if args.command == "validation" and args.validation_command == "e1-dataset":
         payload = evaluate_e1_dataset_quality(manifest_path=args.manifest, config_path=args.config, output_path=args.output)
         print(json.dumps(payload["checks"], sort_keys=True))
@@ -162,9 +108,6 @@ def main(argv: list[str] | None = None) -> int:
         payload = create_e1_preregistration_seal(
             manifest_path=args.manifest,
             config_path=args.config,
-            estimator_validation_path=args.estimator_validation,
-            monte_carlo_validation_path=args.monte_carlo_validation,
-            backtester_validation_path=args.backtester_validation,
             dataset_quality_path=args.dataset_quality,
             output_path=args.output,
         )

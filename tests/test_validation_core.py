@@ -1,7 +1,16 @@
 from __future__ import annotations
 
 from ninja_labs.validation.core import benjamini_hochberg, effective_sample_size
-from ninja_labs.validation.synthetic import generate_ar1
+import numpy as np
+
+
+def generate_ar1(n: int, *, phi: float, seed: int) -> list[float]:
+    rng = np.random.default_rng(seed)
+    noise = rng.normal(size=n)
+    values = np.zeros(n, dtype=float)
+    for i in range(1, n):
+        values[i] = phi * values[i - 1] + noise[i]
+    return values.tolist()
 
 
 def test_benjamini_hochberg_is_monotone_in_sorted_input():

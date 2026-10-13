@@ -64,7 +64,7 @@ artifacts/
   figures/
 ```
 
-A headline `results.json` must satisfy the metadata/gate represented by `schemas/validation-result-v1.schema.json` and `ninja_labs.validation.headline.assess_headline_eligibility`.
+A confirmatory headline `results.json` should satisfy the generic provenance/anti-hindsight metadata in `schemas/validation-result-v1.schema.json`. Experiment-specific controls are defined by `docs/BACKTESTING_POLICY.md` and the experiment contract, not by a universal synthetic gate.
 
 Large source datasets do not belong in Git.
 

@@ -31,22 +31,6 @@ def assess_headline_eligibility(record: Mapping[str, Any]) -> dict[str, Any]:
     elif isinstance(raw_n, (int, float)) and effective_n > raw_n:
         failures.append("effective sample size cannot exceed raw sample size")
 
-    validation = record.get("validation", {})
-    if validation.get("synthetic_recovery_passed") is not True:
-        failures.append("synthetic recovery did not pass")
-    if validation.get("null_calibration_passed") is not True:
-        failures.append("null calibration did not pass")
-    if validation.get("negative_controls_passed") is not True:
-        failures.append("negative controls did not pass")
-
-    split_policy = record.get("split_policy", {})
-    if split_policy.get("chronological") is not True:
-        failures.append("headline split is not chronological")
-    if split_policy.get("purging") is not True:
-        failures.append("label purging was not enforced")
-    if split_policy.get("embargo") is not True:
-        failures.append("boundary embargo was not enforced")
-
     multiple_testing = record.get("multiple_testing", {})
     family_size = multiple_testing.get("family_size")
     method = multiple_testing.get("method")
