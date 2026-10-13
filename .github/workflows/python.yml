@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   python:
     runs-on: ubuntu-latest
@@ -20,8 +23,11 @@ jobs:
       - name: Install Python
         run: uv python install 3.13
 
-      - name: Resolve environment
-        run: uv sync --all-groups
+      - name: Verify lock
+        run: uv lock --check
+
+      - name: Sync frozen environment
+        run: uv sync --all-groups --frozen
 
       - name: Test
         run: uv run pytest

@@ -33,19 +33,16 @@ def create_e1_preregistration_seal(
     config_path: Path,
     estimator_validation_path: Path,
     monte_carlo_validation_path: Path,
+    dataset_quality_path: Path,
     output_path: Path,
 ) -> dict[str, Any]:
-    """Seal E1 before train/validation without opening untouched-test data.
-
-    The seal binds the exact dataset manifest, analysis configuration, both E1
-    estimator-validation gates and current code revision. Coverage metadata is
-    read, but the physical untouched-test Parquet is never opened here.
-    """
+    """Seal E1 before train/validation without opening untouched-test data."""
 
     manifest = _read_json(manifest_path)
     config = _read_toml(config_path)
     estimator = _read_json(estimator_validation_path)
     monte_carlo = _read_json(monte_carlo_validation_path)
+    dataset_quality = _read_json(dataset_quality_path)
 
     if config.get("experiment", {}).get("stage") != "train_validation":
         raise ValueError("E1 preregistration requires experiment.stage=train_validation")
@@ -96,6 +93,17 @@ def create_e1_preregistration_seal(
     if int(mc_config.get("worlds", 0)) < 64:
         raise ValueError("E1 preregistration requires at least 64 Monte Carlo worlds")
 
+    manifest_sha = sha256_file(manifest_path)
+    config_sha = sha256_file(config_path)
+    if dataset_quality.get("kind") != "e1-canonical-dataset-quality-gate":
+        raise ValueError("unexpected dataset quality artifact kind")
+    if dataset_quality.get("passed") is not True or dataset_quality.get("status") != "ACCEPTED":
+        raise ValueError("canonical E1 dataset has not passed its quality gate")
+    if dataset_quality.get("dataset_manifest_sha256") != manifest_sha:
+        raise ValueError("dataset quality gate was produced from a different manifest")
+    if dataset_quality.get("experiment_config_sha256") != config_sha:
+        raise ValueError("dataset quality gate was produced from a different E1 config")
+
     artifacts = manifest.get("artifacts", {})
     required_artifacts = {
         "gold_train",
@@ -144,13 +152,15 @@ def create_e1_preregistration_seal(
         "experiment_id": config["experiment"]["id"],
         "hypothesis_id": config["experiment"]["hypothesis"],
         "dataset_manifest_id": manifest["manifest_id"],
-        "dataset_manifest_sha256": sha256_file(manifest_path),
-        "experiment_config_sha256": sha256_file(config_path),
+        "dataset_manifest_sha256": manifest_sha,
+        "experiment_config_sha256": config_sha,
         "estimator_validation_sha256": sha256_file(estimator_validation_path),
         "estimator_validation_result_sha256": estimator.get("result_sha256"),
         "monte_carlo_validation_sha256": sha256_file(monte_carlo_validation_path),
         "monte_carlo_validation_result_sha256": monte_carlo.get("result_sha256"),
         "monte_carlo_worlds": int(mc_config["worlds"]),
+        "dataset_quality_sha256": sha256_file(dataset_quality_path),
+        "dataset_quality_result_sha256": dataset_quality.get("result_sha256"),
         "coverage_sha256": sha256_file(coverage_path),
         "confirmatory": {
             "primary_target": str(confirmatory["primary_target"]),
@@ -167,6 +177,7 @@ def create_e1_preregistration_seal(
             "fdr_alpha": float(config["validation"]["fdr_alpha"]),
         },
         "data_quality": {
+            "gate_status": dataset_quality["status"],
             "market_gap_count": int(market["gap_count"]),
             "future_window_rows": int(aligned["future_window_rows"]),
             "future_observation_rows": int(aligned["future_observation_rows"]),
@@ -178,7 +189,7 @@ def create_e1_preregistration_seal(
         "untouched_test": untouched_metadata,
         "scientific_boundary": (
             "This seal is created before train/validation outcomes are observed. "
-            "It requires both controlled-world and >=64-world Monte Carlo estimator gates, "
+            "It requires an accepted canonical-dataset quality gate plus deterministic and >=64-world Monte Carlo estimator gates, "
             "authorizes train+validation only, and does not authorize opening the untouched test artifact."
         ),
     }
@@ -208,6 +219,8 @@ def verify_e1_preregistration_seal(
         raise ValueError("experiment config changed after preregistration")
     if int(seal.get("monte_carlo_worlds", 0)) < 64:
         raise ValueError("preregistration seal lacks the required Monte Carlo gate")
+    if seal.get("data_quality", {}).get("gate_status") != "ACCEPTED":
+        raise ValueError("preregistration seal lacks an accepted dataset quality gate")
     expected = dict(seal)
     stored_hash = expected.pop("seal_sha256", None)
     if stored_hash != sha256_json(expected):

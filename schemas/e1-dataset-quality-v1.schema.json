@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AlephCasara/Ninja/schemas/e1-dataset-quality-v1.schema.json",
+  "title": "Ninja E1 Canonical Dataset Quality Gate v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "kind",
+    "status",
+    "passed",
+    "dataset_manifest_sha256",
+    "experiment_config_sha256",
+    "coverage_sha256",
+    "policy",
+    "checks",
+    "result_sha256"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "e1-canonical-dataset-quality-gate"},
+    "status": {"enum": ["ACCEPTED", "REJECTED"]},
+    "passed": {"type": "boolean"},
+    "dataset_manifest_sha256": {"type": "string", "minLength": 64},
+    "experiment_config_sha256": {"type": "string", "minLength": 64},
+    "coverage_sha256": {"type": "string", "minLength": 64},
+    "policy": {"type": "object"},
+    "checks": {"type": "object"},
+    "result_sha256": {"type": "string", "minLength": 64}
+  }
+}

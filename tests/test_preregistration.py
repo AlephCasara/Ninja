@@ -11,12 +11,18 @@ from ninja_labs.preregistration import (
 from ninja_labs.util import sha256_file
 
 
-def _write_fixture(tmp_path, *, monte_carlo_worlds: int = 64, monte_carlo_passed: bool = True):
+def _write_fixture(
+    tmp_path,
+    *,
+    monte_carlo_worlds: int = 64,
+    monte_carlo_passed: bool = True,
+    dataset_accepted: bool = True,
+):
     coverage = tmp_path / "coverage.json"
     coverage.write_text(
         json.dumps(
             {
-                "schema_version": 1,
+                "schema_version": 2,
                 "observations": {
                     "rows": 1000,
                     "archive_capture_rows": 990,
@@ -132,29 +138,50 @@ market_plus_seasonal_attention = ["seasonal_attention_surprise", "attention_acce
         ),
         encoding="utf-8",
     )
-    return manifest, config, estimator, monte_carlo, untouched
+
+    dataset_quality = tmp_path / "dataset-quality.json"
+    dataset_quality.write_text(
+        json.dumps(
+            {
+                "kind": "e1-canonical-dataset-quality-gate",
+                "passed": dataset_accepted,
+                "status": "ACCEPTED" if dataset_accepted else "REJECTED",
+                "dataset_manifest_sha256": sha256_file(manifest),
+                "experiment_config_sha256": sha256_file(config),
+                "result_sha256": "dataset-quality-result",
+            }
+        ),
+        encoding="utf-8",
+    )
+    return manifest, config, estimator, monte_carlo, dataset_quality, untouched
 
 
-def test_preregistration_seal_does_not_open_untouched_test(tmp_path):
-    manifest, config, estimator, monte_carlo, untouched = _write_fixture(tmp_path)
-    seal_path = tmp_path / "seal.json"
-
-    seal = create_e1_preregistration_seal(
+def _create_seal(tmp_path, fixture):
+    manifest, config, estimator, monte_carlo, dataset_quality, _ = fixture
+    return create_e1_preregistration_seal(
         manifest_path=manifest,
         config_path=config,
         estimator_validation_path=estimator,
         monte_carlo_validation_path=monte_carlo,
-        output_path=seal_path,
+        dataset_quality_path=dataset_quality,
+        output_path=tmp_path / "seal.json",
     )
+
+
+def test_preregistration_seal_does_not_open_untouched_test(tmp_path):
+    fixture = _write_fixture(tmp_path)
+    manifest, config, _, _, _, untouched = fixture
+    seal = _create_seal(tmp_path, fixture)
 
     assert seal["status"] == "SEALED_FOR_TRAIN_VALIDATION"
     assert seal["confirmatory"]["primary_horizon_bins"] == 16
     assert seal["monte_carlo_worlds"] == 64
+    assert seal["data_quality"]["gate_status"] == "ACCEPTED"
     assert seal["untouched_test"]["opened_by_preregistration"] is False
     assert seal["untouched_test"]["sha256_from_dataset_manifest"] == "sealed-test-sha-from-manifest"
     assert not untouched.exists()
     verified = verify_e1_preregistration_seal(
-        seal_path=seal_path,
+        seal_path=tmp_path / "seal.json",
         manifest_path=manifest,
         config_path=config,
     )
@@ -162,47 +189,48 @@ def test_preregistration_seal_does_not_open_untouched_test(tmp_path):
 
 
 def test_preregistration_rejects_too_few_monte_carlo_worlds(tmp_path):
-    manifest, config, estimator, monte_carlo, _ = _write_fixture(
-        tmp_path, monte_carlo_worlds=16
-    )
+    fixture = _write_fixture(tmp_path, monte_carlo_worlds=16)
     with pytest.raises(ValueError, match="at least 64 Monte Carlo worlds"):
-        create_e1_preregistration_seal(
-            manifest_path=manifest,
-            config_path=config,
-            estimator_validation_path=estimator,
-            monte_carlo_validation_path=monte_carlo,
-            output_path=tmp_path / "seal.json",
-        )
+        _create_seal(tmp_path, fixture)
 
 
 def test_preregistration_rejects_failed_monte_carlo_gate(tmp_path):
-    manifest, config, estimator, monte_carlo, _ = _write_fixture(
-        tmp_path, monte_carlo_passed=False
-    )
+    fixture = _write_fixture(tmp_path, monte_carlo_passed=False)
     with pytest.raises(ValueError, match="Monte Carlo gate"):
+        _create_seal(tmp_path, fixture)
+
+
+def test_preregistration_rejects_failed_dataset_quality_gate(tmp_path):
+    fixture = _write_fixture(tmp_path, dataset_accepted=False)
+    with pytest.raises(ValueError, match="dataset has not passed"):
+        _create_seal(tmp_path, fixture)
+
+
+def test_preregistration_rejects_dataset_gate_from_different_config(tmp_path):
+    fixture = _write_fixture(tmp_path)
+    manifest, config, estimator, monte_carlo, dataset_quality, _ = fixture
+    quality = json.loads(dataset_quality.read_text(encoding="utf-8"))
+    quality["experiment_config_sha256"] = "0" * 64
+    dataset_quality.write_text(json.dumps(quality), encoding="utf-8")
+    with pytest.raises(ValueError, match="different E1 config"):
         create_e1_preregistration_seal(
             manifest_path=manifest,
             config_path=config,
             estimator_validation_path=estimator,
             monte_carlo_validation_path=monte_carlo,
+            dataset_quality_path=dataset_quality,
             output_path=tmp_path / "seal.json",
         )
 
 
 def test_preregistration_seal_detects_posthoc_config_change(tmp_path):
-    manifest, config, estimator, monte_carlo, _ = _write_fixture(tmp_path)
-    seal_path = tmp_path / "seal.json"
-    create_e1_preregistration_seal(
-        manifest_path=manifest,
-        config_path=config,
-        estimator_validation_path=estimator,
-        monte_carlo_validation_path=monte_carlo,
-        output_path=seal_path,
-    )
+    fixture = _write_fixture(tmp_path)
+    manifest, config, _, _, _, _ = fixture
+    _create_seal(tmp_path, fixture)
     config.write_text(config.read_text(encoding="utf-8") + "# posthoc mutation\n", encoding="utf-8")
     with pytest.raises(ValueError, match="config changed"):
         verify_e1_preregistration_seal(
-            seal_path=seal_path,
+            seal_path=tmp_path / "seal.json",
             manifest_path=manifest,
             config_path=config,
         )

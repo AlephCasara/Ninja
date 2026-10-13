@@ -15,7 +15,9 @@
     "estimator_validation_sha256",
     "monte_carlo_validation_sha256",
     "monte_carlo_worlds",
+    "dataset_quality_sha256",
     "confirmatory",
+    "data_quality",
     "untouched_test",
     "seal_sha256"
   ],
@@ -30,6 +32,7 @@
     "estimator_validation_sha256": {"type": "string", "minLength": 64},
     "monte_carlo_validation_sha256": {"type": "string", "minLength": 64},
     "monte_carlo_worlds": {"type": "integer", "minimum": 64},
+    "dataset_quality_sha256": {"type": "string", "minLength": 64},
     "confirmatory": {
       "type": "object",
       "required": [
@@ -40,6 +43,13 @@
         "minimum_relative_loss_improvement",
         "alpha"
       ]
+    },
+    "data_quality": {
+      "type": "object",
+      "required": ["gate_status"],
+      "properties": {
+        "gate_status": {"const": "ACCEPTED"}
+      }
     },
     "untouched_test": {
       "type": "object",
