@@ -1,7 +1,6 @@
 use anyhow::{Context, Result, bail};
 use rmcp::{
-    ServiceExt, handler::server::wrapper::Parameters, schemars, tool, tool_router,
-    transport::stdio,
+    ServiceExt, handler::server::wrapper::Parameters, schemars, tool, tool_router, transport::stdio,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -179,10 +178,7 @@ fn acquisition_route(profile: &str, preserve: bool, inspect_protocol: bool) -> R
             vec!["curl-cffi", "crawl4ai", "trafilatura"],
             vec!["crawlee", "scrapy"],
         ),
-        "high-throughput-web" => (
-            vec!["crawlee", "scrapy"],
-            vec!["crawl4ai", "curl-cffi"],
-        ),
+        "high-throughput-web" => (vec!["crawlee", "scrapy"], vec!["crawl4ai", "curl-cffi"]),
         "dynamic-web" => (
             vec!["crawl4ai", "playwright"],
             vec!["browser-control", "stagehand"],
@@ -191,14 +187,8 @@ fn acquisition_route(profile: &str, preserve: bool, inspect_protocol: bool) -> R
             vec!["browser-control"],
             vec!["playwright", "stagehand", "camoufox", "cloakbrowser"],
         ),
-        "semantic-browser" => (
-            vec!["stagehand"],
-            vec!["browser-control", "playwright"],
-        ),
-        "protocol-observation" => (
-            vec!["mitmproxy"],
-            vec!["mitmproxy2swagger"],
-        ),
+        "semantic-browser" => (vec!["stagehand"], vec!["browser-control", "playwright"]),
+        "protocol-observation" => (vec!["mitmproxy"], vec!["mitmproxy2swagger"]),
         "replay-capture" => (vec!["browsertrix-crawler"], vec![]),
         "complex-document" => (vec!["docling"], vec!["trafilatura"]),
         _ => bail!(
@@ -280,9 +270,9 @@ fn print_help() {
 
 fn route_from_cli() -> Result<()> {
     let mut args = env::args().skip(2);
-    let profile = args.next().context(
-        "route requires a profile; run `ninja-tooling help` for supported profiles",
-    )?;
+    let profile = args
+        .next()
+        .context("route requires a profile; run `ninja-tooling help` for supported profiles")?;
 
     let mut preserve = false;
     let mut inspect_protocol = false;
@@ -297,11 +287,7 @@ fn route_from_cli() -> Result<()> {
 
     println!(
         "{}",
-        serde_json::to_string_pretty(&acquisition_route(
-            &profile,
-            preserve,
-            inspect_protocol
-        )?)?
+        serde_json::to_string_pretty(&acquisition_route(&profile, preserve, inspect_protocol)?)?
     );
     Ok(())
 }
@@ -375,15 +361,17 @@ mod tests {
 
     #[test]
     fn authenticated_browser_route_prefers_browser_control() {
-        let route = acquisition_route("authenticated-browser", false, false)
-            .expect("route must be valid");
+        let route =
+            acquisition_route("authenticated-browser", false, false).expect("route must be valid");
         assert_eq!(route["primary"][0], "browser-control");
     }
 
     #[test]
     fn route_sidecars_are_explicit_and_additive() {
         let route = acquisition_route("dynamic-web", true, true).expect("route must be valid");
-        let sidecars = route["sidecars"].as_array().expect("sidecars must be an array");
+        let sidecars = route["sidecars"]
+            .as_array()
+            .expect("sidecars must be an array");
         assert!(sidecars.iter().any(|value| value == "mitmproxy"));
         assert!(sidecars.iter().any(|value| value == "mitmproxy2swagger"));
         assert!(sidecars.iter().any(|value| value == "browsertrix-crawler"));
