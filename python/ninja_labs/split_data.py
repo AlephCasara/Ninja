@@ -17,11 +17,14 @@ def materialize_split_panels(
 
     output_dir.mkdir(parents=True, exist_ok=True)
     con = duckdb.connect()
+    con.execute(
+        "CREATE TEMP VIEW aligned_source AS SELECT * FROM read_parquet(?)",
+        [str(aligned_path)],
+    )
     present = {
         str(row[0]): int(row[1])
         for row in con.execute(
-            "SELECT split, count(*) FROM read_parquet(?) GROUP BY split",
-            [str(aligned_path)],
+            "SELECT split, count(*) FROM aligned_source GROUP BY split"
         ).fetchall()
     }
     unexpected = set(present) - set(ALLOWED_SPLITS) - {"outside"}
@@ -32,11 +35,13 @@ def materialize_split_panels(
     result: dict[str, tuple[Path, int]] = {}
     for split in ALLOWED_SPLITS:
         path = output_dir / f"aligned_{split}.parquet"
-        # Split is a controlled enum, not user input.
+        # Split is a controlled enum, not user input. Only the output path is
+        # parameterized here; DuckDB otherwise ambiguously binds two placeholders
+        # inside COPY(read_parquet(...)) statements.
         con.execute(
-            f"COPY (SELECT * FROM read_parquet(?) WHERE split = '{split}' ORDER BY decision_time) "
+            f"COPY (SELECT * FROM aligned_source WHERE split = '{split}' ORDER BY decision_time) "
             "TO ? (FORMAT PARQUET, COMPRESSION ZSTD)",
-            [str(aligned_path), str(path)],
+            [str(path)],
         )
         result[split] = (path, present.get(split, 0))
     con.close()
