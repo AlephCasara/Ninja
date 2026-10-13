@@ -76,6 +76,7 @@ def build_parser() -> argparse.ArgumentParser:
     prereg.add_argument("--manifest", type=Path, required=True)
     prereg.add_argument("--config", type=Path, required=True)
     prereg.add_argument("--estimator-validation", type=Path, required=True)
+    prereg.add_argument("--monte-carlo-validation", type=Path, required=True)
     prereg.add_argument("--output", type=Path, required=True)
 
     e1_tv = experiment_sub.add_parser(
@@ -143,6 +144,7 @@ def main(argv: list[str] | None = None) -> int:
             manifest_path=args.manifest,
             config_path=args.config,
             estimator_validation_path=args.estimator_validation,
+            monte_carlo_validation_path=args.monte_carlo_validation,
             output_path=args.output,
         )
         print(args.output)
