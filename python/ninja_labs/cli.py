@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from ninja_labs.adapters.arctic_shift_stream import download_subreddit_posts_jsonl
+from ninja_labs.dataset_quality import evaluate_e1_dataset_quality
 from ninja_labs.pipeline import run_phase1
 from ninja_labs.preregistration import create_e1_preregistration_seal
 from ninja_labs.sealed_e1 import run_sealed_e1_train_validation
@@ -66,6 +67,14 @@ def build_parser() -> argparse.ArgumentParser:
     e1_mc.add_argument("--worlds", type=int, default=64)
     e1_mc.add_argument("--output", type=Path)
 
+    dataset_gate = validation_sub.add_parser(
+        "e1-dataset",
+        help="Apply preregistered structural/temporal quality gates to the canonical E1 dataset",
+    )
+    dataset_gate.add_argument("--manifest", type=Path, required=True)
+    dataset_gate.add_argument("--config", type=Path, required=True)
+    dataset_gate.add_argument("--output", type=Path, required=True)
+
     experiment = subparsers.add_parser("experiment", help="Run preregistered experiments")
     experiment_sub = experiment.add_subparsers(dest="experiment_command", required=True)
 
@@ -77,6 +86,7 @@ def build_parser() -> argparse.ArgumentParser:
     prereg.add_argument("--config", type=Path, required=True)
     prereg.add_argument("--estimator-validation", type=Path, required=True)
     prereg.add_argument("--monte-carlo-validation", type=Path, required=True)
+    prereg.add_argument("--dataset-quality", type=Path, required=True)
     prereg.add_argument("--output", type=Path, required=True)
 
     e1_tv = experiment_sub.add_parser(
@@ -139,12 +149,22 @@ def main(argv: list[str] | None = None) -> int:
             )
             print(json.dumps(payload, indent=2, sort_keys=True))
         return 0 if payload["passed"] else 1
+    if args.command == "validation" and args.validation_command == "e1-dataset":
+        payload = evaluate_e1_dataset_quality(
+            manifest_path=args.manifest,
+            config_path=args.config,
+            output_path=args.output,
+        )
+        print(args.output)
+        print(json.dumps(payload["checks"], sort_keys=True))
+        return 0 if payload["passed"] else 1
     if args.command == "experiment" and args.experiment_command == "e1-preregister":
         payload = create_e1_preregistration_seal(
             manifest_path=args.manifest,
             config_path=args.config,
             estimator_validation_path=args.estimator_validation,
             monte_carlo_validation_path=args.monte_carlo_validation,
+            dataset_quality_path=args.dataset_quality,
             output_path=args.output,
         )
         print(args.output)
