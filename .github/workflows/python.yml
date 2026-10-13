@@ -37,3 +37,9 @@ jobs:
         run: |
           uv run ninja-labs validation e1-attention --output /tmp/ninja-e1-estimator-validation.json
           cat /tmp/ninja-e1-estimator-validation.json
+
+      - name: E1 Monte Carlo estimator validation
+        shell: bash
+        run: |
+          uv run ninja-labs validation e1-monte-carlo --worlds 64 --output /tmp/ninja-e1-monte-carlo.json
+          cat /tmp/ninja-e1-monte-carlo.json
