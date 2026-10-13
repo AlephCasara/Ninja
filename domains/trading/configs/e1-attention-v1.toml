@@ -73,6 +73,18 @@ bootstrap_resamples = 499
 fdr_alpha = 0.05
 embargo_bins = 96
 
+[robustness]
+# Frozen before empirical E1. These gates determine whether 2025 may be opened.
+validation_time_blocks = 4
+min_positive_validation_blocks = 3
+require_drop_best_block_positive = true
+leave_one_train_year_out = [2021, 2022, 2023]
+min_positive_leave_one_year_runs = 2
+negative_control_runs = 32
+negative_control_block_size = 96
+max_negative_control_success_fraction = 0.10
+require_observed_gain_above_negative_control_p95 = true
+
 [feature_groups]
 market_only = []
 market_plus_raw_count = ["message_count"]
@@ -99,3 +111,4 @@ locked = true
 split = "untouched_test"
 require_preregistration_seal = true
 require_final_test_seal = true
+single_access_ledger = true

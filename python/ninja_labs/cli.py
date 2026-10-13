@@ -6,6 +6,8 @@ from pathlib import Path
 
 from ninja_labs.adapters.arctic_shift_stream import download_subreddit_posts_jsonl
 from ninja_labs.dataset_quality import evaluate_e1_dataset_quality
+from ninja_labs.e1_final import create_e1_final_test_seal, run_e1_final_test
+from ninja_labs.e1_robustness import run_e1_robustness
 from ninja_labs.pipeline import run_phase1
 from ninja_labs.preregistration import create_e1_preregistration_seal
 from ninja_labs.sealed_e1 import run_sealed_e1_train_validation
@@ -27,61 +29,37 @@ def build_parser() -> argparse.ArgumentParser:
 
     phase1 = subparsers.add_parser("phase1", help="Phase 1 historical substrate")
     phase1_sub = phase1.add_subparsers(dest="phase1_command", required=True)
-
     build = phase1_sub.add_parser("build", help="Build Bronze/Silver/Gold substrate")
     build.add_argument("--config", type=Path, required=True)
-
     acquire = phase1_sub.add_parser(
         "acquire-reddit", help="Stream canonical Arctic Shift subreddit post JSONL"
     )
     acquire.add_argument("--subreddit", action="append", required=True)
-    acquire.add_argument("--after", required=True, help="UTC/ISO timestamp or date")
-    acquire.add_argument("--before", required=True, help="exclusive UTC/ISO timestamp or date")
-    acquire.add_argument(
-        "--out-dir", type=Path, default=Path(".ninja-inputs/arctic-shift")
-    )
+    acquire.add_argument("--after", required=True)
+    acquire.add_argument("--before", required=True)
+    acquire.add_argument("--out-dir", type=Path, default=Path(".ninja-inputs/arctic-shift"))
     acquire.add_argument("--no-resume", action="store_true")
 
-    validation = subparsers.add_parser(
-        "validation", help="Scientific anti-confirmation and estimator validation"
-    )
+    validation = subparsers.add_parser("validation", help="Scientific validation gates")
     validation_sub = validation.add_subparsers(dest="validation_command", required=True)
-
-    selftest = validation_sub.add_parser(
-        "selftest", help="Run deterministic generic anti-confirmation harness checks"
-    )
+    selftest = validation_sub.add_parser("selftest")
     selftest.add_argument("--seed", type=int, default=1729)
     selftest.add_argument("--output", type=Path)
-
-    e1 = validation_sub.add_parser(
-        "e1-attention", help="Validate E1 attention estimators on controlled worlds"
-    )
+    e1 = validation_sub.add_parser("e1-attention")
     e1.add_argument("--seed", type=int, default=20261013)
     e1.add_argument("--output", type=Path)
-
-    e1_mc = validation_sub.add_parser(
-        "e1-monte-carlo",
-        help="Stress E1 seasonal attention normalization across randomized worlds",
-    )
+    e1_mc = validation_sub.add_parser("e1-monte-carlo")
     e1_mc.add_argument("--seed", type=int, default=20261013)
     e1_mc.add_argument("--worlds", type=int, default=64)
     e1_mc.add_argument("--output", type=Path)
-
-    dataset_gate = validation_sub.add_parser(
-        "e1-dataset",
-        help="Apply preregistered structural/temporal quality gates to the canonical E1 dataset",
-    )
+    dataset_gate = validation_sub.add_parser("e1-dataset")
     dataset_gate.add_argument("--manifest", type=Path, required=True)
     dataset_gate.add_argument("--config", type=Path, required=True)
     dataset_gate.add_argument("--output", type=Path, required=True)
 
     experiment = subparsers.add_parser("experiment", help="Run preregistered experiments")
     experiment_sub = experiment.add_subparsers(dest="experiment_command", required=True)
-
-    prereg = experiment_sub.add_parser(
-        "e1-preregister",
-        help="Seal E1 before train/validation without opening untouched_test",
-    )
+    prereg = experiment_sub.add_parser("e1-preregister")
     prereg.add_argument("--manifest", type=Path, required=True)
     prereg.add_argument("--config", type=Path, required=True)
     prereg.add_argument("--estimator-validation", type=Path, required=True)
@@ -89,73 +67,75 @@ def build_parser() -> argparse.ArgumentParser:
     prereg.add_argument("--dataset-quality", type=Path, required=True)
     prereg.add_argument("--output", type=Path, required=True)
 
-    e1_tv = experiment_sub.add_parser(
-        "e1-train-validation",
-        help="Evaluate E1 on train+validation under a preregistration seal",
-    )
+    e1_tv = experiment_sub.add_parser("e1-train-validation")
     e1_tv.add_argument("--manifest", type=Path, required=True)
     e1_tv.add_argument("--config", type=Path, required=True)
     e1_tv.add_argument("--seal", type=Path, required=True)
     e1_tv.add_argument("--output", type=Path, required=True)
+
+    robust = experiment_sub.add_parser("e1-robustness")
+    robust.add_argument("--manifest", type=Path, required=True)
+    robust.add_argument("--config", type=Path, required=True)
+    robust.add_argument("--preregistration-seal", type=Path, required=True)
+    robust.add_argument("--train-validation-result", type=Path, required=True)
+    robust.add_argument("--output", type=Path, required=True)
+
+    final_seal = experiment_sub.add_parser("e1-final-seal")
+    final_seal.add_argument("--manifest", type=Path, required=True)
+    final_seal.add_argument("--config", type=Path, required=True)
+    final_seal.add_argument("--preregistration-seal", type=Path, required=True)
+    final_seal.add_argument("--train-validation-result", type=Path, required=True)
+    final_seal.add_argument("--robustness-result", type=Path, required=True)
+    final_seal.add_argument("--output", type=Path, required=True)
+
+    final_test = experiment_sub.add_parser("e1-final-test")
+    final_test.add_argument("--manifest", type=Path, required=True)
+    final_test.add_argument("--config", type=Path, required=True)
+    final_test.add_argument("--preregistration-seal", type=Path, required=True)
+    final_test.add_argument("--train-validation-result", type=Path, required=True)
+    final_test.add_argument("--robustness-result", type=Path, required=True)
+    final_test.add_argument("--final-test-seal", type=Path, required=True)
+    final_test.add_argument("--access-ledger", type=Path, required=True)
+    final_test.add_argument("--output", type=Path, required=True)
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     if args.command == "phase1" and args.phase1_command == "build":
-        manifest = run_phase1(args.config)
-        print(manifest)
+        print(run_phase1(args.config))
         return 0
     if args.command == "phase1" and args.phase1_command == "acquire-reddit":
-        after = parse_utc(args.after)
-        before = parse_utc(args.before)
         reports = []
         for subreddit in args.subreddit:
-            report = download_subreddit_posts_jsonl(
-                subreddit=subreddit,
-                after=after,
-                before=before,
-                output_path=args.out_dir / f"r_{subreddit}_posts.jsonl",
-                resume=not args.no_resume,
+            reports.append(
+                download_subreddit_posts_jsonl(
+                    subreddit=subreddit,
+                    after=parse_utc(args.after),
+                    before=parse_utc(args.before),
+                    output_path=args.out_dir / f"r_{subreddit}_posts.jsonl",
+                    resume=not args.no_resume,
+                )
             )
-            reports.append(report)
         print(json.dumps(reports, indent=2, sort_keys=True))
         return 0
     if args.command == "validation" and args.validation_command == "selftest":
-        if args.output:
-            payload = write_validation_selftest(args.output, seed=args.seed)
-            print(args.output)
-        else:
-            payload = run_validation_selftest(seed=args.seed)
+        payload = write_validation_selftest(args.output, seed=args.seed) if args.output else run_validation_selftest(seed=args.seed)
+        if not args.output:
             print(json.dumps(payload, indent=2, sort_keys=True))
         return 0 if payload["passed"] else 1
     if args.command == "validation" and args.validation_command == "e1-attention":
-        if args.output:
-            payload = write_e1_estimator_validation(args.output, seed=args.seed)
-            print(args.output)
-        else:
-            payload = run_e1_estimator_validation(seed=args.seed)
+        payload = write_e1_estimator_validation(args.output, seed=args.seed) if args.output else run_e1_estimator_validation(seed=args.seed)
+        if not args.output:
             print(json.dumps(payload, indent=2, sort_keys=True))
         return 0 if payload["passed"] else 1
     if args.command == "validation" and args.validation_command == "e1-monte-carlo":
-        if args.output:
-            payload = write_e1_monte_carlo_validation(
-                args.output, seed=args.seed, worlds=args.worlds
-            )
-            print(args.output)
-        else:
-            payload = run_e1_monte_carlo_validation(
-                seed=args.seed, worlds=args.worlds
-            )
+        payload = write_e1_monte_carlo_validation(args.output, seed=args.seed, worlds=args.worlds) if args.output else run_e1_monte_carlo_validation(seed=args.seed, worlds=args.worlds)
+        if not args.output:
             print(json.dumps(payload, indent=2, sort_keys=True))
         return 0 if payload["passed"] else 1
     if args.command == "validation" and args.validation_command == "e1-dataset":
-        payload = evaluate_e1_dataset_quality(
-            manifest_path=args.manifest,
-            config_path=args.config,
-            output_path=args.output,
-        )
-        print(args.output)
+        payload = evaluate_e1_dataset_quality(manifest_path=args.manifest, config_path=args.config, output_path=args.output)
         print(json.dumps(payload["checks"], sort_keys=True))
         return 0 if payload["passed"] else 1
     if args.command == "experiment" and args.experiment_command == "e1-preregister":
@@ -167,19 +147,45 @@ def main(argv: list[str] | None = None) -> int:
             dataset_quality_path=args.dataset_quality,
             output_path=args.output,
         )
-        print(args.output)
         print(payload["seal_sha256"])
         return 0
     if args.command == "experiment" and args.experiment_command == "e1-train-validation":
-        payload = run_sealed_e1_train_validation(
+        payload = run_sealed_e1_train_validation(manifest_path=args.manifest, config_path=args.config, seal_path=args.seal, output_path=args.output)
+        print(json.dumps(payload["primary_confirmatory_result"], sort_keys=True))
+        return 0
+    if args.command == "experiment" and args.experiment_command == "e1-robustness":
+        payload = run_e1_robustness(
             manifest_path=args.manifest,
             config_path=args.config,
-            seal_path=args.seal,
+            preregistration_seal_path=args.preregistration_seal,
+            train_validation_result_path=args.train_validation_result,
             output_path=args.output,
         )
-        print(args.output)
-        print(json.dumps(payload["status_counts"], sort_keys=True))
-        print(json.dumps(payload["primary_confirmatory_result"], sort_keys=True))
+        print(json.dumps({"status": payload["status"], "checks": payload["checks"]}, sort_keys=True))
+        return 0 if payload["passed"] else 1
+    if args.command == "experiment" and args.experiment_command == "e1-final-seal":
+        payload = create_e1_final_test_seal(
+            manifest_path=args.manifest,
+            config_path=args.config,
+            preregistration_seal_path=args.preregistration_seal,
+            train_validation_result_path=args.train_validation_result,
+            robustness_result_path=args.robustness_result,
+            output_path=args.output,
+        )
+        print(payload["seal_sha256"])
+        return 0
+    if args.command == "experiment" and args.experiment_command == "e1-final-test":
+        payload = run_e1_final_test(
+            manifest_path=args.manifest,
+            config_path=args.config,
+            preregistration_seal_path=args.preregistration_seal,
+            train_validation_result_path=args.train_validation_result,
+            robustness_result_path=args.robustness_result,
+            final_test_seal_path=args.final_test_seal,
+            access_ledger_path=args.access_ledger,
+            output_path=args.output,
+        )
+        print(json.dumps({"status": payload["status"], "primary": payload["primary"]}, sort_keys=True))
         return 0
     raise AssertionError("unreachable command")
 
