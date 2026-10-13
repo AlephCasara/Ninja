@@ -119,7 +119,7 @@ $$
 \mathcal{L}(M+ATT)
 $$
 
-on untouched chronological data.
+on frozen replication evidence not used to invent the propagation candidate (chronological/source/event held-out as appropriate).
 
 ## N6 — Attention and credibility are orthogonal dimensions
 

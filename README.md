@@ -1346,7 +1346,7 @@ Before any headline experiment:
 - entity/asset aliases;
 - causal market alignment;
 - no-lookahead tests;
-- frozen chronological splits.
+- explicit frozen evidence boundaries appropriate to the replay/claim.
 
 ---
 
@@ -1364,13 +1364,13 @@ For each source independently:
 8. test MAE;
 9. treat directional return as secondary.
 
-This is the first scientific gate.
+This is the cheapest activity baseline, not an epistemic gate on qualitatively different information hypotheses.
 
 ---
 
 ## Stage 2 — Cross-platform factorization
 
-Only after individual platforms work:
+When at least two reliable timestamped platforms are available, compare:
 
 ```text
 market only
@@ -1403,7 +1403,7 @@ Add:
 - novelty;
 - change points.
 
-Every feature family must beat simpler attention-only models.
+Each frozen candidate must be compared with the simplest scientifically relevant baseline. A failed representation does not reject the broader semantic/narrative family.
 
 ---
 
@@ -1477,11 +1477,11 @@ The original strategy remains the baseline.
 
 # Initial experiments
 
-The current preregistered experiment families are:
+The current registered experiment families are:
 
 | Experiment | Purpose | Status |
 |---|---|---|
-| **E1 Attention Replication** | reproduce/falsify simple attention effects | design/preregistered |
+| **E1 Attention Replication** | reproduce/falsify simple attention effects | baseline design; legacy v1 executor retained, empirical replication pending |
 | **E2 Information Structure** | test disagreement, entropy, novelty | design |
 | **E3 Propagation** | test timing, Hawkes, Transfer Entropy | design |
 | **E4 Event Morphology** | test structural event analogs | design |
@@ -1853,17 +1853,18 @@ Suppose the project considers:
 
 possible combinations.
 
-Accordingly, headline claims require:
+Accordingly, confirmatory/replication claims require a frozen evidence boundary not used to invent the candidate. The exact validation design follows the scientific object. Depending on the claim, appropriate safeguards may include:
 
-- chronological train/validation/test;
-- untouched final test;
-- purging/embargo for overlapping labels;
-- dependence-aware bootstrap;
-- multiple-hypothesis correction;
-- permutation/surrogate tests where appropriate;
-- leave-one-asset-out stress;
-- leave-one-regime-out stress;
-- drop-best-event robustness.
+- chronological or event-held-out replication;
+- untouched/prospective evidence when warranted;
+- purging/embargo when labels overlap;
+- dependence-aware resampling when uncertainty estimation requires it;
+- multiple-testing correction for defined simultaneous claim families;
+- scientifically defensible permutation/surrogate controls;
+- leave-regime/source/asset/event stresses where relevant;
+- concentration/drop-dominant-event diagnostics.
+
+No item in this list is a universal gate merely because it is conventional.
 
 ---
 
@@ -2110,6 +2111,7 @@ Detailed specifications are split into the following documents.
 | [Backtesting policy](docs/BACKTESTING_POLICY.md) | scientific authority for discovery, replay, replication, controls and economic promotion |
 | [Backtesting session protocol](docs/BACKTESTING_SESSION.md) | operational session boundary, ExperimentSpec v2 and clean handoff rules |
 | [Historical replay formalism](docs/HISTORICAL_REPLAY.md) | causal freeze/reveal contracts, semantic instruments and tail first-passage outcomes |
+| [Semantic instrument validation](docs/SEMANTIC_INSTRUMENT_VALIDATION.md) | calibration/audit rules for LLM and classifier measurements over historical content |
 | [Complexity and information dynamics](docs/COMPLEXITY_AND_INFORMATION_DYNAMICS.md) | complexity science, network theory, criticality, ABM, multifractals |
 | [Scientific foundation](docs/SCIENTIFIC_FOUNDATION.md) | literature and evidence map |
 | [Architecture](docs/ARCHITECTURE.md) | logical/runtime architecture and data layers |

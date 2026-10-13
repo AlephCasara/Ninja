@@ -499,7 +499,7 @@ Preferred model ladder:
 4. tree boosting;
 5. more complex models only if justified.
 
-A sophisticated nonlinear model that fails to improve untouched chronological data is rejected.
+A sophisticated nonlinear candidate that fails on its declared frozen replication evidence is rejected at the scope actually tested.
 
 ---
 
@@ -582,7 +582,7 @@ $$
 \mathcal L(M)
 $$
 
-on untouched chronological data.
+on frozen replication evidence not used to invent the candidate.
 
 If that inequality fails in practically meaningful terms, the additional complexity is not justified.
 

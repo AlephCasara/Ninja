@@ -43,7 +43,7 @@ Completed:
 - [x] content/artifact hashes and manifests
 - [x] causal `available_at` and market `decision_time`
 - [x] no-lookahead tests
-- [x] frozen chronological train/validation/untouched-test periods
+- [x] legacy E1 v1 chronological train/validation/untouched-test periods (retained only for reproduction)
 - [x] Bronze/Silver/Gold materializers
 - [x] exact event timestamps preserved for later E3/Hawkes
 - [x] coverage audit for temporal quality, market gaps, missingness and split counts
@@ -103,13 +103,15 @@ Purpose:
 
 **Boundary:** these checks establish replay/software integrity only. They do not show that any tail multiple, semantic feature or Ninja factor is predictable.
 
-## Phase 2 — E1 Attention Replication / first information backtest
+## Phase 2 — legacy E1 v1 replication path (optional historical experiment)
 
-Question:
+This section preserves the original frozen E1-v1 experiment path for audit/reproduction. It is **not** the default workflow for new Ninja sessions. New research starts with `docs/BACKTESTING_SESSION.md`, `ExperimentSpec v2`, Replay Audit, then a separately declared Discovery session.
+
+Historical E1-v1 question:
 
 > Does abnormal public attention add stable chronological out-of-sample information beyond conventional market data?
 
-Before touching the untouched test, freeze feature definitions, horizons, primary metrics, hypothesis family, rejection criteria and minimum meaningful effect.
+Under that legacy experiment only, the untouched-test protocol freezes feature definitions, horizons, primary metrics, hypothesis family, rejection criteria and minimum meaningful effect.
 
 Required sequence:
 
@@ -130,10 +132,11 @@ Required sequence:
 - [ ] run regime/event/source ablations where applicable
 - [ ] publish `SUPPORTED`, `WEAK`, `INCONCLUSIVE`, `REJECTED` or `INVALID`
 
-Target interface:
+Legacy executor surface:
 
 ```text
-uv run ninja-labs experiment run <E1 config>
+uv run ninja-labs experiment --help
+# e1-preregister / e1-train-validation / e1-robustness / e1-final-seal / e1-final-test
 ```
 
 **Role:** E1 is the simplest activity/attention baseline. A negative E1 result does not veto semantic, propagation or morphology hypotheses; each family must stand or fall on its own evidence.
@@ -154,12 +157,12 @@ A surviving E1 factor must be attacked for transportability:
 
 ## Phase 3 — Ninja Labs experiment optimization / Ax
 
-Ax enters only after the fixed E1 pipeline is scientifically and operationally correct.
+Ax enters only after the relevant experiment/session pipeline is scientifically and operationally auditable.
 
 - [x] Ax exists in the Labs instrument catalog
 - [ ] define a bounded adapter around Ninja-owned experiment/trial contracts
-- [ ] allow adaptive search only over preregistered train/validation spaces
-- [ ] make final untouched test unavailable to Ax
+- [ ] allow adaptive search only inside the declared discovery/search evidence boundary
+- [ ] make replication/prospective evidence unavailable to Ax during optimization
 - [ ] compare Ax against fixed/random/grid baselines
 - [ ] record every adaptive trial and stopping condition
 

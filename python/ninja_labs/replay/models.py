@@ -12,6 +12,7 @@ class ReplayType(str, Enum):
     STATE = "state"
     EVENT = "event"
     PROPAGATION = "propagation"
+    STRATEGY_OVERLAY = "strategy_overlay"
 
 
 class AvailabilityPolicy(str, Enum):
@@ -103,8 +104,10 @@ class CausalSlice:
     decision_time: datetime
     availability_policy: AvailabilityPolicy
     observations: tuple[Mapping[str, Any], ...]
+    observation_fingerprints: Mapping[str, str]
     interpretations: tuple[SemanticInterpretation, ...]
     market_rows: tuple[Mapping[str, Any], ...]
+    market_fingerprints: Mapping[str, str]
     max_input_available_at: datetime | None
 
 
@@ -125,6 +128,7 @@ class FrozenReplayState:
     observation_fingerprints: Mapping[str, str]
     interpretation_ids: tuple[str, ...]
     interpretation_fingerprints: Mapping[str, str]
+    market_fingerprints: Mapping[str, str]
     max_input_available_at: datetime | None
     information_state: Mapping[str, Any]
     market_state: Mapping[str, Any]
@@ -147,6 +151,7 @@ class FrozenReplayState:
             "observation_fingerprints": dict(self.observation_fingerprints),
             "interpretation_ids": list(self.interpretation_ids),
             "interpretation_fingerprints": dict(self.interpretation_fingerprints),
+            "market_fingerprints": dict(self.market_fingerprints),
             "max_input_available_at": (
                 iso_utc(self.max_input_available_at)
                 if self.max_input_available_at is not None

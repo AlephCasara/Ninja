@@ -44,6 +44,10 @@ class ReplayOutcome:
     decision_time: datetime
     reference_time: datetime
     reference_price: float
+    reference_delay_seconds: float
+    max_reference_delay_seconds: float
+    max_observed_path_gap_seconds: float
+    max_path_gap_seconds: float
     horizon_end: datetime
     outcome_definition_id: str
     reference_policy: str
@@ -65,6 +69,10 @@ class ReplayOutcome:
             "decision_time": iso_utc(self.decision_time),
             "reference_time": iso_utc(self.reference_time),
             "reference_price": self.reference_price,
+            "reference_delay_seconds": self.reference_delay_seconds,
+            "max_reference_delay_seconds": self.max_reference_delay_seconds,
+            "max_observed_path_gap_seconds": self.max_observed_path_gap_seconds,
+            "max_path_gap_seconds": self.max_path_gap_seconds,
             "horizon_end": iso_utc(self.horizon_end),
             "outcome_definition_id": self.outcome_definition_id,
             "reference_policy": self.reference_policy,
@@ -82,6 +90,8 @@ def compute_market_path_outcome(
     state: FrozenReplayState,
     prices: Iterable[PricePoint],
     horizon_end: datetime,
+    max_reference_delay_seconds: float,
+    max_path_gap_seconds: float,
     multiples: Sequence[float] = (2.0, 5.0, 10.0, 50.0, 100.0),
     outcome_definition_id: str = "market-path-v1",
     reference_policy: str = "first_at_or_after_decision",
@@ -102,21 +112,42 @@ def compute_market_path_outcome(
         raise ValueError("horizon_end must be after decision_time")
     if any(value <= 1.0 for value in multiples):
         raise ValueError("tail multiples must be greater than 1")
+    if max_reference_delay_seconds < 0 or max_path_gap_seconds <= 0:
+        raise ValueError("gap tolerances must be non-negative/positive")
 
-    path = sorted(
-        (
-            PricePoint(parse_utc(point.at), float(point.price))
-            for point in prices
-            if state.decision_time <= parse_utc(point.at) <= horizon
-        ),
-        key=lambda point: point.at,
-    )
+    path_by_time: dict[str, PricePoint] = {}
+    for point in prices:
+        at = parse_utc(point.at)
+        if not (state.decision_time <= at <= horizon):
+            continue
+        normalized = PricePoint(at, float(point.price))
+        key = iso_utc(at)
+        existing = path_by_time.get(key)
+        if existing is not None and existing.price != normalized.price:
+            raise ValueError(f"conflicting price observations at {key}")
+        path_by_time.setdefault(key, normalized)
+
+    path = sorted(path_by_time.values(), key=lambda point: point.at)
     if not path:
         raise ValueError("no price observations in reveal window")
     if any(point.price <= 0 for point in path):
         raise ValueError("prices must be positive")
 
     reference = path[0]
+    reference_delay_seconds = (reference.at - state.decision_time).total_seconds()
+    if reference_delay_seconds > max_reference_delay_seconds:
+        raise ValueError("reference price exceeds allowed decision-time delay")
+
+    path_gap_seconds = [
+        (current.at - previous.at).total_seconds()
+        for previous, current in zip(path, path[1:], strict=False)
+    ]
+    terminal_gap_seconds = (horizon - path[-1].at).total_seconds()
+    path_gap_seconds.append(terminal_gap_seconds)
+    max_observed_path_gap_seconds = max(path_gap_seconds, default=0.0)
+    if max_observed_path_gap_seconds > max_path_gap_seconds:
+        raise ValueError("market path contains a gap larger than allowed")
+
     ratios = [point.price / reference.price for point in path]
     terminal_return = ratios[-1] - 1.0
     max_forward_return = max(ratios) - 1.0
@@ -152,13 +183,17 @@ def compute_market_path_outcome(
         )
 
     scientific_record = {
-        "schema_version": 1,
+        "schema_version": 2,
         "state_id": state.state_id,
         "state_hash": state.state_hash,
         "subject_id": state.subject_id,
         "decision_time": iso_utc(state.decision_time),
         "reference_time": iso_utc(reference.at),
         "reference_price": reference.price,
+        "reference_delay_seconds": reference_delay_seconds,
+        "max_reference_delay_seconds": float(max_reference_delay_seconds),
+        "max_observed_path_gap_seconds": max_observed_path_gap_seconds,
+        "max_path_gap_seconds": float(max_path_gap_seconds),
         "horizon_end": iso_utc(horizon),
         "outcome_definition_id": outcome_definition_id,
         "reference_policy": reference_policy,
@@ -170,7 +205,7 @@ def compute_market_path_outcome(
     }
     outcome_hash = sha256_json(scientific_record)
     return ReplayOutcome(
-        schema_version=1,
+        schema_version=2,
         outcome_id=f"outcome:{outcome_hash[:24]}",
         outcome_hash=outcome_hash,
         state_id=state.state_id,
@@ -179,6 +214,10 @@ def compute_market_path_outcome(
         decision_time=state.decision_time,
         reference_time=reference.at,
         reference_price=reference.price,
+        reference_delay_seconds=reference_delay_seconds,
+        max_reference_delay_seconds=float(max_reference_delay_seconds),
+        max_observed_path_gap_seconds=max_observed_path_gap_seconds,
+        max_path_gap_seconds=float(max_path_gap_seconds),
         horizon_end=horizon,
         outcome_definition_id=outcome_definition_id,
         reference_policy=reference_policy,

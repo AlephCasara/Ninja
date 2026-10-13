@@ -1,3 +1,9 @@
+"""Legacy E1 v1 experiment machinery.
+
+Retained to reproduce/audit the frozen E1-attention-btc-reddit-v1 protocol.
+New Ninja backtesting sessions use ExperimentSpec v2 and are not required to use this path.
+"""
+
 from __future__ import annotations
 
 import json

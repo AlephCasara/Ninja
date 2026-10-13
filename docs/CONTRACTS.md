@@ -207,7 +207,7 @@ negative-result scope / economic relevance
 reproducibility metadata
 ```
 
-Unlike v1, v2 does not require every session to pretend to be a supervised-learning train/validation/test exercise. Discovery may be adaptive and event/propagation studies may use boundaries appropriate to their scientific object. Replication/generalization/economic/prospective phases require a frozen candidate, and replication requires an explicit unseen evidence boundary.
+Unlike v1, v2 does not require every session to pretend to be a supervised-learning train/validation/test exercise. Discovery may be adaptive and event/propagation studies may use boundaries appropriate to their scientific object. Replication/generalization/economic/prospective phases require a frozen candidate; replication/generalization/economic phases require an explicit frozen evaluation boundary, while prospective work accepts only genuinely new observations.
 
 Operational rules are in [BACKTESTING_SESSION.md](BACKTESTING_SESSION.md).
 
@@ -220,21 +220,25 @@ Adding optional metadata that does not change causal or scientific meaning may r
 The schemas are intentionally small. Domain objects are layered on top rather than expanding the core contract until it knows about every future trading or business concept.
 ## Replay contracts
 
-Historical replay adds three explicit schemas:
+Historical replay uses versioned schemas:
 
 ```text
 semantic-interpretation-v1.schema.json
-replay-state-v1.schema.json
+replay-state-v1.schema.json      # legacy compatibility
+replay-state-v2.schema.json      # active hardened replay state
 replay-universe-v1.schema.json
-replay-outcome-v1.schema.json
+replay-outcome-v1.schema.json    # legacy compatibility
+replay-outcome-v2.schema.json    # active hardened market-path outcome
 ```
+
+State v2 adds market-row fingerprints and strategy-overlay replay type. Outcome v2 adds explicit reference-delay/path-gap tolerances. v1 remains immutable for historical compatibility.
 
 `SemanticInterpretation` binds qualitative extraction to the exact observation content hash and records its model/extractor version and knowledge policy.
 
-`ReplayState` is frozen from causal observations, semantic interpretations and market history available by `decision_time`. It contains no future outcome.
+`ReplayState` is frozen from causal observations, semantic interpretations and market history available by `decision_time`. It contains no future outcome. Observation and market-row scientific fingerprints include replay-relevant causal/scientific fields needed to detect conflicting duplicate records. Reacquisition bookkeeping remains auditable through manifests/provenance without changing an otherwise identical historical state.
 
 `ReplayUniverse` freezes the point-in-time eligible population under a versioned rule so future winners, failures and delistings cannot be selected with hindsight.
 
-`ReplayOutcome` is computed only after the state is frozen and is linked back by `state_id/state_hash`. Tail multiples are represented as first-passage outcomes, not feature-construction inputs.
+`ReplayOutcome` is computed only after the state is frozen and is linked back by `state_id/state_hash`. Its reference-price policy records the decision-to-reference delay and an explicit maximum allowed delay; excessive gaps invalidate outcome construction. Tail multiples are labels, not feature-construction inputs.
 
 See [HISTORICAL_REPLAY.md](HISTORICAL_REPLAY.md).

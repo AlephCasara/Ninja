@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AlephCasara/Ninja/schemas/replay-outcome-v2.schema.json",
+  "title": "Ninja Replay Outcome v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "outcome_id",
+    "outcome_hash",
+    "state_id",
+    "state_hash",
+    "subject_id",
+    "decision_time",
+    "reference_time",
+    "reference_price",
+    "reference_delay_seconds",
+    "max_reference_delay_seconds",
+    "max_observed_path_gap_seconds",
+    "max_path_gap_seconds",
+    "horizon_end",
+    "outcome_definition_id",
+    "reference_policy",
+    "terminal_return",
+    "max_forward_return",
+    "min_forward_return",
+    "realized_variation",
+    "first_passage",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 2
+    },
+    "outcome_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "outcome_hash": {
+      "type": "string",
+      "minLength": 64
+    },
+    "state_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "state_hash": {
+      "type": "string",
+      "minLength": 64
+    },
+    "subject_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decision_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reference_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reference_price": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "horizon_end": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "outcome_definition_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "terminal_return": {
+      "type": "number"
+    },
+    "max_forward_return": {
+      "type": "number"
+    },
+    "min_forward_return": {
+      "type": "number"
+    },
+    "realized_variation": {
+      "type": "number",
+      "minimum": 0
+    },
+    "first_passage": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "multiple",
+          "hit",
+          "at",
+          "seconds_from_reference",
+          "adverse_excursion_before_hit"
+        ],
+        "properties": {
+          "multiple": {
+            "type": "number",
+            "exclusiveMinimum": 1
+          },
+          "hit": {
+            "type": "boolean"
+          },
+          "at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "seconds_from_reference": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "adverse_excursion_before_hit": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reference_policy": {
+      "const": "first_at_or_after_decision"
+    },
+    "reference_delay_seconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "max_reference_delay_seconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "max_observed_path_gap_seconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "max_path_gap_seconds": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    }
+  }
+}

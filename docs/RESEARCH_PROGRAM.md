@@ -1,5 +1,7 @@
 # Research program
 
+**Authority:** `BACKTESTING_POLICY.md` and `BACKTESTING_SESSION.md` govern evidence boundaries and interpretation. The stages below are an engineering/research ordering, not a universal epistemic ladder.
+
 ## Phase 1 objective
 
 Before building a large live crawling stack, determine whether Ninja's proposed information factors contain reproducible incremental information.
@@ -26,7 +28,7 @@ Required before hypothesis testing:
 - market-data alignment tests;
 - no-lookahead tests;
 - deterministic experiment configuration;
-- frozen train/validation/test boundaries.
+- explicit frozen evidence boundaries appropriate to the replay/claim.
 
 ### Stage 1 — single-platform replication
 
@@ -45,7 +47,7 @@ Purpose: establish whether the simplest literature-backed phenomenon is reproduc
 
 ### Stage 2 — cross-platform factorization
 
-Only after Stage 1:
+When at least two sufficiently reliable timestamped streams are available:
 
 - compare platform signals;
 - estimate common attention factor;
@@ -76,7 +78,7 @@ Add:
 - novelty;
 - change-point features.
 
-Each feature family must beat a simpler count/attention model before being retained.
+Each frozen candidate must be compared with the simplest scientifically relevant baseline. Failure of one representation does not reject the broader semantic/narrative family.
 
 ### Stage 4 — propagation
 
@@ -241,18 +243,18 @@ Priority order:
 
 ## Statistical controls
 
-Minimum expectations:
+Controls are selected from the structure of the claim rather than imposed universally. Replication must use evidence that did not invent the candidate. Depending on the experiment, appropriate controls may include:
 
-- chronological split, never random train/test for headline claims;
-- untouched final test interval;
-- embargo/purging where labels overlap;
-- block bootstrap for dependent time series;
-- permutation/surrogate tests where appropriate;
-- multiple-hypothesis correction (e.g. FDR);
-- leave-one-asset-out stress;
-- leave-one-regime-out stress;
-- drop-best-event robustness;
-- report effect size and uncertainty, not only p-values.
+- chronological or event-held-out replication;
+- embargo/purging where label overlap creates mechanical leakage;
+- dependence-aware or clustered uncertainty estimates;
+- permutation/surrogate tests that preserve the nuisance structure relevant to the null;
+- multiple-hypothesis correction for a defined simultaneous family;
+- leave-asset/regime/source/event stresses where relevant;
+- concentration/drop-dominant-event diagnostics;
+- effect size, uncertainty and practical relevance.
+
+Random IID splitting is invalid when time/dependence makes it invalid; conversely, train/validation/test is not the universal shape of every State/Event/Propagation replay.
 
 ## Effective sample size
 
@@ -332,7 +334,7 @@ Strategy overlay:
 ```text
 idea
 → literature-backed
-→ preregistered
+→ frozen replication specification
 → replicated
 → validated OOS
 → prospective shadow
@@ -351,6 +353,4 @@ The first implementation milestone should create four reproducible experiment fa
 - **E3 Propagation**
 - **E4 Event Morphology**
 
-E1 must work before the project invests heavily in E3/E4.
-
-If simple attention cannot be reconstructed and evaluated honestly, sophisticated propagation models are premature.
+E1 is the cheapest activity baseline and a useful substrate exercise; its empirical result does not gate E2–E4. Shared causal/data infrastructure should be auditable before more expensive models reuse it, but semantic, propagation and morphology hypotheses stand or fall on their own evidence.

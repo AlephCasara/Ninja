@@ -54,38 +54,12 @@ Ninja Labs owns or coordinates:
 
 ### Statistical validation
 
-- chronological train/validation/test splits;
-- purging and embargo where labels overlap;
-- dependence-aware bootstrap;
-- placebo/permutation/surrogate tests;
-- multiple-hypothesis correction;
-- calibration diagnostics;
-- leave-one-asset-out / leave-one-regime-out tests where appropriate;
-- drop-best-event robustness;
-- ablation against simpler baselines;
-- untouched final test evaluation.
+Labs provides a validation toolkit, not a mandatory sequence. Depending on the scientific object this may include chronological or event-held-out evidence, purging/embargo for overlapping labels, dependence-aware uncertainty, placebo/permutation/surrogate controls, multiple-testing correction for defined families, calibration, leave-group stresses, concentration diagnostics and simpler-baseline ablation. The experiment contract records what applies and why.
 
 ### Experiment management
 
-Every headline result must be traceable to an explicit experiment contract containing at least:
+Every substantive new backtesting session uses `ExperimentSpec v2`, recording its scientific question, phase/replay type, evidence boundary, manifests/clocks, representations, outcomes, baselines/controls, assumptions/search history, leakage checks, negative-result scope and reproducibility metadata. See `docs/BACKTESTING_SESSION.md`.
 
-```text
-experiment_id
-hypothesis_id
-dataset_manifest
-code_revision
-domain
-targets
-baselines
-features/search_space
-train_window
-validation_window
-untouched_test_window
-metrics
-robustness_checks
-stopping_rules
-random_seeds where relevant
-```
 
 The concrete `ExperimentSpec v1` schema is a Phase 0 deliverable.
 
@@ -257,9 +231,9 @@ For example, the same attention-surprise implementation may be reused by trading
 
 A trading result never automatically validates a business result.
 
-## E1 is the current gate
+## E1 legacy baseline
 
-E1 Attention Replication is the first end-to-end Labs target.
+E1 Attention Replication was the first end-to-end Labs target. Its frozen v1 executor/seal machinery is retained for auditability and reproduction of that specific experiment; it is not the project-wide backtesting framework. New sessions use `ExperimentSpec v2`.
 
 Required comparison:
 
@@ -279,7 +253,7 @@ Primary targets remain:
 
 Directional return remains secondary.
 
-A positive result requires stable incremental chronological OOS information and robustness. A negative or inconclusive result is also a valid scientific delivery.
+A positive E1-v1 result requires stable incremental chronological OOS information under that frozen design. A negative or inconclusive result is also a valid delivery and does not gate E2–E4.
 
 ## MCP exposure
 

@@ -37,7 +37,7 @@ $$
 \mathcal{L}(Y_{t+h},\hat g(M_t,N_t)).
 $$
 
-A Ninja factor is useful only if $\Delta_h>0$ on untouched chronological data under an appropriate loss, after accounting for complexity, multiple testing and economic relevance.
+A Ninja representation is useful only if its incremental value survives an evidence boundary appropriate to the claim (for example later chronological data, held-out events or prospective observations), after accounting for relevant complexity/search and economic relevance.
 
 The executable point-in-time form is defined in [HISTORICAL_REPLAY.md](HISTORICAL_REPLAY.md). In particular, Ninja separates a frozen causal state
 
@@ -724,15 +724,15 @@ Targets may include jump arrival, stop-hit arrival, liquidity stress onset or vo
 
 ## 13. Statistical validation
 
-### Chronological partition
+### Evidence partition
 
-Headline tests require
+For supervised time-series prediction, a common valid design is chronological
 
 $$
 Train<Validation<Test.
 $$
 
-The final test window remains untouched until feature definitions, model family and hyperparameters are frozen.
+with the final test untouched until the candidate is frozen. This is not a universal shape for Ninja evidence: Event Replay may hold out event episodes, propagation studies may hold out sources/periods, and prospective work uses genuinely future observations. The invariant is that replication evidence did not participate in inventing the frozen candidate.
 
 ### Purging and embargo
 
@@ -888,7 +888,7 @@ Failure to reject is a valid project result.
 
 Mathematical sophistication is not evidence.
 
-Research priority:
+Example staged research order (not an epistemic gate):
 
 1. robust attention normalization;
 2. platform-separated ablation;

@@ -234,8 +234,11 @@ Audit a bounded sample of real decision times and verify:
 
 - every included observation was available under the declared clock;
 - mutable engagement is point-in-time or excluded;
+- source coverage/missingness is measured rather than silently interpreted as low activity;
+- archive/retrieval gaps, duplicates and restart boundaries are characterized by time/source/community;
 - content/provenance can be traced to source artifacts;
 - semantic interpretations are bound to the exact content hash and knowledge policy;
+- any semantic fields used for scientific claims satisfy `SEMANTIC_INSTRUMENT_VALIDATION.md`;
 - market state uses only data available by decision time;
 - repeated construction yields the same frozen-state hash;
 - duplicate/restart boundaries do not change state counts;
@@ -259,7 +262,7 @@ Before analysis:
 4. read the relevant experiment document;
 5. declare phase and replay type;
 6. declare current scope and explicit exclusions;
-7. pin code/data clocks and manifests available at session start;
+7. pin code/data clocks, manifests and planned coverage/missingness checks available at session start;
 8. declare outcome-access mode;
 9. state the scientific question and the negative-result scope;
 10. only then inspect/compute experiment outcomes.

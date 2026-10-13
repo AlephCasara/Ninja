@@ -34,6 +34,7 @@ def frozen_state() -> FrozenReplayState:
         observation_fingerprints={},
         interpretation_ids=(),
         interpretation_fingerprints={},
+        market_fingerprints={},
         max_input_available_at=dt(1),
         information_state={},
         market_state={},
@@ -55,6 +56,8 @@ def test_tail_labels_are_revealed_after_state_and_use_first_passage():
         state=state,
         prices=prices,
         horizon_end=dt(5),
+        max_reference_delay_seconds=0,
+        max_path_gap_seconds=86400,
         multiples=(2, 5, 10, 50, 100),
     )
     passage = {item.multiple: item for item in outcome.first_passage}
@@ -80,6 +83,8 @@ def test_outcome_ignores_prices_beyond_horizon():
             PricePoint(dt(20), 1000.0),
         ],
         horizon_end=dt(3),
+        max_reference_delay_seconds=0,
+        max_path_gap_seconds=86400,
         multiples=(100,),
     )
 
@@ -94,12 +99,65 @@ def test_outcome_hash_does_not_depend_on_wall_clock_creation_time():
         state=state,
         prices=prices,
         horizon_end=dt(2),
+        max_reference_delay_seconds=0,
+        max_path_gap_seconds=86400,
         created_at=dt(10),
     )
     b = compute_market_path_outcome(
         state=state,
         prices=prices,
         horizon_end=dt(2),
+        max_reference_delay_seconds=0,
+        max_path_gap_seconds=86400,
         created_at=dt(11),
     )
     assert a.outcome_hash == b.outcome_hash
+
+
+def test_outcome_rejects_reference_price_too_far_after_decision():
+    state = frozen_state()
+    prices = [
+        PricePoint(datetime(2025, 1, 1, 1, tzinfo=UTC), 1.0),
+        PricePoint(datetime(2025, 1, 1, 2, tzinfo=UTC), 1.1),
+    ]
+    with pytest.raises(ValueError, match="reference price exceeds allowed"):
+        compute_market_path_outcome(
+            state=state,
+            prices=prices,
+            horizon_end=datetime(2025, 1, 1, 2, tzinfo=UTC),
+            max_reference_delay_seconds=60,
+            max_path_gap_seconds=3600,
+        )
+
+
+def test_outcome_rejects_market_path_gap_larger_than_declared_tolerance():
+    state = frozen_state()
+    prices = [
+        PricePoint(dt(1), 1.0),
+        PricePoint(dt(3), 1.1),
+    ]
+    with pytest.raises(ValueError, match="gap larger than allowed"):
+        compute_market_path_outcome(
+            state=state,
+            prices=prices,
+            horizon_end=dt(3),
+            max_reference_delay_seconds=0,
+            max_path_gap_seconds=86400,
+        )
+
+
+def test_outcome_rejects_conflicting_prices_at_same_timestamp():
+    state = frozen_state()
+    prices = [
+        PricePoint(dt(1), 1.0),
+        PricePoint(dt(1), 1.1),
+        PricePoint(dt(2), 1.2),
+    ]
+    with pytest.raises(ValueError, match="conflicting price observations"):
+        compute_market_path_outcome(
+            state=state,
+            prices=prices,
+            horizon_end=dt(2),
+            max_reference_delay_seconds=0,
+            max_path_gap_seconds=86400,
+        )
