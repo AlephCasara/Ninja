@@ -107,7 +107,7 @@ def _reddit_observation(
         raw.get("author"),
         post_id,
         None,
-        json.dumps(["BTC"], separators=(",", ":")),
+        json.dumps([], separators=(",", ":")),
         f"{bronze_ref}#{source_id}",
         content_hash,
         json.dumps(structured, ensure_ascii=False, separators=(",", ":")),

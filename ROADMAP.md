@@ -85,6 +85,24 @@ Implemented utilities include:
 
 These are tools, not a mandatory sequence. Each experiment chooses validation methods that match its mechanism and replay type under `docs/BACKTESTING_POLICY.md`. Software tests prove implementation behavior only; empirical authority comes from real point-in-time evidence, replication and appropriate controls.
 
+## Phase 1.6 — point-in-time historical replay core
+
+Purpose:
+
+> freeze what could be known at `t` before revealing any future market outcome.
+
+- [x] causal observation slicing under explicit clock policy;
+- [x] versioned, outcome-blind semantic-interpretation contract;
+- [x] deterministic replay-state hash bound to observation/interpretation fingerprints;
+- [x] point-in-time universe freeze for survivorship-safe tail studies;
+- [x] future path outcomes and first-passage labels for 2x/5x/10x/50x/100x;
+- [x] remove subreddit-to-BTC hardcoded entity inference;
+- [ ] adapt canonical Bronze/Silver/Gold materialization to the replay contracts;
+- [ ] build a canonical historical asset-universe source with listing/delisting/liquidity evidence;
+- [ ] build and audit the first real replay panel before any headline empirical claim.
+
+**Boundary:** these checks establish replay/software integrity only. They do not show that any tail multiple, semantic feature or Ninja factor is predictable.
+
 ## Phase 2 — E1 Attention Replication / first information backtest
 
 Question:

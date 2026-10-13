@@ -1,6 +1,6 @@
 # Validation status
 
-Last updated: 2026-10-02.
+Last updated: 2026-10-13.
 
 ## What has been done
 
@@ -9,6 +9,8 @@ Last updated: 2026-10-02.
 - Public historical dataset candidates were identified.
 - Testable factor families and falsifiable hypotheses were defined.
 - A historical research protocol and promotion ladder were specified.
+- The point-in-time replay core is implemented: causal slicing, versioned semantic-interpretation contracts, frozen replay-state hashing, point-in-time universe freezing and post-freeze market/tail outcome labelling.
+- Reddit Silver observations no longer infer `BTC` solely from subreddit membership.
 
 ## What has NOT been done
 
@@ -21,7 +23,9 @@ Ninja has **not yet**:
 - estimated cross-platform transfer entropy;
 - validated event morphology against future market responses;
 - demonstrated incremental OOS value over a market-only baseline;
-- produced any factor approved for Master Trader trading decisions.
+- produced any factor approved for Master Trader trading decisions;
+- demonstrated that 2x/5x/10x/50x/100x outcomes are predictable from pre-move information states;
+- completed integration of the replay core with an accepted full canonical point-in-time asset universe.
 
 Therefore no current Ninja factor should be described as "proven", "validated" or "alpha".
 
@@ -49,6 +53,9 @@ Therefore no current Ninja factor should be described as "proven", "validated" o
 | Transfer entropy | methodological precedent; Ninja application pending |
 | Event morphology | Ninja hypothesis; unvalidated |
 | Shock × transmission × susceptibility | core Ninja hypothesis; unvalidated as a combined model |
+| Historical replay core | implemented/tested as software; no empirical hypothesis validated |
+| Point-in-time tail universe | contract implemented; canonical historical universe pending |
+| 2x/5x/10x/50x/100x opportunity predictability | unvalidated research objective only |
 | Master Trader runtime integration value | unvalidated |
 
 This file should be updated whenever a headline claim changes status.

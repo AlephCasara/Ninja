@@ -8,6 +8,7 @@ Before changing code or experiments, read:
 
 - `README.md`
 - `docs/BACKTESTING_POLICY.md` for any experiment, backtest, validation or promotion work
+- `docs/HISTORICAL_REPLAY.md` for historical replay, semantic interpretation or outcome-label work
 - `docs/ADR-002-CORE-LANGUAGE-AND-TOOLING.md`
 - `docs/NINJA_TOOLS.md`
 - `CONTRIBUTING.md`

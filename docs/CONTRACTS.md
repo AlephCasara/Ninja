@@ -75,7 +75,7 @@ parent_id
 entity_refs[]
 ```
 
-These should be preserved when available because author/source breadth, thread structure, independent-source counts and propagation models may depend on them.
+These should be preserved when they are source-native because author/source breadth, thread structure, independent-source counts and propagation models may depend on them. Inferred entities or event semantics belong in a separate versioned `SemanticInterpretation`; community membership alone must not manufacture an entity reference.
 
 ### Content
 
@@ -194,3 +194,23 @@ Breaking semantic changes require a new schema version.
 Adding optional metadata that does not change causal or scientific meaning may remain within v1.
 
 The schemas are intentionally small. Domain objects are layered on top rather than expanding the core contract until it knows about every future trading or business concept.
+## Replay contracts
+
+Historical replay adds three explicit schemas:
+
+```text
+semantic-interpretation-v1.schema.json
+replay-state-v1.schema.json
+replay-universe-v1.schema.json
+replay-outcome-v1.schema.json
+```
+
+`SemanticInterpretation` binds qualitative extraction to the exact observation content hash and records its model/extractor version and knowledge policy.
+
+`ReplayState` is frozen from causal observations, semantic interpretations and market history available by `decision_time`. It contains no future outcome.
+
+`ReplayUniverse` freezes the point-in-time eligible population under a versioned rule so future winners, failures and delistings cannot be selected with hindsight.
+
+`ReplayOutcome` is computed only after the state is frozen and is linked back by `state_id/state_hash`. Tail multiples are represented as first-passage outcomes, not feature-construction inputs.
+
+See [HISTORICAL_REPLAY.md](HISTORICAL_REPLAY.md).

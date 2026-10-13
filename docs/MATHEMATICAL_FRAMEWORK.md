@@ -39,6 +39,20 @@ $$
 
 A Ninja factor is useful only if $\Delta_h>0$ on untouched chronological data under an appropriate loss, after accounting for complexity, multiple testing and economic relevance.
 
+The executable point-in-time form is defined in [HISTORICAL_REPLAY.md](HISTORICAL_REPLAY.md). In particular, Ninja separates a frozen causal state
+
+$$
+X_{a,t}^{(v,u,c)}=(N_{a,t}^{(v)},M_{a,t}^{(u)})
+$$
+
+from outcomes revealed later,
+
+$$
+Y_{a,t,H}=H_Y(\mathcal M_{a,(t,t+H]}).
+$$
+
+This separation is structural: future outcomes may label a frozen state but may not alter its representation.
+
 ---
 
 ## 2. Attention Scout

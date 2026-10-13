@@ -169,3 +169,30 @@ def test_alignment_rejects_future_available_information(tmp_path):
             output_path=aligned,
             splits=splits,
         )
+
+
+def test_reddit_silver_does_not_infer_btc_entity_from_subreddit(tmp_path):
+    raw = {
+        "id": "general-crypto-post",
+        "author": "alice",
+        "created_utc": int(dt(0, 1).timestamp()),
+        "retrieved_on": int(dt(0, 2).timestamp()),
+        "subreddit": "CryptoCurrency",
+        "title": "A general market discussion",
+        "selftext": "No asset entity has been resolved yet.",
+        "url": "https://example.invalid/post",
+    }
+    bronze = tmp_path / "bronze.jsonl"
+    observations = tmp_path / "observations.parquet"
+    write_reddit_dataset(
+        [raw],
+        bronze_path=bronze,
+        silver_path=observations,
+        collected_at=dt(1),
+        manifest_id="test-manifest",
+    )
+
+    (entity_refs_json,) = duckdb.connect().execute(
+        "SELECT entity_refs_json FROM read_parquet(?)", [str(observations)]
+    ).fetchone()
+    assert entity_refs_json == "[]"

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AlephCasara/Ninja/schemas/replay-universe-v1.schema.json",
+  "title": "Ninja Frozen Point-in-Time Universe v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "universe_id",
+    "universe_hash",
+    "as_of",
+    "domain",
+    "eligibility_rule_id",
+    "dataset_manifest_ids",
+    "member_ids",
+    "member_fingerprints",
+    "frozen_at"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "universe_id": {"type": "string", "minLength": 1},
+    "universe_hash": {"type": "string", "minLength": 64},
+    "as_of": {"type": "string", "format": "date-time"},
+    "domain": {"type": "string", "minLength": 1},
+    "eligibility_rule_id": {"type": "string", "minLength": 1},
+    "dataset_manifest_ids": {"type": "array", "items": {"type": "string"}},
+    "member_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "member_fingerprints": {"type": "object", "additionalProperties": {"type": "string"}},
+    "frozen_at": {"type": "string", "format": "date-time"}
+  }
+}

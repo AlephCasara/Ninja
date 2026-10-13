@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AlephCasara/Ninja/schemas/semantic-interpretation-v1.schema.json",
+  "title": "Ninja Semantic Interpretation v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "interpretation_id",
+    "observation_id",
+    "observation_content_hash",
+    "extractor_id",
+    "extractor_version",
+    "generated_at",
+    "knowledge_policy",
+    "outcome_blind",
+    "grounded_in_inputs",
+    "fields"
+  ],
+  "properties": {
+    "interpretation_id": {"type": "string", "minLength": 1},
+    "observation_id": {"type": "string", "minLength": 1},
+    "observation_content_hash": {"type": "string", "minLength": 1},
+    "extractor_id": {"type": "string", "minLength": 1},
+    "extractor_version": {"type": "string", "minLength": 1},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "knowledge_policy": {
+      "type": "string",
+      "enum": ["document_only", "historical_context", "prospective"]
+    },
+    "context_max_available_at": {"type": ["string", "null"], "format": "date-time"},
+    "outcome_blind": {"const": true},
+    "grounded_in_inputs": {"const": true},
+    "prompt_hash": {"type": ["string", "null"]},
+    "model_id": {"type": ["string", "null"]},
+    "fields": {"type": "object", "additionalProperties": true}
+  }
+}
