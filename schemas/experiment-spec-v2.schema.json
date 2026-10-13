@@ -147,7 +147,8 @@
             "type": "string",
             "minLength": 1
           },
-          "uniqueItems": true
+          "uniqueItems": true,
+          "minItems": 1
         },
         "information_sources": {
           "type": "array",
@@ -285,7 +286,8 @@
         "assumptions",
         "search_space",
         "sample_units",
-        "leakage_checks"
+        "leakage_checks",
+        "coverage_checks"
       ],
       "properties": {
         "baselines": {
@@ -342,6 +344,14 @@
         },
         "stopping_rules": {
           "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "coverage_checks": {
+          "type": "array",
+          "minItems": 1,
           "items": {
             "type": "string",
             "minLength": 1

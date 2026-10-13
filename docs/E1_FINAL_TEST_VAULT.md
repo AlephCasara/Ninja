@@ -1,5 +1,7 @@
 # E1 Robustness and Final-Test Vault
 
+> **Legacy E1 v1 protocol.** This document preserves the frozen mechanics of the historical `E1-attention-btc-reddit-v1` experiment. It is not the active project-wide backtesting policy. New sessions use `ExperimentSpec v2` and `docs/BACKTESTING_SESSION.md`.
+
 E1 treats the 2025 split as a scarce scientific resource rather than another tuning window.
 
 ## Release sequence

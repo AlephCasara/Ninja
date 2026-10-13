@@ -27,6 +27,8 @@ Observation -> SemanticInterpretation -> FrozenReplayState
 
 An observation is source evidence and provenance. It must preserve source clocks, content hash/reference, author/thread relationships and point-in-time engagement snapshots when available.
 
+Replay identity uses a **causal scientific fingerprint**: content plus replay-relevant clocks/fields. Reacquisition bookkeeping such as a new local collection time, storage path or retrieval reference may change without changing the historical scientific state; those details remain auditable through dataset manifests/provenance. By contrast, a changed `available_at`, source-native relationship, engagement snapshot or other replay-relevant field is a scientific conflict and must not be silently deduplicated.
+
 No source is assigned an inferred economic entity merely because of the community or channel from which it came. A post in `r/CryptoCurrency`, for example, is not automatically a BTC observation.
 
 ### SemanticInterpretation
@@ -47,7 +49,7 @@ The interpretation contract records the observation content hash, extractor/mode
 
 An interpretation used in replay must be outcome-blind and grounded in its declared inputs.
 
-A modern model may be used retrospectively for **document-only extraction** when its input is restricted to the historical evidence and the extracted fields are auditable against that evidence. This does not make the model's internal world knowledge causally historical; claims that require external context must use an explicit historical-context cutoff or prospective extraction.
+A modern model may be used retrospectively for **document-only extraction** when its input is restricted to the historical evidence and the extracted fields are auditable against that evidence. This does not make the model's internal world knowledge causally historical; claims that require external context must use an explicit historical-context cutoff or prospective extraction. Semantic measurements used beyond discovery must follow [`SEMANTIC_INSTRUMENT_VALIDATION.md`](SEMANTIC_INSTRUMENT_VALIDATION.md).
 
 ### FrozenReplayState
 
@@ -83,7 +85,7 @@ $$
 X_{a,t}^{(v,u,c)} = \left(N_{a,t}^{(v)}, M_{a,t}^{(u)}\right).
 $$
 
-The serialized scientific content of $X$ is hashed. Wall-clock research metadata such as when the replay was generated does not alter this state hash.
+The serialized scientific content of $X$ is hashed. Wall-clock research metadata such as when the replay was generated does not alter this state hash. Market rows are also fingerprinted under an explicit row identity; exact duplicates are deduplicated and conflicting values for the same market identity are invalid rather than order-dependent.
 
 ## 2. Freeze/reveal separation
 
@@ -95,7 +97,7 @@ $$
 
 This is intentionally a separate module and schema.
 
-The future outcome is linked to `state_id` and `state_hash`; it cannot mutate the frozen state.
+The future outcome is linked to `state_id` and `state_hash`; it cannot mutate the frozen state. Outcome construction must also declare the maximum allowed delay between `decision_time` and the reference price plus the maximum allowed gap inside the revealed market path. Exceeding either tolerance invalidates that outcome instead of silently shifting the effective entry time or bridging missing market history. Conflicting prices at the same timestamp are invalid.
 
 This provides a structural rule against a common research error:
 
@@ -282,8 +284,10 @@ A failed detector rejects that detector under its tested conditions. It does not
 The current implementation lives in `python/ninja_labs/replay/`:
 
 - `models.py`: typed causal state and semantic interpretation contracts;
-- `core.py`: causal slicing and state freeze;
+- `core.py`: causal slicing and state freeze, currently emitting ReplayState v2;
 - `universe.py`: point-in-time population freeze for survivorship-safe studies;
-- `outcomes.py`: future path and first-passage labels.
+- `outcomes.py`: future path and first-passage labels, currently emitting ReplayOutcome v2.
+
+The v1 replay-state/outcome schemas remain preserved for compatibility; breaking replay-contract changes advance the schema version rather than mutating historical records.
 
 The design intentionally keeps outcome computation out of the state-construction module.

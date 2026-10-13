@@ -1,3 +1,5 @@
+# LEGACY E1 v1 experiment-specific configuration. Not the default Ninja backtesting contract.
+# New sessions use ExperimentSpec v2 / docs/BACKTESTING_SESSION.md.
 # E1 preregistration configuration.
 # This file is sealed together with the canonical dataset manifest before any
 # train/validation outcome is inspected. Any scientific change after sealing

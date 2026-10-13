@@ -262,3 +262,83 @@ def test_document_only_interpretation_fingerprint_ignores_research_generation_ti
         frozen_at=dt(6),
     )
     assert a.state_hash == b.state_hash
+
+
+def test_same_observation_id_with_different_causal_metadata_is_rejected():
+    first = observation(
+        "same",
+        published_at=dt(0, 10),
+        first_seen_at=dt(0, 11),
+        available_at=dt(0, 11),
+    )
+    conflicting = dict(first)
+    conflicting["available_at"] = dt(0, 12)
+
+    with pytest.raises(ValueError, match="conflicting scientific records"):
+        build_causal_slice(
+            decision_time=dt(1),
+            observations=[first, conflicting],
+        )
+
+
+def test_conflicting_market_rows_at_same_timestamp_are_rejected():
+    rows = [
+        {"decision_time": dt(0, 45), "close": 100.0},
+        {"decision_time": dt(0, 45), "close": 101.0},
+    ]
+    with pytest.raises(ValueError, match="market rows conflict"):
+        build_causal_slice(
+            decision_time=dt(1),
+            observations=[],
+            market_rows=rows,
+        )
+
+
+def test_exact_duplicate_market_rows_are_deduplicated_before_builder():
+    row = {"decision_time": dt(0, 45), "close": 100.0}
+    causal = build_causal_slice(
+        decision_time=dt(1),
+        observations=[],
+        market_rows=[row, dict(row)],
+    )
+    assert len(causal.market_rows) == 1
+    assert len(causal.market_fingerprints) == 1
+
+
+def test_reacquisition_metadata_does_not_change_observation_scientific_identity():
+    first = observation(
+        "same",
+        published_at=dt(0, 10),
+        first_seen_at=dt(0, 11),
+        available_at=dt(0, 11),
+    )
+    first.update(
+        collected_at=dt(3),
+        content_ref="old/path",
+        provenance={"retrieval_ref": "run-a"},
+    )
+    reacquired = dict(first)
+    reacquired["collected_at"] = dt(4)
+    reacquired["content_ref"] = "new/path"
+    reacquired["provenance"] = {"retrieval_ref": "run-b"}
+
+    causal = build_causal_slice(
+        decision_time=dt(1),
+        observations=[first, reacquired],
+    )
+    assert len(causal.observations) == 1
+    assert len(causal.observation_fingerprints) == 1
+
+
+def test_different_market_symbols_may_share_a_timestamp_without_conflict():
+    rows = [
+        {"decision_time": dt(0, 45), "symbol": "BTCUSDT", "close": 100.0},
+        {"decision_time": dt(0, 45), "symbol": "ETHUSDT", "close": 10.0},
+    ]
+    causal = build_causal_slice(
+        decision_time=dt(1),
+        observations=[],
+        market_rows=rows,
+    )
+    assert len(causal.market_rows) == 2
+    assert len(causal.market_fingerprints) == 2

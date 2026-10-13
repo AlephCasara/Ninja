@@ -27,7 +27,9 @@
     "evaluation_boundary": null
   },
   "data": {
-    "dataset_manifest_ids": [],
+    "dataset_manifest_ids": [
+      "REPLACE_WITH_DATASET_MANIFEST_ID"
+    ],
     "information_sources": [
       "CHANGE_ME"
     ],
@@ -69,7 +71,10 @@
       "point-in-time availability"
     ],
     "partitions": {},
-    "stopping_rules": []
+    "stopping_rules": [],
+    "coverage_checks": [
+      "declare source/time coverage and missingness before interpreting low activity"
+    ]
   },
   "interpretation": {
     "negative_result_scope": "CHANGE_ME",

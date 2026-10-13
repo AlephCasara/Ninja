@@ -19,6 +19,53 @@ InformationBuilder = Callable[
 ]
 MarketBuilder = Callable[[Sequence[Mapping[str, Any]]], Mapping[str, Any]]
 
+_NONSCIENTIFIC_OBSERVATION_FIELDS = frozenset(
+    {"collected_at", "content_ref", "provenance", "provenance_json"}
+)
+_MARKET_IDENTITY_FIELDS = (
+    "source_id",
+    "source",
+    "venue",
+    "exchange",
+    "symbol",
+    "instrument",
+    "interval",
+    "market_row_type",
+    "source_type",
+)
+
+
+def observation_scientific_record(observation: Mapping[str, Any]) -> dict[str, Any]:
+    """Return replay-relevant observation content, excluding acquisition bookkeeping.
+
+    ``available_at``/publication/first-seen clocks remain part of the fingerprint.
+    Reacquiring the same historical evidence may legitimately change collection paths
+    or retrieval metadata without changing the scientific state.
+    """
+
+    return {
+        str(key): value
+        for key, value in observation.items()
+        if str(key) not in _NONSCIENTIFIC_OBSERVATION_FIELDS
+    }
+
+
+def market_row_identity(
+    row: Mapping[str, Any],
+    *,
+    market_time_field: str,
+    row_time: datetime,
+) -> str:
+    explicit = row.get("market_row_id")
+    if explicit is not None:
+        return str(explicit)
+    parts = [f"{market_time_field}={iso_utc(row_time)}"]
+    for field in _MARKET_IDENTITY_FIELDS:
+        value = row.get(field)
+        if value is not None:
+            parts.append(f"{field}={value}")
+    return "|".join(parts)
+
 
 def observation_causal_time(
     observation: Mapping[str, Any],
@@ -60,6 +107,7 @@ def build_causal_slice(
     decision = parse_utc(decision_time)
     observations_by_id: dict[str, Mapping[str, Any]] = {}
     observation_hashes: dict[str, str] = {}
+    observation_fingerprints: dict[str, str] = {}
     observation_times: dict[str, datetime] = {}
     input_times: list[datetime] = []
 
@@ -69,12 +117,14 @@ def build_causal_slice(
             continue
         observation_id = str(observation["observation_id"])
         content_hash = str(observation["content_hash"])
-        existing_hash = observation_hashes.get(observation_id)
-        if existing_hash is not None and existing_hash != content_hash:
-            raise ValueError(f"observation {observation_id} has conflicting content hashes")
+        fingerprint = sha256_json(observation_scientific_record(observation))
+        existing_fingerprint = observation_fingerprints.get(observation_id)
+        if existing_fingerprint is not None and existing_fingerprint != fingerprint:
+            raise ValueError(f"observation {observation_id} has conflicting scientific records")
         if observation_id not in observations_by_id:
             observations_by_id[observation_id] = dict(observation)
             observation_hashes[observation_id] = content_hash
+            observation_fingerprints[observation_id] = fingerprint
             observation_times[observation_id] = causal_time
             input_times.append(causal_time)
 
@@ -112,17 +162,30 @@ def build_causal_slice(
         key=lambda item: (item.observation_id, item.interpretation_id),
     )
 
-    eligible_market: list[Mapping[str, Any]] = []
+    market_by_time: dict[str, Mapping[str, Any]] = {}
+    market_fingerprints: dict[str, str] = {}
+    market_times: dict[str, datetime] = {}
     for row in market_rows:
         value = row.get(market_time_field)
         if value is None:
             raise ValueError(f"market row has no {market_time_field}")
         row_time = parse_utc(value)
-        if row_time <= decision:
-            eligible_market.append(dict(row))
+        if row_time > decision:
+            continue
+        key = market_row_identity(
+            row, market_time_field=market_time_field, row_time=row_time
+        )
+        fingerprint = sha256_json(dict(row))
+        existing = market_fingerprints.get(key)
+        if existing is not None and existing != fingerprint:
+            raise ValueError(f"market rows conflict at {key}")
+        if existing is None:
+            market_by_time[key] = dict(row)
+            market_fingerprints[key] = fingerprint
+            market_times[key] = row_time
             input_times.append(row_time)
 
-    eligible_market.sort(key=lambda row: parse_utc(row[market_time_field]))
+    eligible_market = [market_by_time[key] for key in sorted(market_by_time, key=lambda k: market_times[k])]
 
     max_input = max(input_times) if input_times else None
     if max_input is not None and max_input > decision:
@@ -132,8 +195,10 @@ def build_causal_slice(
         decision_time=decision,
         availability_policy=availability_policy,
         observations=tuple(eligible_observations),
+        observation_fingerprints=dict(sorted(observation_fingerprints.items())),
         interpretations=tuple(eligible_interpretations),
         market_rows=tuple(eligible_market),
+        market_fingerprints=dict(sorted(market_fingerprints.items())),
         max_input_available_at=max_input,
     )
 
@@ -170,10 +235,7 @@ def freeze_replay_state(
     )
     market_state = dict(market_builder(causal.market_rows))
 
-    observation_fingerprints = {
-        str(row["observation_id"]): str(row["content_hash"])
-        for row in causal.observations
-    }
+    observation_fingerprints = dict(causal.observation_fingerprints)
     observation_ids = tuple(sorted(observation_fingerprints))
     interpretation_fingerprints = {
         item.interpretation_id: sha256_json(item.scientific_record())
@@ -181,7 +243,7 @@ def freeze_replay_state(
     }
     interpretation_ids = tuple(sorted(interpretation_fingerprints))
     scientific_record = {
-        "schema_version": 1,
+        "schema_version": 2,
         "replay_type": replay_type.value,
         "domain": domain,
         "subject_id": subject_id,
@@ -194,6 +256,7 @@ def freeze_replay_state(
         "observation_fingerprints": dict(sorted(observation_fingerprints.items())),
         "interpretation_ids": list(interpretation_ids),
         "interpretation_fingerprints": dict(sorted(interpretation_fingerprints.items())),
+        "market_fingerprints": dict(sorted(causal.market_fingerprints.items())),
         "max_input_available_at": (
             iso_utc(causal.max_input_available_at)
             if causal.max_input_available_at is not None
@@ -206,7 +269,7 @@ def freeze_replay_state(
     state_id = f"replay:{state_hash[:24]}"
 
     return FrozenReplayState(
-        schema_version=1,
+        schema_version=2,
         state_id=state_id,
         state_hash=state_hash,
         replay_type=replay_type,
@@ -221,6 +284,7 @@ def freeze_replay_state(
         observation_fingerprints=dict(sorted(observation_fingerprints.items())),
         interpretation_ids=interpretation_ids,
         interpretation_fingerprints=dict(sorted(interpretation_fingerprints.items())),
+        market_fingerprints=dict(sorted(causal.market_fingerprints.items())),
         max_input_available_at=causal.max_input_available_at,
         information_state=information_state,
         market_state=market_state,

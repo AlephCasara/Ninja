@@ -20,6 +20,7 @@ ninja-labs = "ninja_labs.cli:main"
 
 [dependency-groups]
 dev = [
+  "jsonschema>=4.23,<5",
   "pytest>=8.4,<9",
 ]
 
