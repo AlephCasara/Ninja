@@ -25,3 +25,9 @@ jobs:
 
       - name: Test
         run: uv run pytest
+
+      - name: Scientific validation selftest
+        shell: bash
+        run: |
+          uv run ninja-labs validation selftest --output /tmp/ninja-validation-selftest.json
+          cat /tmp/ninja-validation-selftest.json

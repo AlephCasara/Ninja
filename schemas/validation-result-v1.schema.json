@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AlephCasara/Ninja/schemas/validation-result-v1.schema.json",
+  "title": "Ninja Validation Result v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "experiment_id",
+    "hypothesis_id",
+    "primary_metric",
+    "preregistered",
+    "sample",
+    "validation",
+    "split_policy",
+    "multiple_testing",
+    "untouched_test",
+    "falsification"
+  ],
+  "properties": {
+    "experiment_id": {"type": "string", "minLength": 1},
+    "hypothesis_id": {"type": "string", "minLength": 1},
+    "primary_metric": {"type": "string", "minLength": 1},
+    "preregistered": {"const": true},
+    "sample": {
+      "type": "object",
+      "required": ["raw_n", "effective_n"],
+      "properties": {
+        "raw_n": {"type": "number", "exclusiveMinimum": 0},
+        "effective_n": {"type": "number", "exclusiveMinimum": 0}
+      }
+    },
+    "validation": {
+      "type": "object",
+      "required": [
+        "synthetic_recovery_passed",
+        "null_calibration_passed",
+        "negative_controls_passed"
+      ],
+      "properties": {
+        "synthetic_recovery_passed": {"const": true},
+        "null_calibration_passed": {"const": true},
+        "negative_controls_passed": {"const": true}
+      }
+    },
+    "split_policy": {
+      "type": "object",
+      "required": ["chronological", "purging", "embargo"],
+      "properties": {
+        "chronological": {"const": true},
+        "purging": {"const": true},
+        "embargo": {"const": true}
+      }
+    },
+    "multiple_testing": {
+      "type": "object",
+      "required": ["family_size", "method"],
+      "properties": {
+        "family_size": {"type": "integer", "minimum": 1},
+        "method": {"type": "string", "minLength": 1}
+      }
+    },
+    "untouched_test": {
+      "type": "object",
+      "required": ["access_count", "frozen_before_access"],
+      "properties": {
+        "access_count": {"type": "integer", "minimum": 0, "maximum": 1},
+        "frozen_before_access": {"type": "boolean"}
+      }
+    },
+    "falsification": {
+      "type": "object",
+      "required": ["rejection_rule", "minimum_meaningful_effect"],
+      "properties": {
+        "rejection_rule": {"type": "string", "minLength": 1},
+        "minimum_meaningful_effect": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}
