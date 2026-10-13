@@ -5,6 +5,10 @@ import json
 from pathlib import Path
 
 from ninja_labs.pipeline import run_phase1
+from ninja_labs.validation.e1_attention import (
+    run_e1_estimator_validation,
+    write_e1_estimator_validation,
+)
 from ninja_labs.validation.harness import run_validation_selftest, write_validation_selftest
 
 
@@ -19,14 +23,21 @@ def build_parser() -> argparse.ArgumentParser:
     build.add_argument("--config", type=Path, required=True)
 
     validation = subparsers.add_parser(
-        "validation", help="Phase 1.5 scientific validation harness"
+        "validation", help="Scientific anti-confirmation and estimator validation"
     )
     validation_sub = validation.add_subparsers(dest="validation_command", required=True)
+
     selftest = validation_sub.add_parser(
-        "selftest", help="Run deterministic anti-confirmation harness checks"
+        "selftest", help="Run deterministic generic anti-confirmation harness checks"
     )
     selftest.add_argument("--seed", type=int, default=1729)
     selftest.add_argument("--output", type=Path)
+
+    e1 = validation_sub.add_parser(
+        "e1-attention", help="Validate E1 attention estimators on controlled worlds"
+    )
+    e1.add_argument("--seed", type=int, default=20261013)
+    e1.add_argument("--output", type=Path)
     return parser
 
 
@@ -42,6 +53,14 @@ def main(argv: list[str] | None = None) -> int:
             print(args.output)
         else:
             payload = run_validation_selftest(seed=args.seed)
+            print(json.dumps(payload, indent=2, sort_keys=True))
+        return 0 if payload["passed"] else 1
+    if args.command == "validation" and args.validation_command == "e1-attention":
+        if args.output:
+            payload = write_e1_estimator_validation(args.output, seed=args.seed)
+            print(args.output)
+        else:
+            payload = run_e1_estimator_validation(seed=args.seed)
             print(json.dumps(payload, indent=2, sort_keys=True))
         return 0 if payload["passed"] else 1
     raise AssertionError("unreachable command")
