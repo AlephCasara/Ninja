@@ -16,6 +16,7 @@ from ninja_labs.phase1 import (
     write_market_dataset,
     write_reddit_dataset,
 )
+from ninja_labs.split_data import materialize_split_panels
 from ninja_labs.util import (
     iso_utc,
     parse_utc,
@@ -143,6 +144,7 @@ def run_phase1(config_path: Path) -> Path:
     silver_market = run_dir / "silver" / "market.parquet"
     gold_attention = run_dir / "gold" / "attention.parquet"
     gold_aligned = run_dir / "gold" / "aligned.parquet"
+    split_dir = run_dir / "gold" / "splits"
     coverage_path = run_dir / "coverage.json"
     manifest_path = run_dir / "manifest.json"
 
@@ -179,6 +181,10 @@ def run_phase1(config_path: Path) -> Path:
         output_path=gold_aligned,
         splits=splits,
     )
+    split_panels = materialize_split_panels(
+        aligned_path=gold_aligned,
+        output_dir=split_dir,
+    )
     coverage = build_coverage_report(
         observations_path=silver_observations,
         market_path=silver_market,
@@ -214,6 +220,15 @@ def run_phase1(config_path: Path) -> Path:
         "silver_market": artifact_record(silver_market, rows=market_count),
         "gold_attention": artifact_record(gold_attention, rows=attention_count),
         "gold_aligned": artifact_record(gold_aligned, rows=aligned_count),
+        "gold_train": artifact_record(
+            split_panels["train"][0], rows=split_panels["train"][1]
+        ),
+        "gold_validation": artifact_record(
+            split_panels["validation"][0], rows=split_panels["validation"][1]
+        ),
+        "gold_untouched_test": artifact_record(
+            split_panels["untouched_test"][0], rows=split_panels["untouched_test"][1]
+        ),
         "coverage": artifact_record(coverage_path),
     }
     sources = [
@@ -235,7 +250,8 @@ def run_phase1(config_path: Path) -> Path:
         "Mutable Reddit score/num_comments fields are intentionally excluded from E1 causal features.",
         "Observation.available_at is the only timestamp used to construct attention features.",
         "Event-level observations are preserved so later propagation/Hawkes work does not require reconstructed timestamps.",
-        "The untouched_test split is labeled in the aligned panel but Phase 2 optimizers must not use it for adaptive search.",
+        "Train, validation and untouched_test are physically materialized as separate Parquet artifacts to reduce accidental final-test access.",
+        "Development E1 code must consume gold_train and gold_validation only; gold_untouched_test is reserved for a frozen final-test command.",
         "coverage.json records source/market/missingness diagnostics and must be reviewed before E1 consumes a canonical dataset.",
     ]
     write_manifest(
