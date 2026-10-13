@@ -28,7 +28,7 @@ class _Client:
     def get(self, *args, **kwargs):
         type(self).calls += 1
         if type(self).calls == 1:
-            raise httpx.RemoteProtocolError("synthetic incomplete chunked read")
+            raise httpx.RemoteProtocolError("simulated incomplete chunked read")
         return _Response()
 
 

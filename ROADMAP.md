@@ -66,59 +66,24 @@ uv run ninja-labs phase1 build --config domains/trading/configs/phase1-btc-reddi
 
 **Gate:** a successful smoke proves the pipeline, not completeness of the five-year corpus.
 
-## Phase 1.5 — scientific validation harness — generic harness complete
+## Phase 1.5 — reusable statistical infrastructure — software layer
 
 Purpose:
 
-> verify that Ninja's laboratory can recover known truths and reject constructed false relationships before real hypotheses are allowed to generate headline claims.
+> provide tested statistical primitives without turning any primitive into a universal scientific gate.
 
-Generic controls:
+Implemented utilities include:
 
-- [x] deterministic synthetic AR(1) generator
-- [x] deterministic known lagged-effect generator
-- [x] estimator-recovery self-test
-- [x] block permutation preserving local dependence
-- [x] moving-block bootstrap primitive
-- [x] block shuffle, circular shift and time-reversal primitives
-- [x] time-series effective sample size diagnostic
-- [x] Benjamini-Hochberg FDR correction
-- [x] chronological label purging
-- [x] boundary embargo
-- [x] headline-result eligibility gate
-- [x] `validation-result-v1` contract
-- [x] anti-confirmation protocol documentation
-- [x] deterministic `ninja-labs validation selftest` command
-- [x] E1 attention estimator controlled-world validation
-- [x] E1 64-world Monte Carlo calibration
-- [x] E1 full backtester signal/null validation with untouched-test isolation
-- [x] clean-Git evidence requirement for preregistration artifacts
-- [x] pass Python/Rust/Markdown CI on the completed harness
+- [x] moving/block bootstrap and permutation primitives;
+- [x] circular shift and time-reversal primitives;
+- [x] effective-sample diagnostics;
+- [x] Benjamini-Hochberg FDR correction;
+- [x] chronological purging/embargo helpers for experiments where overlapping labels require them;
+- [x] generic result/provenance metadata;
+- [x] unit tests for attention estimator mechanics;
+- [x] clean-Git and immutable-dataset checks for frozen confirmatory artifacts.
 
-Every estimator used later must then receive its **own** validation suite:
-
-```text
-synthetic recovery
-+ null calibration
-+ negative controls
-+ sensitivity analysis
-+ empirical chronological OOS
-+ generalization stress
-```
-
-This applies independently to:
-
-- attention surprise estimators;
-- negative-binomial residuals;
-- acceleration/breadth/concentration measures;
-- change-point detectors;
-- stance/disagreement estimators;
-- narrative/novelty estimators;
-- Hawkes implementations;
-- Transfer Entropy estimators;
-- event-morphology distances;
-- susceptibility/interactions.
-
-**Gate:** passing the generic self-test does not validate N1-N10. A method that cannot recover a constructed truth or behaves badly under null worlds may not interpret market data.
+These are tools, not a mandatory sequence. Each experiment chooses validation methods that match its mechanism and replay type under `docs/BACKTESTING_POLICY.md`. Software tests prove implementation behavior only; empirical authority comes from real point-in-time evidence, replication and appropriate controls.
 
 ## Phase 2 — E1 Attention Replication / first information backtest
 
@@ -130,7 +95,7 @@ Before touching the untouched test, freeze feature definitions, horizons, primar
 
 Required sequence:
 
-- [x] validate raw-count and attention estimators on synthetic/null suites
+- [x] unit-test raw-count and attention estimator mechanics
 - [ ] build preregistered attention features
 - [ ] evaluate market-only baseline
 - [ ] evaluate market + raw count
@@ -142,8 +107,8 @@ Required sequence:
 - [ ] test MAE
 - [ ] enforce horizon-dependent purging/embargo
 - [ ] report raw N, windows/events/clusters where applicable, and effective N
-- [ ] apply registered multiple-testing correction
-- [ ] run block bootstrap/permutation controls
+- [ ] account for multiple testing when the registered comparison family requires it
+- [ ] use dependence-aware uncertainty/controls appropriate to the actual data-generating structure
 - [ ] run regime/event/source ablations where applicable
 - [ ] publish `SUPPORTED`, `WEAK`, `INCONCLUSIVE`, `REJECTED` or `INVALID`
 
@@ -153,7 +118,7 @@ Target interface:
 uv run ninja-labs experiment run <E1 config>
 ```
 
-**Gate:** E1 is the first empirical gate. No sophisticated later model is rescued simply because it is mathematically interesting.
+**Role:** E1 is the simplest activity/attention baseline. A negative E1 result does not veto semantic, propagation or morphology hypotheses; each family must stand or fall on its own evidence.
 
 ## Phase 2.5 — E1 generalization
 
@@ -187,8 +152,8 @@ Ax enters only after the fixed E1 pipeline is scientifically and operationally c
 - [ ] select a second reliable timestamped information stream
 - [ ] run source/platform ablation
 - [ ] estimate common attention and platform residuals
-- [ ] validate stance/disagreement estimators synthetically before claims
-- [ ] validate narrative/novelty/change-point estimators synthetically before claims
+- [ ] benchmark stance/disagreement extraction against reviewed real-data labels before claims
+- [ ] validate narrative/novelty/change-point representations with real-data replay and appropriate controls
 - [ ] run E2 incremental tests against attention-only baselines
 - [ ] build cross-source entity/narrative alignment required for propagation
 
@@ -243,7 +208,7 @@ market + attention + propagation
 
 - [ ] freeze event ontology v0 before outcome inspection
 - [ ] create a reviewed event gold set blinded to future price response
-- [ ] validate morphology-distance behavior on synthetic/controlled examples
+- [ ] validate morphology-distance behavior on reviewed historical event sets and held-out events
 - [ ] benchmark rules / compact classifier / local LLM extraction
 - [ ] test event-response similarity on held-out event episodes
 - [ ] test historical analogue distributions

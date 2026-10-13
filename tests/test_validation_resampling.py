@@ -2,7 +2,16 @@ from __future__ import annotations
 
 from ninja_labs.validation.core import ols_slope, pearson_r
 from ninja_labs.validation.resampling import block_permutation_test, block_shuffle
-from ninja_labs.validation.synthetic import generate_lagged_relation
+import numpy as np
+
+
+def generate_lagged_relation(n: int, *, effect: float, lag: int, seed: int, noise_sigma: float = 1.0) -> tuple[list[float], list[float]]:
+    rng = np.random.default_rng(seed)
+    x = rng.normal(size=n)
+    y = rng.normal(scale=noise_sigma, size=n)
+    for i in range(lag, n):
+        y[i] += effect * x[i - lag]
+    return x[:-lag].tolist(), y[lag:].tolist()
 
 
 def test_known_lagged_effect_is_recovered_and_survives_block_null():

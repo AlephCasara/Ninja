@@ -1,8 +1,8 @@
 """Scientific validation primitives for Ninja Labs.
 
-The validation package exists to make falsification controls reusable and
-mandatory. Domain experiments should own hypotheses; this package owns generic
-mechanisms such as purging, resampling, null tests and headline gates.
+The validation package exposes reusable statistical and falsification primitives.
+Domain experiments own hypotheses and select controls that match the scientific
+object under docs/BACKTESTING_POLICY.md; no primitive is a universal gate.
 """
 
 from ninja_labs.validation.core import (

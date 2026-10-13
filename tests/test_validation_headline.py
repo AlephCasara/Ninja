@@ -10,11 +10,6 @@ def valid_record() -> dict:
         "primary_metric": "oos_rmse_delta",
         "preregistered": True,
         "sample": {"raw_n": 1000, "effective_n": 420.0},
-        "validation": {
-            "synthetic_recovery_passed": True,
-            "null_calibration_passed": True,
-            "negative_controls_passed": True,
-        },
         "split_policy": {
             "chronological": True,
             "purging": True,
@@ -34,11 +29,9 @@ def test_complete_record_is_headline_eligible():
     assert assessment == {"eligible": True, "failures": []}
 
 
-def test_repeated_test_peeking_and_missing_null_calibration_are_rejected():
+def test_repeated_test_peeking_is_rejected():
     record = valid_record()
-    record["validation"]["null_calibration_passed"] = False
     record["untouched_test"]["access_count"] = 2
     assessment = assess_headline_eligibility(record)
     assert assessment["eligible"] is False
-    assert "null calibration did not pass" in assessment["failures"]
     assert "untouched test was accessed more than once" in assessment["failures"]
