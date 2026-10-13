@@ -1,5 +1,7 @@
-# E1 pre-freeze configuration. This file may be changed only before any
-# untouched_test evaluation. Every final-test run must record its exact SHA-256.
+# E1 preregistration configuration.
+# This file is sealed together with the canonical dataset manifest before any
+# train/validation outcome is inspected. Any scientific change after sealing
+# requires a new experiment version rather than mutating this one.
 
 [experiment]
 id = "E1-attention-btc-reddit-v1"
@@ -15,9 +17,21 @@ minimum_relative_loss_improvement = 0.005
 allowed_splits = ["train", "validation"]
 forbidden_splits = ["untouched_test"]
 
+[confirmatory]
+# Frozen before real train/validation outcomes. Four hours is the primary
+# horizon because it is long enough for public-attention transmission while
+# avoiding the heavy label overlap of 24h and the timestamp sensitivity of 15m.
+primary_target = "future_rv"
+primary_horizon_bins = 16
+primary_candidate = "market_plus_seasonal_attention"
+primary_loss = "mse"
+minimum_relative_loss_improvement = 0.005
+alpha = 0.05
+
 [attention]
-# Simple rolling AZ is retained as a diagnostic baseline only; synthetic tests
-# show it retains strong deterministic daily seasonality.
+# Simple rolling AZ is retained as a diagnostic baseline only; controlled-world
+# tests showed strong residual daily seasonality. The primary normalized feature
+# compares each 15-minute bin only with the same weekly phase in prior weeks.
 rolling_az_lookback = 96
 seasonal_period = 672        # same 15-minute slot of the week
 seasonal_cycles = 8          # eight prior weeks, causal only
@@ -52,6 +66,14 @@ market_plus_seasonal_attention = ["seasonal_attention_surprise", "attention_acce
 market_plus_attention_structure = ["message_count", "unique_author_count", "author_breadth", "author_hhi", "author_entropy_normalized"]
 market_plus_all_validated = ["message_count", "seasonal_attention_surprise", "attention_acceleration", "unique_author_count", "author_breadth", "author_hhi", "author_entropy_normalized"]
 
+[interpretation]
+# Only the exact confirmatory target/horizon/candidate above may be called the
+# primary N1 test. Everything else is secondary/exploratory even if its p-value
+# is numerically stronger.
+secondary_targets = ["future_rv", "future_volume_surprise", "jump", "mae"]
+secondary_horizons_bins = [1, 4, 96]
+exploratory_candidates = ["market_plus_raw_count", "market_plus_attention_structure", "market_plus_all_validated"]
+
 [reporting]
 result_states = ["SUPPORTED", "WEAK", "INCONCLUSIVE", "REJECTED", "INVALID"]
 report_raw_n = true
@@ -61,4 +83,5 @@ report_all_trials = true
 [final_test]
 locked = true
 split = "untouched_test"
-require_frozen_spec_hash = true
+require_preregistration_seal = true
+require_final_test_seal = true

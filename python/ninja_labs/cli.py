@@ -5,8 +5,9 @@ import json
 from pathlib import Path
 
 from ninja_labs.adapters.arctic_shift_stream import download_subreddit_posts_jsonl
-from ninja_labs.e1 import run_e1_train_validation
 from ninja_labs.pipeline import run_phase1
+from ninja_labs.preregistration import create_e1_preregistration_seal
+from ninja_labs.sealed_e1 import run_sealed_e1_train_validation
 from ninja_labs.util import parse_utc
 from ninja_labs.validation.e1_attention import (
     run_e1_estimator_validation,
@@ -55,12 +56,23 @@ def build_parser() -> argparse.ArgumentParser:
 
     experiment = subparsers.add_parser("experiment", help="Run preregistered experiments")
     experiment_sub = experiment.add_subparsers(dest="experiment_command", required=True)
+
+    prereg = experiment_sub.add_parser(
+        "e1-preregister",
+        help="Seal E1 before train/validation without opening untouched_test",
+    )
+    prereg.add_argument("--manifest", type=Path, required=True)
+    prereg.add_argument("--config", type=Path, required=True)
+    prereg.add_argument("--estimator-validation", type=Path, required=True)
+    prereg.add_argument("--output", type=Path, required=True)
+
     e1_tv = experiment_sub.add_parser(
         "e1-train-validation",
-        help="Evaluate E1 on train+validation without opening untouched_test",
+        help="Evaluate E1 on train+validation under a preregistration seal",
     )
     e1_tv.add_argument("--manifest", type=Path, required=True)
     e1_tv.add_argument("--config", type=Path, required=True)
+    e1_tv.add_argument("--seal", type=Path, required=True)
     e1_tv.add_argument("--output", type=Path, required=True)
     return parser
 
@@ -102,14 +114,26 @@ def main(argv: list[str] | None = None) -> int:
             payload = run_e1_estimator_validation(seed=args.seed)
             print(json.dumps(payload, indent=2, sort_keys=True))
         return 0 if payload["passed"] else 1
-    if args.command == "experiment" and args.experiment_command == "e1-train-validation":
-        payload = run_e1_train_validation(
+    if args.command == "experiment" and args.experiment_command == "e1-preregister":
+        payload = create_e1_preregistration_seal(
             manifest_path=args.manifest,
             config_path=args.config,
+            estimator_validation_path=args.estimator_validation,
+            output_path=args.output,
+        )
+        print(args.output)
+        print(payload["seal_sha256"])
+        return 0
+    if args.command == "experiment" and args.experiment_command == "e1-train-validation":
+        payload = run_sealed_e1_train_validation(
+            manifest_path=args.manifest,
+            config_path=args.config,
+            seal_path=args.seal,
             output_path=args.output,
         )
         print(args.output)
         print(json.dumps(payload["status_counts"], sort_keys=True))
+        print(json.dumps(payload["primary_confirmatory_result"], sort_keys=True))
         return 0
     raise AssertionError("unreachable command")
 
