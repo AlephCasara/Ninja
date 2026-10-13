@@ -190,7 +190,7 @@ def run_e1_estimator_validation(*, seed: int = 20261013) -> dict[str, Any]:
             concentrated["hhi"] == 1.0
             and concentrated["entropy_normalized"] == 0.0
             and diffuse["hhi"] < balanced["hhi"] < concentrated["hhi"]
-            and diffuse["entropy_normalized"] == 1.0
+            and abs(float(diffuse["entropy_normalized"]) - 1.0) < 1e-12
             and abs(float(balanced["hhi"]) - float(relabeled["hhi"])) < 1e-12
             and abs(float(balanced["entropy_normalized"]) - float(relabeled["entropy_normalized"])) < 1e-12
         ),
