@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from ninja_labs.util import git_commit, sha256_file, sha256_json, utc_now
+from ninja_labs.util import git_commit, git_is_dirty, sha256_file, sha256_json, utc_now
 
 
 def artifact_record(path: Path, *, rows: int | None = None) -> dict[str, Any]:
@@ -32,6 +32,7 @@ def write_manifest(
         "manifest_id": manifest_id,
         "created_at": utc_now().isoformat().replace("+00:00", "Z"),
         "code_commit": git_commit(),
+        "code_dirty": git_is_dirty(),
         "config": config,
         "sources": sources,
         "artifacts": artifacts,

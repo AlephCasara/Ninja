@@ -8,7 +8,7 @@ from ninja_labs.preregistration import (
     create_e1_preregistration_seal,
     verify_e1_preregistration_seal,
 )
-from ninja_labs.util import sha256_file
+from ninja_labs.util import git_commit, sha256_file
 
 
 def _write_fixture(
@@ -17,6 +17,8 @@ def _write_fixture(
     monte_carlo_worlds: int = 64,
     monte_carlo_passed: bool = True,
     dataset_accepted: bool = True,
+    backtester_passed: bool = True,
+    backtester_null_worlds: int = 12,
 ):
     coverage = tmp_path / "coverage.json"
     coverage.write_text(
@@ -49,6 +51,8 @@ def _write_fixture(
         json.dumps(
             {
                 "manifest_id": "fixture-manifest",
+                "code_commit": git_commit(),
+                "code_dirty": False,
                 "artifacts": {
                     "coverage": {
                         "path": str(coverage),
@@ -113,6 +117,8 @@ market_plus_seasonal_attention = ["seasonal_attention_surprise", "attention_acce
         json.dumps(
             {
                 "kind": "e1-attention-estimator-validation",
+                "code_commit": git_commit(),
+                "code_dirty": False,
                 "passed": True,
                 "status": "VALIDATED_FOR_E1",
                 "result_sha256": "controlled-world-result",
@@ -126,6 +132,8 @@ market_plus_seasonal_attention = ["seasonal_attention_surprise", "attention_acce
         json.dumps(
             {
                 "kind": "e1-attention-monte-carlo-validation",
+                "code_commit": git_commit(),
+                "code_dirty": False,
                 "passed": monte_carlo_passed,
                 "status": "VALIDATED_FOR_E1" if monte_carlo_passed else "FAILED_MONTE_CARLO_GATE",
                 "result_sha256": "monte-carlo-result",
@@ -139,11 +147,33 @@ market_plus_seasonal_attention = ["seasonal_attention_surprise", "attention_acce
         encoding="utf-8",
     )
 
+    backtester = tmp_path / "backtester.json"
+    backtester.write_text(
+        json.dumps(
+            {
+                "kind": "e1-backtester-end-to-end-validation",
+                "code_commit": git_commit(),
+                "code_dirty": False,
+                "passed": backtester_passed,
+                "status": "VALIDATED_FOR_E1" if backtester_passed else "BACKTESTER_VALIDATION_FAILED",
+                "result_sha256": "backtester-result",
+                "configuration": {
+                    "null_worlds": backtester_null_worlds,
+                    "horizon": 16,
+                    "minimum_gain": 0.005,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
     dataset_quality = tmp_path / "dataset-quality.json"
     dataset_quality.write_text(
         json.dumps(
             {
                 "kind": "e1-canonical-dataset-quality-gate",
+                "code_commit": git_commit(),
+                "code_dirty": False,
                 "passed": dataset_accepted,
                 "status": "ACCEPTED" if dataset_accepted else "REJECTED",
                 "dataset_manifest_sha256": sha256_file(manifest),
@@ -153,16 +183,17 @@ market_plus_seasonal_attention = ["seasonal_attention_surprise", "attention_acce
         ),
         encoding="utf-8",
     )
-    return manifest, config, estimator, monte_carlo, dataset_quality, untouched
+    return manifest, config, estimator, monte_carlo, backtester, dataset_quality, untouched
 
 
 def _create_seal(tmp_path, fixture):
-    manifest, config, estimator, monte_carlo, dataset_quality, _ = fixture
+    manifest, config, estimator, monte_carlo, backtester, dataset_quality, _ = fixture
     return create_e1_preregistration_seal(
         manifest_path=manifest,
         config_path=config,
         estimator_validation_path=estimator,
         monte_carlo_validation_path=monte_carlo,
+        backtester_validation_path=backtester,
         dataset_quality_path=dataset_quality,
         output_path=tmp_path / "seal.json",
     )
@@ -170,12 +201,14 @@ def _create_seal(tmp_path, fixture):
 
 def test_preregistration_seal_does_not_open_untouched_test(tmp_path):
     fixture = _write_fixture(tmp_path)
-    manifest, config, _, _, _, untouched = fixture
+    manifest, config, _, _, _, _, untouched = fixture
     seal = _create_seal(tmp_path, fixture)
 
     assert seal["status"] == "SEALED_FOR_TRAIN_VALIDATION"
     assert seal["confirmatory"]["primary_horizon_bins"] == 16
     assert seal["monte_carlo_worlds"] == 64
+    assert seal["backtester_null_worlds"] == 12
+    assert seal["backtester_validation_result_sha256"] == "backtester-result"
     assert seal["data_quality"]["gate_status"] == "ACCEPTED"
     assert seal["untouched_test"]["opened_by_preregistration"] is False
     assert seal["untouched_test"]["sha256_from_dataset_manifest"] == "sealed-test-sha-from-manifest"
@@ -200,6 +233,18 @@ def test_preregistration_rejects_failed_monte_carlo_gate(tmp_path):
         _create_seal(tmp_path, fixture)
 
 
+def test_preregistration_rejects_failed_backtester_gate(tmp_path):
+    fixture = _write_fixture(tmp_path, backtester_passed=False)
+    with pytest.raises(ValueError, match="backtester has not passed"):
+        _create_seal(tmp_path, fixture)
+
+
+def test_preregistration_rejects_too_few_backtester_null_worlds(tmp_path):
+    fixture = _write_fixture(tmp_path, backtester_null_worlds=4)
+    with pytest.raises(ValueError, match="at least 12 backtester null worlds"):
+        _create_seal(tmp_path, fixture)
+
+
 def test_preregistration_rejects_failed_dataset_quality_gate(tmp_path):
     fixture = _write_fixture(tmp_path, dataset_accepted=False)
     with pytest.raises(ValueError, match="dataset has not passed"):
@@ -208,7 +253,7 @@ def test_preregistration_rejects_failed_dataset_quality_gate(tmp_path):
 
 def test_preregistration_rejects_dataset_gate_from_different_config(tmp_path):
     fixture = _write_fixture(tmp_path)
-    manifest, config, estimator, monte_carlo, dataset_quality, _ = fixture
+    manifest, config, estimator, monte_carlo, backtester, dataset_quality, _ = fixture
     quality = json.loads(dataset_quality.read_text(encoding="utf-8"))
     quality["experiment_config_sha256"] = "0" * 64
     dataset_quality.write_text(json.dumps(quality), encoding="utf-8")
@@ -218,6 +263,7 @@ def test_preregistration_rejects_dataset_gate_from_different_config(tmp_path):
             config_path=config,
             estimator_validation_path=estimator,
             monte_carlo_validation_path=monte_carlo,
+            backtester_validation_path=backtester,
             dataset_quality_path=dataset_quality,
             output_path=tmp_path / "seal.json",
         )
@@ -225,7 +271,7 @@ def test_preregistration_rejects_dataset_gate_from_different_config(tmp_path):
 
 def test_preregistration_seal_detects_posthoc_config_change(tmp_path):
     fixture = _write_fixture(tmp_path)
-    manifest, config, _, _, _, _ = fixture
+    manifest, config, _, _, _, _, _ = fixture
     _create_seal(tmp_path, fixture)
     config.write_text(config.read_text(encoding="utf-8") + "# posthoc mutation\n", encoding="utf-8")
     with pytest.raises(ValueError, match="config changed"):
@@ -233,4 +279,40 @@ def test_preregistration_seal_detects_posthoc_config_change(tmp_path):
             seal_path=tmp_path / "seal.json",
             manifest_path=manifest,
             config_path=config,
+        )
+
+
+def test_preregistration_rejects_dirty_backtester_evidence(tmp_path):
+    fixture = _write_fixture(tmp_path)
+    manifest, config, estimator, monte_carlo, backtester, dataset_quality, _ = fixture
+    payload = json.loads(backtester.read_text(encoding="utf-8"))
+    payload["code_dirty"] = True
+    backtester.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(ValueError, match="dirty Git state"):
+        create_e1_preregistration_seal(
+            manifest_path=manifest,
+            config_path=config,
+            estimator_validation_path=estimator,
+            monte_carlo_validation_path=monte_carlo,
+            backtester_validation_path=backtester,
+            dataset_quality_path=dataset_quality,
+            output_path=tmp_path / "seal.json",
+        )
+
+
+def test_preregistration_rejects_evidence_from_different_commit(tmp_path):
+    fixture = _write_fixture(tmp_path)
+    manifest, config, estimator, monte_carlo, backtester, dataset_quality, _ = fixture
+    payload = json.loads(backtester.read_text(encoding="utf-8"))
+    payload["code_commit"] = "0" * 40
+    backtester.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(ValueError, match="different code commit"):
+        create_e1_preregistration_seal(
+            manifest_path=manifest,
+            config_path=config,
+            estimator_validation_path=estimator,
+            monte_carlo_validation_path=monte_carlo,
+            backtester_validation_path=backtester,
+            dataset_quality_path=dataset_quality,
+            output_path=tmp_path / "seal.json",
         )

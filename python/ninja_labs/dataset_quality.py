@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from ninja_labs.phase1 import interval_seconds
-from ninja_labs.util import git_commit, parse_utc, sha256_file, sha256_json, utc_now
+from ninja_labs.util import git_commit, git_is_dirty, parse_utc, sha256_file, sha256_json, utc_now
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -193,6 +193,7 @@ def evaluate_e1_dataset_quality(
         "passed": passed,
         "created_at": utc_now().isoformat().replace("+00:00", "Z"),
         "code_commit": git_commit(),
+        "code_dirty": git_is_dirty(),
         "dataset_manifest_id": manifest.get("manifest_id"),
         "dataset_manifest_sha256": sha256_file(manifest_path),
         "experiment_config_sha256": sha256_file(config_path),

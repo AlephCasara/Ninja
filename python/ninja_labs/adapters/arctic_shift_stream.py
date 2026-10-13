@@ -90,21 +90,27 @@ def download_subreddit_posts_jsonl(
             }
             delay = 1.0
             payload: Any | None = None
+            last_transport_error: str | None = None
             for attempt in range(6):
                 if request_interval_seconds:
                     time.sleep(request_interval_seconds)
                 requests += 1
                 try:
                     response = client.get("/api/posts/search", params=params)
-                except httpx.TimeoutException:
+                except httpx.RequestError as error:
                     response = None
+                    last_transport_error = f"{type(error).__name__}: {error}"
                 if response is not None and not response.is_error:
                     payload = response.json()
                     if not (isinstance(payload, dict) and payload.get("error")):
                         break
                 retries += 1
                 if attempt == 5:
-                    detail = response.text[:500] if response is not None else "timeout"
+                    detail = (
+                        response.text[:500]
+                        if response is not None
+                        else (last_transport_error or "transport error")
+                    )
                     raise RuntimeError(f"Arctic Shift download failed after retries: {detail}")
                 time.sleep(delay)
                 delay = min(delay * 2.0, 30.0)

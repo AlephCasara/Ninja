@@ -56,7 +56,7 @@ Pending canonical-data gate:
 - [ ] download `r/Bitcoin` and `r/CryptoCurrency` subreddit JSONL inputs
 - [ ] materialize the canonical 2021-2025 dataset
 - [ ] inspect final coverage/gaps/temporal-quality report
-- [ ] commit a resolver-generated `uv.lock` before the first headline E1 result
+- [x] commit a resolver-generated `uv.lock` before the first headline E1 result
 
 Canonical command:
 
@@ -88,6 +88,10 @@ Generic controls:
 - [x] `validation-result-v1` contract
 - [x] anti-confirmation protocol documentation
 - [x] deterministic `ninja-labs validation selftest` command
+- [x] E1 attention estimator controlled-world validation
+- [x] E1 64-world Monte Carlo calibration
+- [x] E1 full backtester signal/null validation with untouched-test isolation
+- [x] clean-Git evidence requirement for preregistration artifacts
 - [x] pass Python/Rust/Markdown CI on the completed harness
 
 Every estimator used later must then receive its **own** validation suite:
@@ -126,7 +130,7 @@ Before touching the untouched test, freeze feature definitions, horizons, primar
 
 Required sequence:
 
-- [ ] validate raw-count and attention estimators on synthetic/null suites
+- [x] validate raw-count and attention estimators on synthetic/null suites
 - [ ] build preregistered attention features
 - [ ] evaluate market-only baseline
 - [ ] evaluate market + raw count

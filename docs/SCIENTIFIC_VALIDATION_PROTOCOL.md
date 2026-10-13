@@ -175,6 +175,24 @@ It checks that the generic validation machinery can:
 
 This self-test validates the generic laboratory controls. It does **not** validate N1-N10, Hawkes, Transfer Entropy, attention surprise or any market hypothesis. Each estimator still requires its own recovery/null suite before empirical promotion.
 
+## E1 end-to-end backtester gate
+
+Estimator recovery alone is insufficient for E1. Before preregistration, the complete train/validation backtester must also pass controlled worlds through the exact production analysis path.
+
+The gate runs one world where attention is deliberately coupled to future volatility and a family of null worlds where attention and volatility are independent. It exercises causal feature construction, forward targets, common support, model fitting, paired block inference, effect-size thresholds, FDR and the untouched-test boundary.
+
+The default preregistration gate requires at least 12 null worlds. The known-signal world must be `SUPPORTED`, exceed the minimum meaningful effect and beat the p95 null gain. The allowed fraction of null `SUPPORTED`/`WEAK` discoveries is capped before empirical E1. The untouched-test artifact must remain unopened in every synthetic world.
+
+```text
+uv run ninja-labs validation e1-backtester --null-worlds 12
+```
+
+A passing result validates the E1 backtester mechanics, not N1 itself.
+
+## Clean-code evidence
+
+Scientific artifacts record both the Git commit and whether the worktree was dirty when they were produced. Preregistration rejects estimator, Monte Carlo, backtester, dataset-quality or canonical-manifest evidence produced from a dirty Git state, and requires those artifacts to identify the same clean code revision. Runtime scratch/data directories are ignored by Git and are not evidence-bearing source changes.
+
 ## Result taxonomy
 
 Scientific results should be retained even when they fail.

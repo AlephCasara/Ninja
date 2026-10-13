@@ -73,3 +73,18 @@ def git_commit() -> str:
     except (OSError, subprocess.CalledProcessError):
         return "unknown"
     return result.stdout.strip() or "unknown"
+
+
+def git_is_dirty() -> bool:
+    """Return whether tracked or non-ignored untracked files differ from HEAD."""
+
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain=v1", "--untracked-files=normal"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return True
+    return bool(result.stdout.strip())
