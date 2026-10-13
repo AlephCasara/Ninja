@@ -187,6 +187,30 @@ Each completed experiment record should be resolvable to:
 - output metrics/artifacts;
 - final status: positive, negative or inconclusive.
 
+## ExperimentSpec v2
+
+`schemas/experiment-spec-v2.schema.json` is the active session-level experiment contract for new backtesting work. v1 is retained for compatibility with experiments created under the older fixed train/validation/untouched-test model.
+
+Version 2 adds explicit:
+
+```text
+scientific_question
+phase
+replay_type
+scope / exclusions
+evidence boundary and outcome-access policy
+point-in-time data/population rules
+communication and market representations
+outcome definitions / horizons
+experiment-specific statistical design
+negative-result scope / economic relevance
+reproducibility metadata
+```
+
+Unlike v1, v2 does not require every session to pretend to be a supervised-learning train/validation/test exercise. Discovery may be adaptive and event/propagation studies may use boundaries appropriate to their scientific object. Replication/generalization/economic/prospective phases require a frozen candidate, and replication requires an explicit unseen evidence boundary.
+
+Operational rules are in [BACKTESTING_SESSION.md](BACKTESTING_SESSION.md).
+
 ## Contract evolution
 
 Breaking semantic changes require a new schema version.

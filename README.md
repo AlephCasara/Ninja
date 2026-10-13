@@ -2108,6 +2108,7 @@ Detailed specifications are split into the following documents.
 |---|---|
 | [Mathematical framework](docs/MATHEMATICAL_FRAMEWORK.md) | complete equations, estimators, nulls and validation logic |
 | [Backtesting policy](docs/BACKTESTING_POLICY.md) | scientific authority for discovery, replay, replication, controls and economic promotion |
+| [Backtesting session protocol](docs/BACKTESTING_SESSION.md) | operational session boundary, ExperimentSpec v2 and clean handoff rules |
 | [Historical replay formalism](docs/HISTORICAL_REPLAY.md) | causal freeze/reveal contracts, semantic instruments and tail first-passage outcomes |
 | [Complexity and information dynamics](docs/COMPLEXITY_AND_INFORMATION_DYNAMICS.md) | complexity science, network theory, criticality, ABM, multifractals |
 | [Scientific foundation](docs/SCIENTIFIC_FOUNDATION.md) | literature and evidence map |

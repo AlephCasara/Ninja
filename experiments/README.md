@@ -19,6 +19,7 @@ Do not create one "bot" per hypothesis. Hypotheses frequently require features f
 ## Scientific validation policy
 
 All experiments follow [`docs/BACKTESTING_POLICY.md`](../docs/BACKTESTING_POLICY.md).
+New substantive sessions also follow [`docs/BACKTESTING_SESSION.md`](../docs/BACKTESTING_SESSION.md) and use `ExperimentSpec v2`.
 
 There is no universal synthetic-recovery or Monte-Carlo prerequisite for empirical Ninja hypotheses. Validation must match the scientific object and the claim. Synthetic data may be used for software/mathematical correctness when justified, but it is not a substitute for evidence from real historical or prospective information systems.
 
@@ -52,19 +53,21 @@ Preregistration is used when appropriate to separate a confirmatory/replication 
 
 ## Required artifacts per completed experiment
 
-Each experiment directory should eventually contain:
+Each experiment/session directory should eventually contain:
 
 ```text
-SPEC.md
-config.yaml
-results.json
-REPORT.md
+SPEC.json              # ExperimentSpec v2
+CHANGELOG.md            # append-only scientific/search changes
+RESULTS.json            # machine-readable result when a run exists
+REPORT.md               # interpretation when a run is completed
 artifacts/
   manifests/
   figures/
 ```
 
-A confirmatory headline `results.json` should satisfy the generic provenance/anti-hindsight metadata in `schemas/validation-result-v1.schema.json`. Experiment-specific controls are defined by `docs/BACKTESTING_POLICY.md` and the experiment contract, not by a universal synthetic gate.
+Start from [`templates/session-spec-v2.json`](templates/session-spec-v2.json) and [`templates/session-changelog.md`](templates/session-changelog.md).
+
+A confirmatory headline `RESULTS.json` should satisfy the generic provenance/anti-hindsight metadata in `schemas/validation-result-v1.schema.json`. Experiment-specific controls are defined by `docs/BACKTESTING_POLICY.md` and the experiment contract, not by a universal synthetic gate.
 
 Large source datasets do not belong in Git.
 

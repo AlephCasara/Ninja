@@ -1,0 +1,83 @@
+{
+  "schema_version": 2,
+  "experiment_id": "CHANGE_ME",
+  "hypothesis_id": null,
+  "domain": "trading.crypto",
+  "scientific_question": "CHANGE_ME",
+  "phase": "discovery",
+  "replay_type": "state",
+  "scope": {
+    "program": "ninja-v1-public-communication",
+    "in_scope": [
+      "point-in-time public communication",
+      "market-state baseline"
+    ],
+    "out_of_scope": [
+      "on-chain analytics",
+      "wallet forensics",
+      "rug-pull detection",
+      "50x/100x hunting as a discovery objective",
+      "RL trading policies"
+    ]
+  },
+  "evidence_boundary": {
+    "outcome_access": "outcome_blind_discovery",
+    "candidate_frozen": false,
+    "inspected_outcome_boundaries": [],
+    "evaluation_boundary": null
+  },
+  "data": {
+    "dataset_manifest_ids": [],
+    "information_sources": [
+      "CHANGE_ME"
+    ],
+    "market_sources": [
+      "CHANGE_ME"
+    ],
+    "availability_rule": "CHANGE_ME",
+    "population": "CHANGE_ME",
+    "universe_rule": "CHANGE_ME"
+  },
+  "representations": {
+    "observation": "observation-v1",
+    "communication_state": [
+      "CHANGE_ME"
+    ],
+    "market_state": [
+      "CHANGE_ME"
+    ],
+    "semantic_interpretation": null
+  },
+  "outcomes": {
+    "targets": [
+      "CHANGE_ME"
+    ],
+    "horizons": [
+      "CHANGE_ME"
+    ]
+  },
+  "design": {
+    "baselines": [
+      "market-only"
+    ],
+    "controls": [],
+    "methods": [],
+    "assumptions": [],
+    "search_space": {},
+    "sample_units": [],
+    "leakage_checks": [
+      "point-in-time availability"
+    ],
+    "partitions": {},
+    "stopping_rules": []
+  },
+  "interpretation": {
+    "negative_result_scope": "CHANGE_ME",
+    "economic_relevance": "CHANGE_ME"
+  },
+  "reproducibility": {
+    "code_revision": "CHANGE_ME",
+    "environment_lock": "uv.lock",
+    "random_seeds": []
+  }
+}
