@@ -4,6 +4,7 @@ from ninja_labs.attention.estimators import (
     estimate_nb_moments,
     negative_binomial_residual,
     robust_attention_surprise,
+    seasonal_robust_attention_surprise,
 )
 
 __all__ = [
@@ -12,4 +13,5 @@ __all__ = [
     "estimate_nb_moments",
     "negative_binomial_residual",
     "robust_attention_surprise",
+    "seasonal_robust_attention_surprise",
 ]
