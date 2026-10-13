@@ -40,11 +40,61 @@ def build_coverage_report(
             count(DISTINCT author_id) FILTER (WHERE author_id IS NOT NULL) AS unique_authors,
             count(DISTINCT subreddit) FILTER (WHERE subreddit IS NOT NULL) AS unique_communities,
             count(*) FILTER (WHERE temporal_quality = 'archive_capture') AS archive_capture_rows,
-            count(*) FILTER (WHERE temporal_quality = 'source_timestamp') AS source_timestamp_rows
+            count(*) FILTER (WHERE temporal_quality = 'source_timestamp') AS source_timestamp_rows,
+            count(*) FILTER (
+                WHERE first_seen_at IS NOT NULL AND first_seen_at < published_at
+            ) AS first_seen_before_published_rows
         FROM read_parquet(?)
         """,
         [str(observations_path)],
     )
+    observation_rows = max(int(observations["rows"]), 1)
+    observations["archive_capture_fraction"] = (
+        int(observations["archive_capture_rows"]) / observation_rows
+    )
+    observations["source_timestamp_fraction"] = (
+        int(observations["source_timestamp_rows"]) / observation_rows
+    )
+
+    rows_by_year = con.execute(
+        """
+        SELECT CAST(year(published_at) AS INTEGER) AS year, count(*) AS rows
+        FROM read_parquet(?)
+        GROUP BY 1 ORDER BY 1
+        """,
+        [str(observations_path)],
+    ).fetchall()
+    observations["rows_by_year"] = {str(year): int(rows) for year, rows in rows_by_year}
+
+    rows_by_community = con.execute(
+        """
+        SELECT subreddit, count(*) AS rows
+        FROM read_parquet(?)
+        WHERE subreddit IS NOT NULL
+        GROUP BY 1 ORDER BY 1
+        """,
+        [str(observations_path)],
+    ).fetchall()
+    observations["rows_by_community"] = {
+        str(name): int(rows) for name, rows in rows_by_community
+    }
+
+    retrieval_lag = _one(
+        con,
+        """
+        SELECT
+            count(*) AS rows,
+            min(epoch(first_seen_at - published_at)) AS min_seconds,
+            quantile_cont(epoch(first_seen_at - published_at), 0.50) AS p50_seconds,
+            quantile_cont(epoch(first_seen_at - published_at), 0.95) AS p95_seconds,
+            quantile_cont(epoch(first_seen_at - published_at), 0.99) AS p99_seconds,
+            max(epoch(first_seen_at - published_at)) AS max_seconds
+        FROM read_parquet(?)
+        WHERE first_seen_at IS NOT NULL
+        """,
+        [str(observations_path)],
+    )
+    observations["retrieval_lag"] = retrieval_lag
 
     market = _one(
         con,
@@ -67,6 +117,16 @@ def build_coverage_report(
         """,
         [str(market_path), interval * 1.5],
     )
+    if market["min_open_time"] is not None and market["max_close_time"] is not None:
+        span_seconds = float(
+            con.execute(
+                "SELECT epoch(?::TIMESTAMPTZ - ?::TIMESTAMPTZ)",
+                [market["max_close_time"], market["min_open_time"]],
+            ).fetchone()[0]
+        )
+        market["expected_rows_inside_observed_span"] = int(round(span_seconds / interval))
+        expected = max(int(market["expected_rows_inside_observed_span"]), 1)
+        market["coverage_fraction_inside_observed_span"] = int(market["rows"]) / expected
 
     attention = _one(
         con,
@@ -82,6 +142,8 @@ def build_coverage_report(
         """,
         [str(attention_path)],
     )
+    attention_rows = max(int(attention["rows"]), 1)
+    attention["nonzero_fraction"] = int(attention["nonzero_windows"]) / attention_rows
 
     split_rows = con.execute(
         """
@@ -110,9 +172,9 @@ def build_coverage_report(
     )
     con.close()
 
-    aligned["rows_by_split"] = {name: count for name, count in split_rows}
+    aligned["rows_by_split"] = {str(name): int(count) for name, count in split_rows}
     report = {
-        "schema_version": 1,
+        "schema_version": 2,
         "observations": observations,
         "market": market,
         "attention": attention,
