@@ -9,7 +9,12 @@ from typing import Any
 import httpx
 
 from ninja_labs.adapters.arctic_shift import BASE_URL, POST_FIELDS
-from ninja_labs.util import parse_utc, sha256_file
+from ninja_labs.adapters.arctic_shift_audit import (
+    ArcticShiftAuditError,
+    audit_subreddit_posts_jsonl,
+    repair_partial_jsonl_tail,
+)
+from ninja_labs.util import parse_utc
 
 
 def _last_jsonl_record(path: Path) -> dict[str, Any] | None:
@@ -40,7 +45,7 @@ def download_subreddit_posts_jsonl(
     request_interval_seconds: float = 0.5,
     timeout_seconds: float = 90.0,
 ) -> dict[str, Any]:
-    """Stream one subreddit using the same cursor strategy as Arctic Shift UI."""
+    """Stream one subreddit, then require a raw-source integrity audit."""
 
     start_ms = int(after.timestamp() * 1000)
     end_ms = int(before.timestamp() * 1000)
@@ -50,6 +55,9 @@ def download_subreddit_posts_jsonl(
         raise ValueError("request_interval_seconds must be non-negative")
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    repaired_partial_tail_bytes = 0
+    if resume and output_path.exists():
+        repaired_partial_tail_bytes = repair_partial_jsonl_tail(output_path)
     mode = "a" if resume and output_path.exists() else "w"
     current_ms = start_ms
     existing_rows = 0
@@ -62,7 +70,7 @@ def download_subreddit_posts_jsonl(
             previous_created_ms = int(parse_utc(last["created_utc"]).timestamp() * 1000)
             current_ms = max(start_ms, previous_created_ms)
             with output_path.open("r", encoding="utf-8") as existing:
-                existing_rows = sum(1 for _ in existing)
+                existing_rows = sum(1 for line in existing if line.strip())
 
     headers = {
         "User-Agent": "AlephCasara-Ninja/0.1 research contact via GitHub",
@@ -150,7 +158,25 @@ def download_subreddit_posts_jsonl(
             if wrote_this_page == 0:
                 current_ms += 1000
 
-    total_rows = existing_rows + downloaded_rows
+    audit = audit_subreddit_posts_jsonl(
+        path=output_path,
+        subreddit=subreddit,
+        after=after,
+        before=before,
+    )
+    if not audit["passed"]:
+        raise ArcticShiftAuditError(
+            "canonical Arctic Shift JSONL failed source audit: "
+            + json.dumps(
+                {
+                    key: value
+                    for key, value in audit.items()
+                    if key.endswith("_rows") or key in {"duplicate_ids", "out_of_order_rows", "ends_with_newline"}
+                },
+                sort_keys=True,
+            )
+        )
+
     return {
         "source": "arctic-shift-download-tool-compatible",
         "subreddit": subreddit,
@@ -159,9 +185,11 @@ def download_subreddit_posts_jsonl(
         "path": str(output_path),
         "existing_rows": existing_rows,
         "downloaded_rows": downloaded_rows,
-        "total_rows": total_rows,
+        "total_rows": audit["rows"],
         "requests": requests,
         "retries": retries,
-        "bytes": output_path.stat().st_size if output_path.exists() else 0,
-        "sha256": sha256_file(output_path) if output_path.exists() else None,
+        "repaired_partial_tail_bytes": repaired_partial_tail_bytes,
+        "bytes": audit["bytes"],
+        "sha256": audit["sha256"],
+        "audit": audit,
     }
